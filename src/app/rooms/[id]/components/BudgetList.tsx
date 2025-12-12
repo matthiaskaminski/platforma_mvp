@@ -81,7 +81,7 @@ export function BudgetList() {
 
             {/* Summary Sticky Footer */}
             <div className="sticky bottom-0 bg-[#0F0F0F] z-30 p-0">
-                <div className="flex flex-col md:flex-row items-center justify-between gap-6 px-6 bg-[#1B1B1B] py-4 w-full rounded-2xl">
+                <div className="flex flex-col md:flex-row items-center justify-between gap-6 px-6 bg-[#151515] py-4 w-full rounded-2xl">
 
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-[#252525] flex items-center justify-center">
