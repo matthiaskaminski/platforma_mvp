@@ -8,6 +8,8 @@ export async function createRoom(projectId: string, data: {
     type: string;
     area: number;
     budgetAllocated: number;
+    status: string; // "not_started" | "in_progress" | "finished"
+    coverImage?: string;
 }) {
     if (!projectId) {
         throw new Error("Project ID is required");
@@ -18,9 +20,11 @@ export async function createRoom(projectId: string, data: {
             data: {
                 projectId,
                 name: data.name,
-                type: data.type as any, // Enum casting if necessary
+                type: data.type as any, // Enum casting
+                status: data.status as any, // Enum casting
                 area: data.area,
-                budgetAllocated: data.budgetAllocated
+                budgetAllocated: data.budgetAllocated,
+                coverImage: data.coverImage
             }
         });
 

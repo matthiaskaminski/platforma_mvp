@@ -5,7 +5,7 @@ import { Sheet, SheetHeader, SheetTitle, SheetDescription } from "@/components/u
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { createRoom } from "@/app/rooms/actions";
-import { Plus, Armchair, BedDouble, Bath, Utensils, DoorOpen, Baby, LayoutGrid, Type } from "lucide-react";
+import { Armchair, BedDouble, Bath, Utensils, DoorOpen, Baby, LayoutGrid, Link as LinkIcon, CheckCircle2, Circle, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface AddRoomSidebarProps {
@@ -21,37 +21,35 @@ const ROOM_TYPES = [
     { id: "bathroom", label: "Łazienka", icon: Bath },
     { id: "kids", label: "Dziecięcy", icon: Baby },
     { id: "hall", label: "Przedpokój", icon: DoorOpen },
-    { id: "other", label: "Inne", icon: LayoutGrid }, // Custom option
+    { id: "other", label: "Inne", icon: LayoutGrid },
+];
+
+const STATUS_OPTIONS = [
+    { id: "not_started", label: "Nie rozpoczęte", icon: Circle, color: "text-zinc-400" },
+    { id: "in_progress", label: "W trakcie", icon: Clock, color: "text-[#91E8B2]" },
+    { id: "finished", label: "Zakończone", icon: CheckCircle2, color: "text-green-500" },
 ];
 
 export default function AddRoomSidebar({ open, onOpenChange, projectId }: AddRoomSidebarProps) {
     const [isPending, startTransition] = useTransition();
     const [name, setName] = useState("");
     const [type, setType] = useState("living");
+    const [status, setStatus] = useState("not_started");
     const [area, setArea] = useState("");
     const [budget, setBudget] = useState("");
+    const [coverImage, setCoverImage] = useState("");
 
     // Reset when opening
     useEffect(() => {
         if (open) {
             setName("");
             setType("living");
+            setStatus("not_started");
             setArea("");
             setBudget("");
+            setCoverImage("");
         }
     }, [open]);
-
-    // Focus name input when "Inne" is selected
-    useEffect(() => {
-        if (type === "other") {
-            // Optional: could auto-focus name input ref here
-            if (!name) setName("");
-        } else {
-            // Reset name to default label IF user hasn't typed a custom one?
-            // Actually, clearer UX is: Name is empty by default (placeholder shows example).
-            // When type is selected, we might pre-fill? No, placeholder covers it.
-        }
-    }, [type]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -68,7 +66,9 @@ export default function AddRoomSidebar({ open, onOpenChange, projectId }: AddRoo
                 name: finalName,
                 type: type === "other" ? "other" : type,
                 area: parseFloat(area) || 0,
-                budgetAllocated: parseFloat(budget) || 0
+                budgetAllocated: parseFloat(budget) || 0,
+                status,
+                coverImage: coverImage.trim() || undefined
             };
 
             const result = await createRoom(projectId, formData);
@@ -89,28 +89,31 @@ export default function AddRoomSidebar({ open, onOpenChange, projectId }: AddRoo
                 </SheetDescription>
             </SheetHeader>
 
-            <form onSubmit={handleSubmit} className="space-y-8">
+            <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Type Selection */}
-                <div className="grid grid-cols-3 gap-3">
-                    {ROOM_TYPES.map((t) => {
-                        const Icon = t.icon;
-                        const isSelected = type === t.id;
-                        return (
-                            <div
-                                key={t.id}
-                                onClick={() => setType(t.id)}
-                                className={cn(
-                                    "cursor-pointer flex flex-col items-center justify-center p-3 rounded-xl border transition-all gap-2 h-[80px]",
-                                    isSelected
-                                        ? "bg-white text-black border-white"
-                                        : "bg-[#1B1B1B] text-zinc-400 border-white/5 hover:border-white/20 hover:text-zinc-200"
-                                )}
-                            >
-                                <Icon className="w-6 h-6" />
-                                <span className="text-xs font-medium">{t.label}</span>
-                            </div>
-                        )
-                    })}
+                <div>
+                    <label className="text-sm font-medium text-zinc-300 block mb-3">Rodzaj pomieszczenia</label>
+                    <div className="grid grid-cols-3 gap-3">
+                        {ROOM_TYPES.map((t) => {
+                            const Icon = t.icon;
+                            const isSelected = type === t.id;
+                            return (
+                                <div
+                                    key={t.id}
+                                    onClick={() => setType(t.id)}
+                                    className={cn(
+                                        "cursor-pointer flex flex-col items-center justify-center p-3 rounded-xl transition-all gap-2 h-[80px]",
+                                        isSelected
+                                            ? "bg-white text-black"
+                                            : "bg-[#232323] text-zinc-400 hover:bg-[#262626] hover:text-zinc-200"
+                                    )}
+                                >
+                                    <Icon className="w-6 h-6" />
+                                    <span className="text-xs font-medium">{t.label}</span>
+                                </div>
+                            )
+                        })}
+                    </div>
                 </div>
 
                 {/* Name */}
@@ -120,8 +123,35 @@ export default function AddRoomSidebar({ open, onOpenChange, projectId }: AddRoo
                         placeholder={type === 'other' ? "Wpisz nazwę własną..." : "np. Salon gościnny"}
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                        className="bg-[#1B1B1B] border-white/10 text-white h-[48px] focus-visible:ring-[#232323] focus-visible:border-[#232323] transition-colors"
+                        className="bg-[#232323] border-transparent text-white h-[48px] focus-visible:ring-1 focus-visible:ring-[#262626] focus-visible:border-transparent transition-colors placeholder:text-zinc-600"
                     />
+                </div>
+
+                {/* Status Selection */}
+                <div className="space-y-3">
+                    <label className="text-sm font-medium text-zinc-300 block">Status</label>
+                    <div className="flex gap-2">
+                        {STATUS_OPTIONS.map((s) => {
+                            const Icon = s.icon;
+                            const isSelected = status === s.id;
+                            return (
+                                <button
+                                    key={s.id}
+                                    type="button"
+                                    onClick={() => setStatus(s.id)}
+                                    className={cn(
+                                        "flex-1 flex items-center justify-center gap-2 h-[48px] rounded-xl transition-colors text-sm font-medium",
+                                        isSelected
+                                            ? "bg-white text-black"
+                                            : "bg-[#232323] text-zinc-400 hover:bg-[#262626]"
+                                    )}
+                                >
+                                    <Icon className="w-4 h-4" />
+                                    {s.label}
+                                </button>
+                            )
+                        })}
+                    </div>
                 </div>
 
                 {/* Metrics */}
@@ -134,7 +164,8 @@ export default function AddRoomSidebar({ open, onOpenChange, projectId }: AddRoo
                             step="0.1"
                             value={area}
                             onChange={(e) => setArea(e.target.value)}
-                            className="bg-[#1B1B1B] border-white/10 text-white h-[48px] focus-visible:ring-[#232323] focus-visible:border-[#232323]"
+                            // No-spinner utility via Tailwind arbitrary values
+                            className="bg-[#232323] border-transparent text-white h-[48px] focus-visible:ring-1 focus-visible:ring-[#262626] focus-visible:border-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none placeholder:text-zinc-600"
                         />
                     </div>
                     <div className="space-y-3">
@@ -145,7 +176,23 @@ export default function AddRoomSidebar({ open, onOpenChange, projectId }: AddRoo
                             step="100"
                             value={budget}
                             onChange={(e) => setBudget(e.target.value)}
-                            className="bg-[#1B1B1B] border-white/10 text-white h-[48px] focus-visible:ring-[#232323] focus-visible:border-[#232323]"
+                            className="bg-[#232323] border-transparent text-white h-[48px] focus-visible:ring-1 focus-visible:ring-[#262626] focus-visible:border-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none placeholder:text-zinc-600"
+                        />
+                    </div>
+                </div>
+
+                {/* Cover Image */}
+                <div className="space-y-3">
+                    <label className="text-sm font-medium text-zinc-300 block">Zdjęcie (Miniatura)</label>
+                    <div className="relative">
+                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500">
+                            <LinkIcon className="w-4 h-4" />
+                        </div>
+                        <Input
+                            placeholder="Wklej link do zdjęcia..."
+                            value={coverImage}
+                            onChange={(e) => setCoverImage(e.target.value)}
+                            className="bg-[#232323] border-transparent text-white h-[48px] pl-10 focus-visible:ring-1 focus-visible:ring-[#262626] focus-visible:border-transparent placeholder:text-zinc-600"
                         />
                     </div>
                 </div>
@@ -156,7 +203,7 @@ export default function AddRoomSidebar({ open, onOpenChange, projectId }: AddRoo
                         type="button"
                         variant="ghost"
                         onClick={() => onOpenChange(false)}
-                        className="flex-1 text-zinc-400 hover:text-white h-[48px]"
+                        className="flex-1 text-zinc-400 hover:text-white h-[48px] hover:bg-[#232323]"
                     >
                         Anuluj
                     </Button>

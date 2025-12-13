@@ -1,3 +1,4 @@
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,145 +9,104 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-// Enums
-enum UserType {
-  FREELANCER
-  STUDIO
-}
-
-enum ClientType {
-  PRIVATE
-  COMMERCIAL
+enum UserRole {
+  ADMIN
+  DESIGNER
+  CLIENT
 }
 
 enum ProjectStatus {
+  DRAFT
   ACTIVE
   ARCHIVED
   COMPLETED
-  ON_HOLD
-}
-
-enum RoomType {
-  LIVING_ROOM
-  KITCHEN
-  BEDROOM
-  BATHROOM
-  HALLWAY
-  OFFICE
-  OTHER
 }
 
 enum TaskStatus {
   TODO
   IN_PROGRESS
-  BLOCKED
   DONE
 }
 
-enum PaymentStatus {
-  UNPAID
-  PAID
-  PARTIALLY_PAID
-  REFUNDED
+enum RoomType {
+  LIVING   @map("living")
+  KITCHEN  @map("kitchen")
+  BEDROOM  @map("bedroom")
+  BATHROOM @map("bathroom")
+  KIDS     @map("kids")
+  HALL     @map("hall")
+  OFFICE   @map("office")
+  OTHER    @map("other")
 }
 
 enum ProductStatus {
-  TO_ORDER
-  ORDERED
-  DELIVERED
-  RETURNED
+  TO_ORDER      @map("to_order")
+  ORDERED       @map("ordered")
+  DELIVERED     @map("delivered")
+  PAID          @map("paid")
+  RETURNED      @map("returned")
 }
 
-enum DocumentType {
-  INVOICE
-  CONTRACT
-  PLAN
-  OTHER
+enum RoomStatus {
+  NOT_STARTED @map("not_started")
+  IN_PROGRESS @map("in_progress")
+  FINISHED    @map("finished")
 }
-
-enum MoodboardStatus {
-  DRAFT
-  SENT
-  APPROVED
-}
-
-enum SurveyStatus {
-  DRAFT
-  SENT
-  COMPLETED
-}
-
-// Models
 
 model Profile {
   id          String   @id @default(uuid()) @db.Uuid
   email       String   @unique
-  firstName   String?  @map("first_name")
-  lastName    String?  @map("last_name")
+  fullName    String?  @map("full_name")
+  avatarUrl   String?  @map("avatar_url")
+  phoneNumber String?  @map("phone_number")
+  role        UserRole @default(DESIGNER)
+  
+  // New onboarding fields
   studioName  String?  @map("studio_name")
   nip         String?
-  address     String?
-  phone       String?
-  logoUrl     String?  @map("logo_url")
-  userType    UserType @default(FREELANCER) @map("user_type")
   
-  onboardingCompleted Boolean @default(false) @map("onboarding_completed")
-  preferences         Json?
-  
-  // Relations
-  clients     Client[]
-  projects    Project[]
-  wishlists   Wishlist[]
-  subscriptions Subscription[]
-
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
+  projects    Project[]
+  wishlists   Wishlist[]
+  
   @@map("profiles")
-}
-
-model Subscription {
-  id          String   @id @default(uuid()) @db.Uuid
-  profileId   String   @map("profile_id") @db.Uuid
-  profile     Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  plan        String
-  status      String
-  validUntil  DateTime @map("valid_until")
-
-  @@map("subscriptions")
 }
 
 model Client {
   id          String   @id @default(uuid()) @db.Uuid
-  designerId  String   @map("designer_id") @db.Uuid
-  designer    Profile  @relation(fields: [designerId], references: [id], onDelete: Cascade)
-  type        ClientType @default(PRIVATE)
-  name        String
+  email       String
+  fullName    String?  @map("full_name")
+  phoneNumber String?  @map("phone_number")
   nip         String?
-  phone       String?
-  email       String?
-  addressData String?  @map("address_data") // JSON if detailed
+  
+  projectId   String   @map("project_id") @db.Uuid
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
-  // Relations
-  projects    Project[]
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
   @@map("clients")
 }
 
 model Project {
   id          String   @id @default(uuid()) @db.Uuid
-  clientId    String   @map("client_id") @db.Uuid
-  client      Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  
   designerId  String   @map("designer_id") @db.Uuid
   designer    Profile  @relation(fields: [designerId], references: [id], onDelete: Cascade)
   
   name        String
   description String?
-  icon        String?  // e.g. "Home", "Office" (Lucide icon name)
-  color       String?  // e.g. "#FF0000"
+  status      ProjectStatus @default(DRAFT)
+  
+  // New visual fields
+  icon        String?
+  color       String?
+
+  // Address / Details
   address     String?
-  status      ProjectStatus @default(ACTIVE)
+  city        String?
+  postalCode  String?  @map("postal_code")
   
   totalArea   Float?   @map("total_area")
   floorsCount Int?     @map("floors_count")
@@ -179,9 +139,11 @@ model Room {
   
   name        String
   type        RoomType @default(OTHER)
+  status      RoomStatus @default(NOT_STARTED)
   area        Float?
   floorNumber Int?     @map("floor_number")
   budgetAllocated Decimal? @map("budget_allocated") @db.Decimal(12, 2)
+  coverImage  String?  @map("cover_image")
 
   // Relations
   productItems ProductItem[]
@@ -248,138 +210,92 @@ model Task {
   // AssignedTo typically refers to a Profile or user ID, which should be UUID too if users are in Profile
   assignedTo  String?  @map("assigned_to") @db.Uuid
   dueDate     DateTime? @map("due_date")
-
+  
   createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
   @@map("tasks")
 }
 
+// Additional models for context (simplified)
+model Contact {
+  id        String   @id @default(uuid()) @db.Uuid
+  projectId String   @map("project_id") @db.Uuid
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name      String
+  role      String?
+  email     String?
+  phone     String?
+  @@map("contacts")
+}
+
+model Conversation {
+  id        String   @id @default(uuid()) @db.Uuid
+  projectId String   @map("project_id") @db.Uuid
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title     String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  @@map("conversations")
+}
+
+model Survey {
+  id        String   @id @default(uuid()) @db.Uuid
+  projectId String   @map("project_id") @db.Uuid
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title     String
+  status    String   @default("DRAFT")
+  @@map("surveys")
+}
+
+model Moodboard {
+  id        String   @id @default(uuid()) @db.Uuid
+  projectId String   @map("project_id") @db.Uuid
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name      String
+  images    Json?
+  @@map("moodboards")
+}
+
 model Document {
-  id          String   @id @default(uuid()) @db.Uuid
-  projectId   String   @map("project_id") @db.Uuid
-  project     Project  @relation("ProjectDocuments", fields: [projectId], references: [id], onDelete: Cascade)
-  
-  name        String
-  url         String
-  type        DocumentType @default(OTHER)
-
-  createdAt   DateTime @default(now()) @map("created_at")
-
+  id        String   @id @default(uuid()) @db.Uuid
+  projectId String   @map("project_id") @db.Uuid
+  project   Project  @relation("ProjectDocuments", fields: [projectId], references: [id], onDelete: Cascade)
+  name      String
+  url       String
+  type      String?
+  size      Int?
+  uploadedAt DateTime @default(now()) @map("uploaded_at")
   @@map("documents")
 }
 
-model GalleryImage {
-  id          String   @id @default(uuid()) @db.Uuid
-  roomId      String   @map("room_id") @db.Uuid
-  room        Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
-  
-  url         String
-  caption     String?
-  isCover     Boolean  @default(false) @map("is_cover")
-
-  createdAt   DateTime @default(now()) @map("created_at")
-
-  @@map("gallery_images")
-}
-
 model Note {
-  id          String   @id @default(uuid()) @db.Uuid
-  roomId      String   @map("room_id") @db.Uuid
-  room        Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
-  
-  content     String   
-  createdAt   DateTime @default(now()) @map("created_at")
-
+  id        String   @id @default(uuid()) @db.Uuid
+  roomId    String   @map("room_id") @db.Uuid
+  room      Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  content   String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
   @@map("notes")
-}
-
-model Contact {
-  id          String   @id @default(uuid()) @db.Uuid
-  projectId   String   @map("project_id") @db.Uuid
-  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  
-  name        String
-  role        String?
-  phone       String?
-  email       String?
-  companyName String?  @map("company_name")
-
-  conversations Conversation[]
-
-  @@map("contacts")
 }
 
 model CalendarEvent {
   id          String   @id @default(uuid()) @db.Uuid
   projectId   String   @map("project_id") @db.Uuid
   project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  
   title       String
-  startTime   DateTime @map("start_time")
-  endTime     DateTime? @map("end_time")
-  type        String?  
-
+  date        DateTime
+  description String?
+  type        String   @default("MEETING") // MEETING, DEADLINE, PAYMENT, INSTALLATION
   @@map("calendar_events")
 }
 
-model Moodboard {
-  id          String   @id @default(uuid()) @db.Uuid
-  projectId   String   @map("project_id") @db.Uuid
-  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  
-  name        String
-  status      MoodboardStatus @default(DRAFT)
-  contentData Json?    @map("content_data") 
-
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-
-  @@map("moodboards")
-}
-
-model Survey {
-  id          String   @id @default(uuid()) @db.Uuid
-  projectId   String   @map("project_id") @db.Uuid
-  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  
-  name        String
-  status      SurveyStatus @default(DRAFT)
-  questions   Json?
-  answers     Json?
-
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-
-  @@map("surveys")
-}
-
-model Conversation {
-  id          String   @id @default(uuid()) @db.Uuid
-  projectId   String   @map("project_id") @db.Uuid
-  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  
-  contactId   String?  @map("contact_id") @db.Uuid
-  contact     Contact? @relation(fields: [contactId], references: [id])
-  
-  topic       String?
-  
-  messages    Message[]
-
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-
-  @@map("conversations")
-}
-
-model Message {
-  id             String       @id @default(uuid()) @db.Uuid
-  conversationId String       @map("conversation_id") @db.Uuid
-  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  
-  senderId       String       @map("sender_id") @db.Uuid
-  content        String
-  
-  createdAt      DateTime     @default(now()) @map("created_at")
-
-  @@map("messages")
+model GalleryImage {
+  id        String   @id @default(uuid()) @db.Uuid
+  roomId    String   @map("room_id") @db.Uuid
+  room      Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  url       String
+  caption   String?
+  createdAt DateTime @default(now()) @map("created_at")
+  @@map("gallery_images")
 }
