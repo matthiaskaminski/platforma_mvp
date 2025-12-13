@@ -113,7 +113,10 @@ export default function RoomsClient({ rooms: initialRooms, projectId }: RoomsCli
             </div>
 
             {/* Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 xl:grid-rows-2 gap-3 w-full flex-1 min-h-0 overflow-y-auto pr-1">
+            <div className={cn(
+                "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 xl:grid-rows-2 gap-3 w-full flex-1 min-h-0 overflow-y-auto pr-1",
+                rooms.length === 0 && "flex items-center justify-center"
+            )}>
                 {rooms.length > 0 ? rooms.map((room) => {
                     const Icon = iconMap[room.type] || Armchair;
                     // Safe status fallback
@@ -150,11 +153,17 @@ export default function RoomsClient({ rooms: initialRooms, projectId }: RoomsCli
                             {/* Middle Content: Image + Info Box */}
                             <div className="flex gap-4 flex-1 min-h-0">
                                 {/* Left: Image */}
-                                <div className="w-[45%] relative rounded-xl overflow-hidden bg-zinc-800">
-                                    <div className="absolute inset-0 bg-neutral-800 group-hover:scale-105 transition-transform duration-700">
-                                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                                        <img src={room.img || PLACEHOLDER_IMG} alt={room.name} className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity" />
-                                    </div>
+                                <div className="w-[45%] relative rounded-xl overflow-hidden bg-[#1B1B1B]">
+                                    {room.img ? (
+                                        <div className="absolute inset-0 bg-neutral-800 group-hover:scale-105 transition-transform duration-700">
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                            <img src={room.img} alt={room.name} className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity" />
+                                        </div>
+                                    ) : (
+                                        <div className="absolute inset-0 flex items-center justify-center bg-[#232323] border-2 border-dashed border-white/10">
+                                            <Icon className="w-16 h-16 text-white/20" />
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Right: Info Box */}
@@ -234,9 +243,9 @@ export default function RoomsClient({ rooms: initialRooms, projectId }: RoomsCli
                         </Card>
                     )
                 }) : (
-                    <div className="col-span-full flex flex-col items-center justify-center p-10 h-full">
-                        <Armchair className="w-6 h-6 mb-2 text-muted-foreground" />
-                        <p className="text-sm text-muted-foreground">Brak pomieszczeń. Dodaj pierwsze!</p>
+                    <div className="flex flex-col items-center justify-center">
+                        <Armchair className="w-8 h-8 mb-3 text-muted-foreground" />
+                        <p className="text-base text-muted-foreground">Brak pomieszczeń. Dodaj pierwsze!</p>
                     </div>
                 )}
             </div>

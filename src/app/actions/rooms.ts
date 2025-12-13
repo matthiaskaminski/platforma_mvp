@@ -177,17 +177,14 @@ export async function getRoomById(roomId: string) {
             }
         },
         include: {
-            productItems: {
-                orderBy: { createdAt: 'desc' }
-            },
-            tasks: {
-                orderBy: { createdAt: 'desc' }
-            },
-            notes: {
-                orderBy: { createdAt: 'desc' }
-            },
-            galleryImages: {
-                orderBy: { createdAt: 'desc' }
+            // Only fetch counts for better performance
+            _count: {
+                select: {
+                    productItems: true,
+                    tasks: true,
+                    notes: true,
+                    galleryImages: true
+                }
             },
             project: {
                 select: {

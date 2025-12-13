@@ -39,8 +39,17 @@ export default async function RoomsPage() {
             include: {
                 rooms: {
                     include: {
-                        productItems: true,
-                        tasks: true
+                        _count: {
+                            select: {
+                                productItems: true,
+                                tasks: true
+                            }
+                        },
+                        productItems: {
+                            select: {
+                                paidAmount: true
+                            }
+                        }
                     },
                     orderBy: { name: 'asc' }
                 }
@@ -58,8 +67,17 @@ export default async function RoomsPage() {
             include: {
                 rooms: {
                     include: {
-                        productItems: true,
-                        tasks: true
+                        _count: {
+                            select: {
+                                productItems: true,
+                                tasks: true
+                            }
+                        },
+                        productItems: {
+                            select: {
+                                paidAmount: true
+                            }
+                        }
                     },
                     orderBy: { name: 'asc' }
                 }
@@ -74,15 +92,10 @@ export default async function RoomsPage() {
 
     // 4. Transform Data for Client Component
     const roomsData = project.rooms.map(room => {
-        // Calculate spent budget
+        // Calculate spent budget (now only fetching paidAmount field)
         const spent = room.productItems.reduce((acc, item) => acc + (Number(item.paidAmount) || 0), 0)
 
-        // Status mapping (DB Enum -> URL/Client string)
-        // DB uses Enums, we map to our client strings if needed, or if they match, just cast/assign.
-        // Our client expects: "not_started" | "in_progress" | "finished"
-        // Our Schema Enum maps to: @map("not_started"), etc. so Prisma returns the Key (NOT_STARTED).
-        // We need to map NOT_STARTED -> "not_started".
-
+        // Status mapping
         const statusMap: Record<string, string> = {
             'NOT_STARTED': 'not_started',
             'IN_PROGRESS': 'in_progress',
@@ -91,19 +104,20 @@ export default async function RoomsPage() {
 
         const status = statusMap[room.status] || 'not_started'
 
-        // Days ago logic (mocked for now as createdAt is missing on Room)
+        // Days ago logic
         const daysAgo = "2 dni temu" // Placeholder
 
         return {
             id: room.id,
             name: room.name,
-            type: room.type, // Enum needs handling on client if needed, or cast to string
+            type: room.type,
             status: status,
             area: room.area || 0,
-            tasksCount: room.tasks.length,
-            productsCount: room.productItems.length,
+            tasksCount: room._count.tasks,
+            productsCount: room._count.productItems,
             budget: Number(room.budgetAllocated) || 0,
             spent: spent,
+            floorNumber: room.floorNumber,
             img: room.coverImage || undefined,
             daysAgo: daysAgo
         }
