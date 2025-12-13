@@ -208,7 +208,7 @@ export default function DashboardClient({ user, project, stats, recentProducts =
     const interactions = stats.interactions || { surveys: 0, moodboards: 0, messages: 0 };
 
     return (
-        <div className="flex flex-col h-full animate-in fade-in duration-500 overflow-hidden">
+        <div className="flex flex-col h-full animate-in fade-in duration-700 overflow-hidden">
             {/* Header Bar */}
             <Card className="shrink-0 flex flex-col xl:flex-row xl:items-center justify-between gap-4 mb-3 min-h-[80px]">
                 <div className="flex items-center gap-3">
