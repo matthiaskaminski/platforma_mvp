@@ -11,9 +11,16 @@ export default async function OnboardingPage() {
         redirect('/login')
     }
 
-    const profile = await prisma.profile.findUnique({
-        where: { email: user.email! }
-    })
+    let profile = null
+    try {
+        profile = await prisma.profile.findUnique({
+            where: { email: user.email! }
+        })
+    } catch (error) {
+        console.error("DB Error in Onboarding Page:", error)
+        // If DB is down, we can't really proceed, but logging is crucial
+        throw error
+    }
 
     if (profile?.onboardingCompleted) {
         redirect('/')
