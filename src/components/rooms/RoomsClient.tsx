@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { cn } from "@/lib/utils";
 import { createRoom } from "@/app/rooms/actions"; // We will create this
+import AddRoomSidebar from "./AddRoomSidebar";
 
 // Mock Data for fallback
 const PLACEHOLDER_IMG = "https://zotnacipqsjewlzofpga.supabase.co/storage/v1/object/public/Liru/526585939_1355299613265765_6668356102677043657_n.jpg";
@@ -109,12 +110,13 @@ export default function RoomsClient({ rooms: initialRooms, projectId }: RoomsCli
                 </Card>
 
                 {/* 2. Add Button - Separate Element */}
-                <form action={handleCreateRoom} className="self-center md:self-stretch">
-                    <Button disabled={isCreating} type="submit" className="h-[80px] bg-[#151515] hover:bg-[#252525] text-white px-6 rounded-2xl text-sm font-medium transition-colors whitespace-nowrap flex items-center gap-2 shadow-sm w-full md:w-auto">
-                        {isCreating ? <PlusCircle className="w-5 h-5 animate-spin" /> : <Plus className="w-5 h-5" />}
-                        Dodaj nowe pomieszczenie
-                    </Button>
-                </form>
+                <Button
+                    onClick={() => setIsCreating(true)}
+                    className="self-center md:self-stretch h-[80px] bg-[#151515] hover:bg-[#252525] text-white px-6 rounded-2xl text-sm font-medium transition-colors whitespace-nowrap flex items-center gap-2 shadow-sm w-full md:w-auto"
+                >
+                    <Plus className="w-5 h-5" />
+                    Dodaj nowe pomieszczenie
+                </Button>
             </div>
 
             {/* Grid */}
@@ -230,12 +232,18 @@ export default function RoomsClient({ rooms: initialRooms, projectId }: RoomsCli
                         </Card>
                     )
                 }) : (
-                    <div className="col-span-full flex flex-col items-center justify-center p-10 text-muted-foreground opacity-50">
-                        <Armchair className="w-16 h-16 mb-4" />
-                        <p className="text-lg">Brak pomieszczeń. Dodaj pierwsze!</p>
+                    <div className="col-span-full flex flex-col items-center justify-center p-10 h-full">
+                        <Armchair className="w-6 h-6 mb-2 text-muted-foreground" />
+                        <p className="text-sm text-muted-foreground">Brak pomieszczeń. Dodaj pierwsze!</p>
                     </div>
                 )}
             </div>
+
+            <AddRoomSidebar
+                open={isCreating}
+                onOpenChange={setIsCreating}
+                projectId={projectId}
+            />
         </div>
     );
 }
