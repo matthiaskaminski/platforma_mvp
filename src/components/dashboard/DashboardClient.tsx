@@ -483,7 +483,7 @@ export default function DashboardClient({ user, project, stats }: DashboardClien
                         </div>
                         <div className="flex flex-col gap-3 overflow-y-auto pr-1 flex-1 min-h-0 no-scrollbar">
                             {newProducts.map((prod, i) => (
-                                <div key={i} className="flex-1 flex gap-4 items-center p-2 bg-[#1B1B1B] rounded-xl group cursor-pointer hover:bg-[#232323] transition-colors overflow-hidden">
+                                <div key={i} className="h-24 shrink-0 flex gap-4 items-center p-2 bg-[#1B1B1B] rounded-xl group cursor-pointer hover:bg-[#232323] transition-colors overflow-hidden">
                                     <div className="h-full aspect-square bg-white rounded-lg flex-shrink-0 relative flex items-center justify-center p-2">
                                         <img src={prod.image} className="max-w-full max-h-full object-contain" alt={prod.name} />
                                     </div>
@@ -511,7 +511,7 @@ export default function DashboardClient({ user, project, stats }: DashboardClien
                         </div>
                         <div className="grid grid-cols-2 grid-rows-2 gap-2 h-full min-h-0 flex-1">
                             {visualizationImages.slice(0, 4).map((imgSrc, i) => (
-                                <div key={i} className="relative bg-zinc-800 rounded-lg border border-[var(--color-border)]/50 overflow-hidden group w-full h-full">
+                                <div key={i} className="relative bg-zinc-800 rounded-lg border border-[var(--color-border)]/50 overflow-hidden group w-full h-full min-h-[100px]">
                                     <img src={imgSrc} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" alt={`Wizualizacja ${i + 1}`} />
                                 </div>
                             ))}
