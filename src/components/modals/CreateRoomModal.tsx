@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
-import { X, Armchair, Utensils, BedDouble, Bath, Baby, DoorOpen, LayoutGrid, Circle, Clock, CheckCircle2 } from "lucide-react";
+import { X, Armchair, Utensils, BedDouble, Bath, Baby, DoorOpen, LayoutGrid, Link as LinkIcon } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { Badge } from "@/components/ui/Badge";
 import { createRoom } from "@/app/actions/rooms";
 import { cn } from "@/lib/utils";
 import { RoomType, RoomStatus } from "@prisma/client";
@@ -26,9 +27,9 @@ const ROOM_TYPES = [
 ];
 
 const STATUS_OPTIONS = [
-    { id: 'NOT_STARTED' as RoomStatus, label: "Nie rozpoczęte", Icon: Circle },
-    { id: 'IN_PROGRESS' as RoomStatus, label: "W trakcie", Icon: Clock },
-    { id: 'FINISHED' as RoomStatus, label: "Zakończone", Icon: CheckCircle2 },
+    { id: 'NOT_STARTED' as RoomStatus, label: "Nie rozpoczęte", badgeStatus: 'not_started' as const },
+    { id: 'IN_PROGRESS' as RoomStatus, label: "W trakcie", badgeStatus: 'in_progress' as const },
+    { id: 'FINISHED' as RoomStatus, label: "Zakończone", badgeStatus: 'finished' as const },
 ];
 
 export function CreateRoomModal({ isOpen, onClose, projectId }: CreateRoomModalProps) {
@@ -37,6 +38,7 @@ export function CreateRoomModal({ isOpen, onClose, projectId }: CreateRoomModalP
     const [selectedStatus, setSelectedStatus] = useState<RoomStatus>('NOT_STARTED');
     const [area, setArea] = useState('');
     const [budget, setBudget] = useState('');
+    const [coverImage, setCoverImage] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     if (!isOpen) return null;
@@ -59,6 +61,7 @@ export function CreateRoomModal({ isOpen, onClose, projectId }: CreateRoomModalP
                 type: selectedType,
                 area: area ? parseFloat(area) : undefined,
                 budgetAllocated: budget ? parseFloat(budget) : undefined,
+                coverImage: coverImage.trim() || undefined,
             });
 
             // Reset form
@@ -67,6 +70,7 @@ export function CreateRoomModal({ isOpen, onClose, projectId }: CreateRoomModalP
             setSelectedStatus('NOT_STARTED');
             setArea('');
             setBudget('');
+            setCoverImage('');
             onClose();
 
             // Refresh will happen automatically via revalidatePath in server action
@@ -112,10 +116,10 @@ export function CreateRoomModal({ isOpen, onClose, projectId }: CreateRoomModalP
                                     type="button"
                                     onClick={() => setSelectedType(id)}
                                     className={cn(
-                                        "flex flex-col items-center justify-center p-3 rounded-lg border-2 transition-all hover:bg-white/5 gap-2 min-h-[80px]",
+                                        "flex flex-col items-center justify-center p-3 rounded-lg transition-all gap-2 min-h-[80px]",
                                         selectedType === id
-                                            ? 'border-primary bg-white/5'
-                                            : 'border-white/10'
+                                            ? 'bg-white text-black'
+                                            : 'bg-[#232323] text-muted-foreground hover:bg-[#2a2a2a]'
                                     )}
                                 >
                                     <Icon className="w-5 h-5" />
@@ -147,20 +151,28 @@ export function CreateRoomModal({ isOpen, onClose, projectId }: CreateRoomModalP
                             Status
                         </label>
                         <div className="grid grid-cols-3 gap-2">
-                            {STATUS_OPTIONS.map(({ id, label, Icon }) => (
+                            {STATUS_OPTIONS.map(({ id, label, badgeStatus }) => (
                                 <button
                                     key={id}
                                     type="button"
                                     onClick={() => setSelectedStatus(id)}
                                     className={cn(
-                                        "flex flex-col items-center justify-center p-3 rounded-lg border-2 transition-all hover:bg-white/5 gap-2 min-h-[70px]",
+                                        "flex items-center justify-center p-3 rounded-lg transition-all gap-2 min-h-[60px]",
                                         selectedStatus === id
-                                            ? 'border-primary bg-white/5'
-                                            : 'border-white/10'
+                                            ? 'bg-white text-black'
+                                            : 'bg-[#232323] hover:bg-[#2a2a2a]'
                                     )}
                                 >
-                                    <Icon className="w-4 h-4" />
-                                    <span className="text-xs font-medium text-center">{label}</span>
+                                    <Badge
+                                        status={badgeStatus}
+                                        dot
+                                        className={cn(
+                                            "bg-transparent px-0 text-xs font-medium",
+                                            selectedStatus === id ? 'text-black [&_span]:shadow-none' : ''
+                                        )}
+                                    >
+                                        {label}
+                                    </Badge>
                                 </button>
                             ))}
                         </div>
@@ -192,6 +204,25 @@ export function CreateRoomModal({ isOpen, onClose, projectId }: CreateRoomModalP
                                 value={budget}
                                 onChange={(e) => setBudget(e.target.value)}
                                 placeholder="0"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Cover Image */}
+                    <div>
+                        <label className="block text-sm font-medium mb-2">
+                            Zdjęcie (Miniatura)
+                        </label>
+                        <div className="relative">
+                            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                                <LinkIcon className="w-4 h-4" />
+                            </div>
+                            <Input
+                                type="text"
+                                value={coverImage}
+                                onChange={(e) => setCoverImage(e.target.value)}
+                                placeholder="Wklej link do zdjęcia..."
+                                className="pl-10"
                             />
                         </div>
                     </div>
