@@ -92,8 +92,8 @@ export default async function DashboardPage() {
   }
 
   // 5. Fetch Recent Products & Visualizations if project exists
-  let recentProducts = []
-  let visualizations = []
+  let recentProducts: any[] = []
+  let visualizations: any[] = []
 
   if (project) {
     recentProducts = await prisma.productItem.findMany({
