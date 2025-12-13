@@ -51,15 +51,19 @@ export default async function RoomsPage() {
         // Calculate spent budget
         const spent = room.productItems.reduce((acc, item) => acc + (Number(item.paidAmount) || 0), 0)
 
-        // Calculate status based on tasks or manual field? 
-        // For now, let's derive it or use simple logic. 
-        // We'll use 'in_progress' if there are tasks/products, 'not_started' if empty.
-        // Or better, if we add 'status' to Room model later. For now let's guess.
-        let status = "not_started"
-        if (room.productItems.length > 0 || room.tasks.length > 0) status = "in_progress"
-        // Check if all tasks done? (Need status on tasks)
-        const allTasksDone = room.tasks.length > 0 && room.tasks.every(t => t.status === 'DONE')
-        if (allTasksDone && room.tasks.length > 0) status = "finished"
+        // Status mapping (DB Enum -> URL/Client string)
+        // DB uses Enums, we map to our client strings if needed, or if they match, just cast/assign.
+        // Our client expects: "not_started" | "in_progress" | "finished"
+        // Our Schema Enum maps to: @map("not_started"), etc. so Prisma returns the Key (NOT_STARTED).
+        // We need to map NOT_STARTED -> "not_started".
+
+        const statusMap: Record<string, string> = {
+            'NOT_STARTED': 'not_started',
+            'IN_PROGRESS': 'in_progress',
+            'FINISHED': 'finished'
+        }
+
+        const status = statusMap[room.status] || 'not_started'
 
         // Days ago logic (mocked for now as createdAt is missing on Room)
         const daysAgo = "2 dni temu" // Placeholder
@@ -74,7 +78,7 @@ export default async function RoomsPage() {
             productsCount: room.productItems.length,
             budget: Number(room.budgetAllocated) || 0,
             spent: spent,
-            img: undefined, // No image yet on room directly (unless we fetch one from gallery)
+            img: room.coverImage || undefined,
             daysAgo: daysAgo
         }
     })
