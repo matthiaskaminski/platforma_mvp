@@ -97,8 +97,54 @@ export default async function DashboardPage() {
       })
     })
 
-    const tasksCount = await prisma.task.count({ where: { projectId: project.id } })
-    const doneTasks = await prisma.task.count({ where: { projectId: project.id, status: 'DONE' } })
+    // Parallelize all data fetching dependent on project
+    const [
+      statsCounts,
+      recentTasksData,
+      interactionsData,
+      recentProductsData,
+      visualizationsData
+    ] = await Promise.all([
+      // 1. Stats Counts
+      Promise.all([
+        prisma.task.count({ where: { projectId: project.id } }),
+        prisma.task.count({ where: { projectId: project.id, status: 'DONE' } })
+      ]),
+      // 2. Recent Tasks
+      prisma.task.findMany({
+        where: { projectId: project.id, status: { not: 'DONE' } },
+        orderBy: { dueDate: 'asc' },
+        take: 3,
+        include: { room: true }
+      }),
+      // 3. Interactions Counts
+      Promise.all([
+        prisma.survey.count({ where: { projectId: project.id } }),
+        prisma.moodboard.count({ where: { projectId: project.id } }),
+        prisma.message.count({ where: { conversation: { projectId: project.id } } })
+      ]),
+      // 4. Recent Products
+      prisma.productItem.findMany({
+        where: { room: { projectId: project.id } },
+        orderBy: { createdAt: 'desc' },
+        take: 3,
+        include: { room: true }
+      }),
+      // 5. Visualizations
+      prisma.galleryImage.findMany({
+        where: { room: { projectId: project.id } },
+        orderBy: { createdAt: 'desc' },
+        take: 4
+      })
+    ])
+
+    const [tasksCount, doneTasks] = statsCounts;
+    const [surveyCount, moodboardCount, messagesCount] = interactionsData;
+
+    recentTasks = recentTasksData;
+    recentProducts = recentProductsData;
+    visualizations = visualizationsData;
+
     const floorsCount = project.floorsCount || 0
     const roomsCount = project.rooms.length
 
@@ -116,65 +162,12 @@ export default async function DashboardPage() {
       },
       activeTasks: tasksCount - doneTasks,
       counts: { products: productsCount, doneTasks, floors: floorsCount, rooms: roomsCount },
-      interactions: { surveys: 0, moodboards: 0, messages: 0 } // Placeholder, updated below
+      interactions: {
+        surveys: surveyCount,
+        moodboards: moodboardCount,
+        messages: messagesCount
+      }
     }
-  }
-
-  // 4b. Fetch Recent Tasks
-  let recentTasks: any[] = []
-
-  if (project) {
-    recentTasks = await prisma.task.findMany({
-      where: {
-        projectId: project.id,
-        status: { not: 'DONE' }
-      },
-      orderBy: { dueDate: 'asc' },
-      take: 3,
-      include: { room: true }
-    })
-  }
-
-  // 4c. Fetch Interaction Counts
-  if (project) {
-    const surveyCount = await prisma.survey.count({ where: { projectId: project.id } })
-    const moodboardCount = await prisma.moodboard.count({ where: { projectId: project.id } })
-    const messagesCount = await prisma.message.count({ where: { conversation: { projectId: project.id } } })
-
-    stats.interactions = {
-      surveys: surveyCount,
-      moodboards: moodboardCount,
-      messages: messagesCount
-    }
-  }
-
-  // 4d. Calendar Events
-  let calendarEvents: any[] = []
-  if (project) {
-    calendarEvents = project.calendarEvents || []
-  }
-
-  // 5. Fetch Recent Products & Visualizations if project exists
-  let recentProducts: any[] = []
-  let visualizations: any[] = []
-
-  if (project) {
-    recentProducts = await prisma.productItem.findMany({
-      where: {
-        room: { projectId: project.id }
-      },
-      orderBy: { createdAt: 'desc' },
-      take: 3,
-      include: { room: true }
-    })
-
-    visualizations = await prisma.galleryImage.findMany({
-      where: {
-        room: { projectId: project.id }
-      },
-      orderBy: { createdAt: 'desc' },
-      take: 4
-    })
   }
 
   // 6. Serializable Data
