@@ -57,7 +57,7 @@ export default async function DashboardPage() {
   }
 
   // 4. Calculate Stats
-  // 4. Calculate Stats
+
   let stats = {
     budget: {
       spent: 0, planned: 0, total: 0, remaining: 0,
