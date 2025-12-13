@@ -1,4 +1,5 @@
 'use client'
+import { useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Check, Plus, FolderPlus } from 'lucide-react'
 import ProfileStep from './steps/ProfileStep'
