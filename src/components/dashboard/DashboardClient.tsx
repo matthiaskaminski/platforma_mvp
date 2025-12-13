@@ -64,15 +64,22 @@ interface DashboardClientProps {
     user: any
     project: any
     stats: {
-        budget: { spent: number; planned: number; total: number; remaining: number }
+        budget: {
+            spent: number; planned: number; total: number; remaining: number
+            breakdown?: { materials: number; furniture: number; labor: number }
+        }
         daysConfig: { start: Date; end: Date }
         activeTasks: number
+        counts?: { products: number; doneTasks: number; floors: number; rooms: number }
+        interactions?: { surveys: number; moodboards: number; messages: number }
     }
     recentProducts: any[]
     visualizations: any[]
+    recentTasks?: any[]
+    calendarEvents?: any[]
 }
 
-export default function DashboardClient({ user, project, stats, recentProducts = [], visualizations = [] }: DashboardClientProps) {
+export default function DashboardClient({ user, project, stats, recentProducts = [], visualizations = [], recentTasks = [], calendarEvents = [] }: DashboardClientProps) {
     const [statsTiles, setStatsTiles] = useState(initialTiles);
     const [activeId, setActiveId] = useState<string | null>(null);
 
@@ -87,13 +94,14 @@ export default function DashboardClient({ user, project, stats, recentProducts =
     React.useEffect(() => {
         if (project && stats) {
             setStatsTiles(tiles => tiles.map(tile => {
+                const counts = stats.counts || { products: 0, doneTasks: 0, floors: 0, rooms: 0 };
                 switch (tile.id) {
                     case 'tile-1': return { ...tile, value: project.name }
                     case 'tile-2': return { ...tile, value: `${project.totalArea || 0}m²` }
-                    case 'tile-3': return { ...tile, value: String(project.floorsCount || 0) }
-                    case 'tile-4': return { ...tile, value: String(project.roomsCount || 0) }
-                    case 'tile-5': return { ...tile, value: "0" } // TODO: Count products properly
-                    case 'tile-6': return { ...tile, value: String(stats.activeTasks) }
+                    case 'tile-3': return { ...tile, value: String(counts.floors || 0) }
+                    case 'tile-4': return { ...tile, value: String(counts.rooms || 0) }
+                    case 'tile-5': return { ...tile, value: String(counts.products || 0) }
+                    case 'tile-6': return { ...tile, value: String(counts.doneTasks || 0) }
                     default: return tile
                 }
             }))
@@ -139,6 +147,13 @@ export default function DashboardClient({ user, project, stats, recentProducts =
     };
 
     const activeTile = activeId ? statsTiles.find(t => t.id === activeId) : null;
+
+    // Derived values for Budget Categories
+    const breakdown = stats.budget.breakdown || { materials: 0, furniture: 0, labor: 0 };
+    const maxVal = Math.max(breakdown.materials, breakdown.furniture, breakdown.labor, 1);
+
+    // Derived values for Interactions
+    const interactions = stats.interactions || { surveys: 0, moodboards: 0, messages: 0 };
 
     return (
         <div className="flex flex-col h-full animate-in fade-in duration-500 overflow-hidden">
@@ -290,36 +305,36 @@ export default function DashboardClient({ user, project, stats, recentProducts =
                             {/* Categories */}
                             <div className="flex-1 w-full flex flex-col justify-center gap-5">
                                 <div className="flex flex-col gap-4">
-                                    {/* Kategoria 1 */}
+                                    {/* Kategoria 1 - Materiały */}
                                     <div>
                                         <div className="flex justify-between text-[14px] mb-1.5">
                                             <span className="text-[#E5E5E5] font-medium">Materiały budowlane</span>
-                                            <span className="text-[#6E6E6E]">90%</span>
+                                            <span className="text-[#6E6E6E]">{Math.round((breakdown.materials / stats.budget.total) * 100) || 0}%</span>
                                         </div>
                                         <div className="h-2.5 w-full bg-[#1B1B1B] rounded-full overflow-hidden border-none">
-                                            <div className="h-full bg-[#E5E5E5] w-[90%] rounded-full"></div>
+                                            <div style={{ width: `${(breakdown.materials / maxVal) * 100}%` }} className="h-full bg-[#E5E5E5] rounded-full"></div>
                                         </div>
                                     </div>
 
-                                    {/* Kategoria 2 */}
+                                    {/* Kategoria 2 - Meble */}
                                     <div>
                                         <div className="flex justify-between text-[14px] mb-1.5">
                                             <span className="text-[#E5E5E5] font-medium">Meble i dekoracje</span>
-                                            <span className="text-[#6E6E6E]">40%</span>
+                                            <span className="text-[#6E6E6E]">{Math.round((breakdown.furniture / stats.budget.total) * 100) || 0}%</span>
                                         </div>
                                         <div className="h-2.5 w-full bg-[#1B1B1B] rounded-full overflow-hidden border-none">
-                                            <div className="h-full bg-[#6E6E6E] w-[40%] rounded-full"></div>
+                                            <div style={{ width: `${(breakdown.furniture / maxVal) * 100}%` }} className="h-full bg-[#6E6E6E] rounded-full"></div>
                                         </div>
                                     </div>
 
-                                    {/* Kategoria 3 */}
+                                    {/* Kategoria 3 - Robocizna */}
                                     <div>
                                         <div className="flex justify-between text-[14px] mb-1.5">
                                             <span className="text-[#E5E5E5] font-medium">Robocizna</span>
-                                            <span className="text-[#6E6E6E]">60%</span>
+                                            <span className="text-[#6E6E6E]">{Math.round((breakdown.labor / stats.budget.total) * 100) || 0}%</span>
                                         </div>
                                         <div className="h-2.5 w-full bg-[#1B1B1B] rounded-full overflow-hidden border-none">
-                                            <div className="h-full bg-[#232323] w-[60%] rounded-full"></div>
+                                            <div style={{ width: `${(breakdown.labor / maxVal) * 100}%` }} className="h-full bg-[#232323] rounded-full"></div>
                                         </div>
                                     </div>
                                 </div>
@@ -371,7 +386,7 @@ export default function DashboardClient({ user, project, stats, recentProducts =
                             <div className="flex items-center justify-between mb-4">
                                 <div className="flex items-center gap-2">
                                     <h3 className="text-[20px] font-medium text-[#E5E5E5]">Lista zadań</h3>
-                                    <span className="w-5 h-5 bg-[#E5E5E5] text-black text-xs font-bold rounded-full flex items-center justify-center">2</span>
+                                    <span className="w-5 h-5 bg-[#E5E5E5] text-black text-xs font-bold rounded-full flex items-center justify-center">{stats.activeTasks}</span>
                                 </div>
                                 <Button variant="secondary" size="sm" className="rounded-full h-auto py-1 px-3 border border-white/5 bg-[#232323] hover:bg-[#2a2a2a]">Zarządzaj</Button>
                             </div>
@@ -381,39 +396,25 @@ export default function DashboardClient({ user, project, stats, recentProducts =
                             </Button>
 
                             <div className="space-y-3 flex-1 flex flex-col overflow-y-auto pr-1 min-h-0 no-scrollbar">
-                                <div className="flex-1 flex flex-col justify-between p-3 bg-secondary/30 hover:bg-[#232323] transition-colors cursor-pointer rounded-xl">
-                                    <h4 className="text-[16px] font-medium mb-1">Skontaktować się z dostawcą lamp</h4>
-                                    <div className="flex justify-between items-center text-sm">
-                                        <span className="text-[#F1F1F1] flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-[#E8B491] shadow-[0_0_8px_rgba(232,180,145,0.4)]"></span> Przeterminowane</span>
-                                        <span className="text-muted-foreground">Salon</span>
+                                {recentTasks.length > 0 ? (
+                                    recentTasks.map((task, i) => (
+                                        <div key={i} className="flex-1 flex flex-col justify-between p-3 bg-secondary/30 hover:bg-[#232323] transition-colors cursor-pointer rounded-xl">
+                                            <h4 className="text-[16px] font-medium mb-1">{task.title}</h4>
+                                            <div className="flex justify-between items-center text-sm">
+                                                <span className="text-[#F1F1F1] flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-[#E8B491] shadow-[0_0_8px_rgba(232,180,145,0.4)]"></span> W trakcie</span>
+                                                <span className="text-muted-foreground">{task.room?.name || "Ogólne"}</span>
+                                            </div>
+                                            <div className="mt-1 text-sm text-muted-foreground flex justify-between">
+                                                <span>Termin</span>
+                                                <span>{task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'Brak'}</span>
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
+                                        Wszystkie zadania zrobione! 🎉
                                     </div>
-                                    <div className="mt-1 text-sm text-muted-foreground flex justify-between">
-                                        <span>Data zakończenia</span>
-                                        <span>10.11.2025</span>
-                                    </div>
-                                </div>
-                                <div className="flex-1 flex flex-col justify-between p-3 bg-secondary/30 hover:bg-[#232323] transition-colors cursor-pointer rounded-xl">
-                                    <h4 className="text-[16px] font-medium mb-1">Zatwierdzić próbki tkanin do sofy</h4>
-                                    <div className="flex justify-between items-center text-sm">
-                                        <span className="text-[#F1F1F1] flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-[#E8B491] shadow-[0_0_8px_rgba(232,180,145,0.4)]"></span> Przeterminowane</span>
-                                        <span className="text-muted-foreground">Salon</span>
-                                    </div>
-                                    <div className="mt-1 text-sm text-muted-foreground flex justify-between">
-                                        <span>Data zakończenia</span>
-                                        <span>11.11.2025</span>
-                                    </div>
-                                </div>
-                                <div className="flex-1 flex flex-col justify-between p-3 bg-secondary/30 hover:bg-[#232323] transition-colors cursor-pointer rounded-xl">
-                                    <h4 className="text-[16px] font-medium mb-1">Wybrać łóżko z drewnianą ramą</h4>
-                                    <div className="flex justify-between items-center text-sm">
-                                        <span className="text-[#F1F1F1] flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-[#91A3E8] shadow-[0_0_8px_rgba(145,163,232,0.4)]"></span> W trakcie</span>
-                                        <span className="text-muted-foreground">Sypialnia</span>
-                                    </div>
-                                    <div className="mt-1 text-sm text-muted-foreground flex justify-between">
-                                        <span>Data zakończenia</span>
-                                        <span>26.11.2025</span>
-                                    </div>
-                                </div>
+                                )}
                             </div>
                         </Card>
 
@@ -425,9 +426,10 @@ export default function DashboardClient({ user, project, stats, recentProducts =
                             </div>
                             <div className="flex flex-col gap-3 overflow-y-auto pr-1 flex-1 min-h-0 no-scrollbar">
                                 {[
-                                    { name: "Ankiety", created: 3, sent: 3, replies: 2, icon: ClipboardList },
-                                    { name: "Style", created: 1, sent: 1, replies: 1, icon: Palette },
-                                    { name: "Moodboardy", created: 4, sent: 2, replies: 2, icon: ImageIcon, newReply: true },
+                                    { name: "Ankiety", value: interactions.surveys, icon: ClipboardList },
+                                    { name: "Style", value: 0, icon: Palette }, // No style table yet
+                                    { name: "Moodboardy", value: interactions.moodboards, icon: ImageIcon },
+                                    { name: "Wiadomości", value: interactions.messages, icon: ClipboardList }
                                 ].map((item, i) => (
                                     <div key={i} className={`flex-1 flex flex-col justify-between p-3 bg-secondary/30 hover:bg-[#232323] transition-colors cursor-pointer rounded-xl`}>
                                         <div className="flex justify-between items-center mb-1">
@@ -438,10 +440,7 @@ export default function DashboardClient({ user, project, stats, recentProducts =
                                             <ArrowUpRight className="w-4 h-4 text-muted-foreground" />
                                         </div>
                                         <div className="space-y-0.5 text-sm text-muted-foreground">
-                                            <div className="flex justify-between"><span>Stworzone</span> <span className="text-foreground">{item.created}</span></div>
-                                            <div className="flex justify-between"><span>Wysłane</span> <span className="text-foreground">{item.sent}</span></div>
-                                            <div className="flex justify-between"><span>Odpowiedzi</span> <span className="text-foreground">{item.replies}</span></div>
-                                            {item.newReply && <div className="pt-1 text-white/80">Masz nową odpowiedź!</div>}
+                                            <div className="flex justify-between"><span>Aktywne</span> <span className="text-foreground">{item.value}</span></div>
                                         </div>
                                     </div>
                                 ))}
@@ -502,9 +501,12 @@ export default function DashboardClient({ user, project, stats, recentProducts =
                                     </div>
                                 ))
                             ) : (
-                                <div className="col-span-2 row-span-2 flex items-center justify-center text-muted-foreground text-sm bg-[#1B1B1B] rounded-lg">
-                                    Brak wizualizacji.
-                                </div>
+                                // 4-icon placeholder state
+                                Array.from({ length: 4 }).map((_, i) => (
+                                    <div key={i} className="flex items-center justify-center bg-[#1B1B1B] rounded-lg border border-white/5">
+                                        <ImageIcon className="w-6 h-6 text-white/10" />
+                                    </div>
+                                ))
                             )}
                         </div>
                     </Card>
