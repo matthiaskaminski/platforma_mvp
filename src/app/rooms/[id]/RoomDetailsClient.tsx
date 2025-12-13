@@ -61,6 +61,13 @@ interface GalleryImage {
     createdAt: Date;
 }
 
+interface Note {
+    id: string;
+    content: string;
+    createdAt: Date;
+    updatedAt: Date;
+}
+
 interface RoomDetailsClientProps {
     roomData: {
         id: string;
@@ -77,9 +84,10 @@ interface RoomDetailsClientProps {
     tasks: Task[];
     budgetItems: BudgetItem[];
     galleryImages: GalleryImage[];
+    notes: Note[];
 }
 
-export default function RoomDetailsClient({ roomData, products, tasks, budgetItems, galleryImages }: RoomDetailsClientProps) {
+export default function RoomDetailsClient({ roomData, products, tasks, budgetItems, galleryImages, notes }: RoomDetailsClientProps) {
     const [activeTab, setActiveTab] = useState("Produkty");
 
     return (
@@ -231,7 +239,7 @@ export default function RoomDetailsClient({ roomData, products, tasks, budgetIte
                     ) : activeTab === "Galeria" ? (
                         <GalleryGrid galleryImages={galleryImages} />
                     ) : activeTab === "Notatki" ? (
-                        <NotesList />
+                        <NotesList notes={notes} />
                     ) : activeTab === "Historia" ? (
                         <HistoryList />
                     ) : (
