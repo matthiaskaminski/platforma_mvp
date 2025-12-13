@@ -1,9 +1,12 @@
-import { getRoomById } from '@/app/actions/rooms';
+import { getRoomById, getRoomProducts } from '@/app/actions/rooms';
 import { redirect } from 'next/navigation';
 import RoomDetailsClient from './RoomDetailsClient';
 
 export default async function RoomDetailsPage({ params }: { params: { id: string } }) {
-    const room = await getRoomById(params.id);
+    const [room, products] = await Promise.all([
+        getRoomById(params.id),
+        getRoomProducts(params.id)
+    ]);
 
     if (!room) {
         redirect('/rooms');
@@ -28,5 +31,5 @@ export default async function RoomDetailsPage({ params }: { params: { id: string
         coverImage: room.coverImage,
     };
 
-    return <RoomDetailsClient roomData={roomData} />;
+    return <RoomDetailsClient roomData={roomData} products={products} />;
 }

@@ -18,6 +18,20 @@ import { Button } from "@/components/ui/Button";
 
 const ROOM_IMG_PLACEHOLDER = "https://zotnacipqsjewlzofpga.supabase.co/storage/v1/object/public/Liru/526853319_1355299613265765_6668356102677043657_n.jpg";
 
+interface Product {
+    id: string;
+    name: string;
+    category: string | null;
+    supplier: string | null;
+    url: string | null;
+    imageUrl: string | null;
+    price: any;
+    quantity: number;
+    paidAmount: any;
+    isInCart: boolean;
+    status: string;
+}
+
 interface RoomDetailsClientProps {
     roomData: {
         id: string;
@@ -29,10 +43,11 @@ interface RoomDetailsClientProps {
         tasksCount: number;
         productsCount: number;
         coverImage: string | null;
-    }
+    };
+    products: Product[];
 }
 
-export default function RoomDetailsClient({ roomData }: RoomDetailsClientProps) {
+export default function RoomDetailsClient({ roomData, products }: RoomDetailsClientProps) {
     const [activeTab, setActiveTab] = useState("Produkty");
 
     return (
@@ -163,7 +178,7 @@ export default function RoomDetailsClient({ roomData }: RoomDetailsClientProps) 
                     {/* Content Viewer */}
                     {activeTab === "Produkty" ? (
                         <div className="flex-1 overflow-y-auto no-scrollbar">
-                            <ProductGrid />
+                            <ProductGrid products={products} />
                         </div>
                     ) : activeTab === "Zadania" ? (
                         <TasksList />
