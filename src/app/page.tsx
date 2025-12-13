@@ -73,8 +73,10 @@ export default async function DashboardPage() {
   let recentTasks: any[] = []
   let recentProducts: any[] = []
   let visualizations: any[] = []
+  let calendarEvents: any[] = []
 
   if (project) {
+    calendarEvents = project.calendarEvents || []
     // Calculate Stats & Counts
     const totalBudget = Number(project.budgetGoal) || 0
     let spent = 0
