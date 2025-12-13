@@ -61,8 +61,8 @@ export default async function RoomsPage() {
         const allTasksDone = room.tasks.length > 0 && room.tasks.every(t => t.status === 'DONE')
         if (allTasksDone && room.tasks.length > 0) status = "finished"
 
-        // Days ago logic (mocked for now or use createdAt)
-        const daysAgo = Math.floor((new Date().getTime() - new Date(room.createdAt || new Date()).getTime()) / (1000 * 60 * 60 * 24)) + " dni temu"
+        // Days ago logic (mocked for now as createdAt is missing on Room)
+        const daysAgo = "2 dni temu" // Placeholder
 
         return {
             id: room.id,
