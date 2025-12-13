@@ -41,7 +41,7 @@ export default function ProjectDetailsStep({ onNext, initialData }: ProjectDetai
                         placeholder="np. Warszawa, ul. Złota 44/10"
                         value={formData.address}
                         onChange={e => setFormData({ ...formData, address: e.target.value })}
-                        className="bg-[#1A1A1A] border-white/5"
+
                     />
                 </div>
 
@@ -53,7 +53,7 @@ export default function ProjectDetailsStep({ onNext, initialData }: ProjectDetai
                             placeholder="0"
                             value={formData.totalArea}
                             onChange={e => setFormData({ ...formData, totalArea: e.target.value })}
-                            className="bg-[#1A1A1A] border-white/5"
+
                         />
                     </div>
                     <div className="space-y-2">
@@ -63,7 +63,7 @@ export default function ProjectDetailsStep({ onNext, initialData }: ProjectDetai
                             placeholder="0"
                             value={formData.budgetGoal}
                             onChange={e => setFormData({ ...formData, budgetGoal: e.target.value })}
-                            className="bg-[#1A1A1A] border-white/5"
+
                         />
                     </div>
                 </div>
@@ -76,7 +76,7 @@ export default function ProjectDetailsStep({ onNext, initialData }: ProjectDetai
                             placeholder="0"
                             value={formData.roomsCount}
                             onChange={e => setFormData({ ...formData, roomsCount: e.target.value })}
-                            className="bg-[#1A1A1A] border-white/5"
+
                         />
                     </div>
                     <div className="space-y-2">
@@ -86,7 +86,7 @@ export default function ProjectDetailsStep({ onNext, initialData }: ProjectDetai
                             placeholder="1"
                             value={formData.floorsCount}
                             onChange={e => setFormData({ ...formData, floorsCount: e.target.value })}
-                            className="bg-[#1A1A1A] border-white/5"
+
                         />
                     </div>
                 </div>

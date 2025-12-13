@@ -48,7 +48,7 @@ export default function ProfileStep({ onNext, initialData }: ProfileStepProps) {
                         placeholder="Wprowadź swoje imię"
                         value={formData.firstName}
                         onChange={e => setFormData({ ...formData, firstName: e.target.value })}
-                        className="bg-[#1A1A1A] border-white/5"
+
                     />
                 </div>
 
@@ -59,7 +59,7 @@ export default function ProfileStep({ onNext, initialData }: ProfileStepProps) {
                         placeholder="Wprowadź swoje nazwisko"
                         value={formData.lastName}
                         onChange={e => setFormData({ ...formData, lastName: e.target.value })}
-                        className="bg-[#1A1A1A] border-white/5"
+
                     />
                 </div>
 
@@ -69,7 +69,7 @@ export default function ProfileStep({ onNext, initialData }: ProfileStepProps) {
                         placeholder="Wprowadź swój numer telefonu"
                         value={formData.phone}
                         onChange={e => setFormData({ ...formData, phone: e.target.value })}
-                        className="bg-[#1A1A1A] border-white/5"
+
                     />
                 </div>
 
@@ -80,7 +80,7 @@ export default function ProfileStep({ onNext, initialData }: ProfileStepProps) {
                         placeholder="Wprowadź nazwę swojej działalności"
                         value={formData.studioName}
                         onChange={e => setFormData({ ...formData, studioName: e.target.value })}
-                        className="bg-[#1A1A1A] border-white/5"
+
                     />
                 </div>
 
@@ -91,7 +91,7 @@ export default function ProfileStep({ onNext, initialData }: ProfileStepProps) {
                         placeholder="Wprowadź NIP"
                         value={formData.nip}
                         onChange={e => setFormData({ ...formData, nip: e.target.value })}
-                        className="bg-[#1A1A1A] border-white/5"
+
                     />
                 </div>
 

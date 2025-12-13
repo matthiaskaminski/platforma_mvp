@@ -53,14 +53,14 @@ export default function ProjectBasicStep({ onNext, initialData }: ProjectBasicSt
                         placeholder="np. Apartament Złota 44"
                         value={formData.name}
                         onChange={e => setFormData({ ...formData, name: e.target.value })}
-                        className="bg-[#1A1A1A] border-white/5"
+
                     />
                 </div>
 
                 <div className="space-y-2">
                     <label className="text-sm font-medium">Opis projektu</label>
                     <textarea
-                        className="flex w-full rounded-md border border-white/5 bg-[#1A1A1A] px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 min-h-[80px]"
+                        className="flex w-full rounded-lg bg-[#1B1B1B] border border-transparent px-3 py-2 text-sm text-[#EDEDED] placeholder:text-[#6E6E6E] focus-visible:outline-none focus-visible:border-[#262626] disabled:cursor-not-allowed disabled:opacity-50 min-h-[80px]"
                         placeholder="Krótki opis projektu..."
                         value={formData.description}
                         onChange={e => setFormData({ ...formData, description: e.target.value })}
@@ -76,8 +76,8 @@ export default function ProjectBasicStep({ onNext, initialData }: ProjectBasicSt
                                     key={id}
                                     type="button"
                                     className={`aspect-square flex items-center justify-center rounded-lg border transition-all ${formData.icon === id
-                                            ? 'bg-white text-black border-white'
-                                            : 'bg-[#1A1A1A] border-white/5 text-gray-400 hover:bg-[#252525]'
+                                        ? 'bg-white text-black border-white'
+                                        : 'bg-[#1A1A1A] border-white/5 text-gray-400 hover:bg-[#252525]'
                                         }`}
                                     onClick={() => setFormData({ ...formData, icon: id })}
                                 >
@@ -110,8 +110,8 @@ export default function ProjectBasicStep({ onNext, initialData }: ProjectBasicSt
                         <button
                             type="button"
                             className={`p-4 rounded-xl border text-left transition-all ${formData.clientType === 'PRIVATE'
-                                    ? 'bg-white text-black border-white'
-                                    : 'bg-[#1A1A1A] border-white/5 text-gray-400 hover:bg-[#252525]'
+                                ? 'bg-white text-black border-white'
+                                : 'bg-[#1A1A1A] border-white/5 text-gray-400 hover:bg-[#252525]'
                                 }`}
                             onClick={() => setFormData({ ...formData, clientType: 'PRIVATE' })}
                         >
@@ -121,8 +121,8 @@ export default function ProjectBasicStep({ onNext, initialData }: ProjectBasicSt
                         <button
                             type="button"
                             className={`p-4 rounded-xl border text-left transition-all ${formData.clientType === 'COMMERCIAL'
-                                    ? 'bg-white text-black border-white'
-                                    : 'bg-[#1A1A1A] border-white/5 text-gray-400 hover:bg-[#252525]'
+                                ? 'bg-white text-black border-white'
+                                : 'bg-[#1A1A1A] border-white/5 text-gray-400 hover:bg-[#252525]'
                                 }`}
                             onClick={() => setFormData({ ...formData, clientType: 'COMMERCIAL' })}
                         >
