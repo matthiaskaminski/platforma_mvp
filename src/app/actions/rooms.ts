@@ -287,3 +287,60 @@ export async function getRoomTasks(roomId: string) {
 
     return tasks
 }
+
+/**
+ * Get budget data for a room (uses products)
+ */
+export async function getRoomBudget(roomId: string) {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user?.email) {
+        return []
+    }
+
+    const profile = await prisma.profile.findUnique({
+        where: { email: user.email }
+    })
+
+    if (!profile) {
+        return []
+    }
+
+    // Verify room ownership
+    const room = await prisma.room.findFirst({
+        where: {
+            id: roomId,
+            project: {
+                designerId: profile.id
+            }
+        }
+    })
+
+    if (!room) {
+        return []
+    }
+
+    // Fetch products with necessary budget fields
+    const products = await prisma.productItem.findMany({
+        where: {
+            roomId: roomId
+        },
+        select: {
+            id: true,
+            name: true,
+            category: true,
+            supplier: true,
+            imageUrl: true,
+            price: true,
+            quantity: true,
+            paidAmount: true,
+            status: true
+        },
+        orderBy: {
+            createdAt: 'desc'
+        }
+    })
+
+    return products
+}

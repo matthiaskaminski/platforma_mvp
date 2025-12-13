@@ -1,22 +1,62 @@
 "use client";
 
 import React from "react";
-import { Check, Flame, Calendar, Clock, FileText, CheckSquare, MoreVertical, LayoutGrid, Hash, CheckCircle2, CreditCard } from "lucide-react";
+import { Check, Flame, Calendar, Clock, FileText, CheckSquare, MoreVertical, LayoutGrid, Hash, CheckCircle2, CreditCard, Wallet } from "lucide-react";
 
-const budgetItems = [
-    { id: 1, name: "Sofa modułowa 3-os.", category: "Produkty", cost: 4500, paid: 4500, status: "Opłacone", dotColor: "bg-[#91E8B2] shadow-[0_0_8px_rgba(145,232,178,0.5)]", statusColor: "text-[#F3F3F3]" },
-    { id: 2, name: "Lampa stojąca (2 szt.)", category: "Produkty", cost: 2800, paid: 0, status: "Do zapłaty", dotColor: "bg-[#E8B491] shadow-[0_0_8px_rgba(232,180,145,0.4)]", statusColor: "text-[#F3F3F3]" },
-    { id: 3, name: "Montaż oświetlenia", category: "Usługi", cost: 500, paid: 0, status: "Do zapłaty", dotColor: "bg-[#E8B491] shadow-[0_0_8px_rgba(232,180,145,0.4)]", statusColor: "text-[#F3F3F3]" },
-    { id: 4, name: "Farba ceramiczna 10L", category: "Materiały", cost: 450, paid: 450, status: "Opłacone", dotColor: "bg-[#91E8B2] shadow-[0_0_8px_rgba(145,232,178,0.5)]", statusColor: "text-[#F3F3F3]" },
-    { id: 5, name: "Dywan wełniany 200x300", category: "Produkty", cost: 1200, paid: 0, status: "Do zapłaty", dotColor: "bg-[#E8B491] shadow-[0_0_8px_rgba(232,180,145,0.4)]", statusColor: "text-[#F3F3F3]" },
-    { id: 6, name: "Konsultacja projektowa", category: "Usługi", cost: 1500, paid: 1500, status: "Opłacone", dotColor: "bg-[#91E8B2] shadow-[0_0_8px_rgba(145,232,178,0.5)]", statusColor: "text-[#F3F3F3]" },
-    { id: 7, name: "Regały String System", category: "Produkty", cost: 8000, paid: 4000, status: "Częściowo", dotColor: "bg-[#6E8BCB] shadow-[0_0_8px_rgba(110,139,203,0.4)]", statusColor: "text-[#F3F3F3]" },
-];
+const PLACEHOLDER_IMG = "https://zotnacipqsjewlzofpga.supabase.co/storage/v1/object/public/Liru/Screenshot_119.png";
 
-export function BudgetList() {
-    const totalCost = budgetItems.reduce((acc, item) => acc + item.cost, 0);
-    const totalPaid = budgetItems.reduce((acc, item) => acc + item.paid, 0);
+interface BudgetItem {
+    id: string;
+    name: string;
+    category: string | null;
+    supplier: string | null;
+    imageUrl: string | null;
+    price: any;
+    quantity: number;
+    paidAmount: any;
+    status: string;
+}
+
+interface BudgetListProps {
+    budgetItems: BudgetItem[];
+}
+
+export function BudgetList({ budgetItems }: BudgetListProps) {
+    // Calculate totals
+    const totalCost = budgetItems.reduce((acc, item) => {
+        const price = Number(item.price) || 0;
+        return acc + (price * item.quantity);
+    }, 0);
+
+    const totalPaid = budgetItems.reduce((acc, item) => {
+        return acc + (Number(item.paidAmount) || 0);
+    }, 0);
+
     const remaining = totalCost - totalPaid;
+
+    // Determine payment status
+    const getPaymentStatus = (item: BudgetItem) => {
+        const totalPrice = Number(item.price) * item.quantity;
+        const paid = Number(item.paidAmount) || 0;
+
+        if (paid >= totalPrice) {
+            return { label: "Opłacone", dotColor: "bg-[#91E8B2] shadow-[0_0_8px_rgba(145,232,178,0.5)]" };
+        } else if (paid > 0) {
+            return { label: "Częściowo", dotColor: "bg-[#6E8BCB] shadow-[0_0_8px_rgba(110,139,203,0.4)]" };
+        } else {
+            return { label: "Do zapłaty", dotColor: "bg-[#E8B491] shadow-[0_0_8px_rgba(232,180,145,0.4)]" };
+        }
+    };
+
+    if (budgetItems.length === 0) {
+        return (
+            <div className="flex flex-col items-center justify-center h-full p-6">
+                <Wallet className="w-12 h-12 mb-4 text-muted-foreground" />
+                <p className="text-base text-muted-foreground mb-2">Brak pozycji budżetowych</p>
+                <p className="text-sm text-muted-foreground">Dodaj produkty, aby zobaczyć budżet</p>
+            </div>
+        );
+    }
 
     return (
         <div className="flex-1 overflow-y-auto no-scrollbar pb-0 flex flex-col relative">
@@ -37,43 +77,49 @@ export function BudgetList() {
 
             {/* List */}
             <div className="px-6 pb-4">
-                {budgetItems.map((item) => (
-                    <div key={item.id} className="grid grid-cols-[40px_60px_3fr_1.5fr_1fr_1fr_1.5fr_40px] gap-4 py-4 items-center hover:bg-[#151515] transition-colors border-b border-white/5 last:border-0 text-[14px] group">
-                        {/* Checkbox */}
-                        <div className="flex justify-center">
-                            <div className="w-5 h-5 rounded border border-white/30 bg-transparent flex items-center justify-center cursor-pointer hover:border-white transition-colors">
+                {budgetItems.map((item) => {
+                    const totalPrice = Number(item.price) * item.quantity;
+                    const paidAmount = Number(item.paidAmount) || 0;
+                    const paymentStatus = getPaymentStatus(item);
+
+                    return (
+                        <div key={item.id} className="grid grid-cols-[40px_60px_3fr_1.5fr_1fr_1fr_1.5fr_40px] gap-4 py-4 items-center hover:bg-[#151515] transition-colors border-b border-white/5 last:border-0 text-[14px] group">
+                            {/* Checkbox */}
+                            <div className="flex justify-center">
+                                <div className="w-5 h-5 rounded border border-white/30 bg-transparent flex items-center justify-center cursor-pointer hover:border-white transition-colors">
+                                </div>
+                            </div>
+
+                            {/* Image / Icon */}
+                            <div className="flex justify-center">
+                                {item.imageUrl ? (
+                                    <div className="w-12 h-12 bg-white rounded-md overflow-hidden flex items-center justify-center">
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                        <img src={item.imageUrl || PLACEHOLDER_IMG} alt={item.name} className="w-full h-full object-contain mix-blend-multiply p-1" />
+                                    </div>
+                                ) : (
+                                    <div className="w-12 h-12 bg-[#151515] rounded-md flex items-center justify-center border border-white/5">
+                                        <Hash className="w-6 h-6 text-muted-foreground" />
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="text-white font-medium truncate">{item.name}</div>
+                            <div className="text-muted-foreground">{item.category || item.supplier || "Produkt"}</div>
+                            <div className="text-right text-white">{totalPrice.toLocaleString('pl-PL')} zł</div>
+                            <div className="text-right text-muted-foreground">{paidAmount.toLocaleString('pl-PL')} zł</div>
+                            <div className="flex items-center gap-2 justify-end">
+                                <div className={`w-2.5 h-2.5 rounded-full ${paymentStatus.dotColor}`}></div>
+                                <span className="text-[#F3F3F3]">{paymentStatus.label}</span>
+                            </div>
+                            <div className="flex justify-center opacity-0 hover:opacity-100 transition-opacity">
+                                <button className="p-1 hover:text-white text-muted-foreground transition-colors">
+                                    <MoreVertical className="w-4 h-4" />
+                                </button>
                             </div>
                         </div>
-
-                        {/* Image / Icon */}
-                        <div className="flex justify-center">
-                            {item.category === "Produkty" ? (
-                                <div className="w-12 h-12 bg-white rounded-md overflow-hidden flex items-center justify-center">
-                                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img src="https://zotnacipqsjewlzofpga.supabase.co/storage/v1/object/public/Liru/Screenshot_119.png" alt={item.name} className="w-full h-full object-contain mix-blend-multiply p-1" />
-                                </div>
-                            ) : (
-                                <div className="w-12 h-12 bg-[#151515] rounded-md flex items-center justify-center border border-white/5">
-                                    <Hash className="w-6 h-6 text-muted-foreground" />
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="text-white font-medium truncate">{item.name}</div>
-                        <div className="text-muted-foreground">{item.category}</div>
-                        <div className="text-right text-white">{item.cost.toLocaleString('pl-PL')} zł</div>
-                        <div className="text-right text-muted-foreground">{item.paid.toLocaleString('pl-PL')} zł</div>
-                        <div className="flex items-center gap-2 justify-end">
-                            <div className={`w-2.5 h-2.5 rounded-full ${item.dotColor}`}></div>
-                            <span className={item.statusColor}>{item.status}</span>
-                        </div>
-                        <div className="flex justify-center opacity-0 hover:opacity-100 transition-opacity">
-                            <button className="p-1 hover:text-white text-muted-foreground transition-colors">
-                                <MoreVertical className="w-4 h-4" />
-                            </button>
-                        </div>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
 
             {/* Spacer to push summary to bottom if list is short, or just let it sit at bottom of content */}

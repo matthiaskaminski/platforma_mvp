@@ -42,6 +42,18 @@ interface Task {
     updatedAt: Date;
 }
 
+interface BudgetItem {
+    id: string;
+    name: string;
+    category: string | null;
+    supplier: string | null;
+    imageUrl: string | null;
+    price: any;
+    quantity: number;
+    paidAmount: any;
+    status: string;
+}
+
 interface RoomDetailsClientProps {
     roomData: {
         id: string;
@@ -56,9 +68,10 @@ interface RoomDetailsClientProps {
     };
     products: Product[];
     tasks: Task[];
+    budgetItems: BudgetItem[];
 }
 
-export default function RoomDetailsClient({ roomData, products, tasks }: RoomDetailsClientProps) {
+export default function RoomDetailsClient({ roomData, products, tasks, budgetItems }: RoomDetailsClientProps) {
     const [activeTab, setActiveTab] = useState("Produkty");
 
     return (
@@ -206,7 +219,7 @@ export default function RoomDetailsClient({ roomData, products, tasks }: RoomDet
                             <DocumentsGrid />
                         </div>
                     ) : activeTab === "Budżet" ? (
-                        <BudgetList />
+                        <BudgetList budgetItems={budgetItems} />
                     ) : activeTab === "Galeria" ? (
                         <GalleryGrid />
                     ) : activeTab === "Notatki" ? (
