@@ -118,6 +118,7 @@ model Project {
 
   // Relations
   rooms       Room[]
+  clients     Client[]
   contacts    Contact[]
   conversations Conversation[]
   surveys     Survey[]
