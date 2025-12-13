@@ -21,6 +21,12 @@ export default function LoginPage() {
         setLoading(true)
         setError(null)
 
+        if (!email || !password) {
+            setError('Podaj email i hasło')
+            setLoading(false)
+            return
+        }
+
         const { error } = await supabase.auth.signInWithPassword({
             email,
             password,
@@ -39,6 +45,12 @@ export default function LoginPage() {
         e.preventDefault()
         setLoading(true)
         setError(null)
+
+        if (!email || !password) {
+            setError('Podaj email i hasło')
+            setLoading(false)
+            return
+        }
 
         const { error } = await supabase.auth.signUp({
             email,
