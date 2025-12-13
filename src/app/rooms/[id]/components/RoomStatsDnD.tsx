@@ -117,25 +117,24 @@ function SortableStatTile({ id, item, roomType }: { id: string, item: any, roomT
 }
 
 export function RoomStatsDnD({ roomData }: RoomStatsDnDProps) {
-    const statusInfo = statusConfig[roomData.status] || statusConfig['not_started'];
-
-    // Build stats array from roomData
-    const buildStats = () => [
-        { id: 'stat-name', type: 'name', label: roomData.name, sub: "Pomieszczenie" },
-        { id: 'stat-status', type: 'status', label: statusInfo.label, sub: "Status", badgeStatus: statusInfo.badgeStatus },
-        { id: 'stat-area', type: 'text', label: roomData.area ? `${roomData.area}m²` : "Brak", sub: "Metraż" },
-        { id: 'stat-floor', type: 'text', label: roomData.floorNumber?.toString() || "Brak", sub: "Piętro" },
-        { id: 'stat-tasks', type: 'text', label: roomData.tasksCount.toString(), sub: "Wykonane zadania" },
-        { id: 'stat-products', type: 'text', label: roomData.productsCount.toString(), sub: "Produkty" },
-    ];
-
-    const [items, setItems] = useState(buildStats());
+    const [items, setItems] = useState<any[]>([]);
     const [activeId, setActiveId] = useState<string | null>(null);
 
     // Update items when roomData changes
     useEffect(() => {
-        setItems(buildStats());
-    }, [roomData.name, roomData.status, roomData.area, roomData.floorNumber, roomData.tasksCount, roomData.productsCount, roomData.type]);
+        const statusInfo = statusConfig[roomData.status] || statusConfig['not_started'];
+
+        const newStats = [
+            { id: 'stat-name', type: 'name', label: roomData.name, sub: "Pomieszczenie" },
+            { id: 'stat-status', type: 'status', label: statusInfo.label, sub: "Status", badgeStatus: statusInfo.badgeStatus },
+            { id: 'stat-area', type: 'text', label: roomData.area ? `${roomData.area}m²` : "Brak", sub: "Metraż" },
+            { id: 'stat-floor', type: 'text', label: roomData.floorNumber?.toString() || "Brak", sub: "Piętro" },
+            { id: 'stat-tasks', type: 'text', label: roomData.tasksCount.toString(), sub: "Wykonane zadania" },
+            { id: 'stat-products', type: 'text', label: roomData.productsCount.toString(), sub: "Produkty" },
+        ];
+
+        setItems(newStats);
+    }, [roomData]);
 
     const sensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
