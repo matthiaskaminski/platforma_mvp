@@ -7,8 +7,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { cn } from "@/lib/utils";
-import { createRoom } from "@/app/rooms/actions"; // We will create this
-import AddRoomSidebar from "./AddRoomSidebar";
+import { CreateRoomModal } from "@/components/modals/CreateRoomModal";
 
 // Mock Data for fallback
 const PLACEHOLDER_IMG = "https://zotnacipqsjewlzofpga.supabase.co/storage/v1/object/public/Liru/526585939_1355299613265765_6668356102677043657_n.jpg";
@@ -49,37 +48,7 @@ interface RoomsClientProps {
 
 export default function RoomsClient({ rooms: initialRooms, projectId }: RoomsClientProps) {
     const [rooms, setRooms] = useState<RoomData[]>(initialRooms);
-    const [isCreating, setIsCreating] = useState(false);
-
-    const handleCreateRoom = async () => {
-        setIsCreating(true);
-        // Temporary simplistic creation for standard "Salon" or similar
-        // In real app, this should open a modal.
-        try {
-            // For now, let's just create a generic room to test integration
-            // or maybe redirect to a create form? 
-            // The user wanted "Implement Add Room Action".
-            // Let's assume we want a quick add button for now or console log.
-            console.log("Create room clicked");
-            // For the first step, let's just trigger a server action with default data
-            // to prove connectivity, or perhaps just show a modal (but I don't have a modal component ready).
-            // Let's implement basic server action call.
-            await createRoom(projectId, {
-                name: "Nowe Pomieszczenie",
-                type: "living",
-                area: 0,
-                budgetAllocated: 0,
-                status: "not_started",
-                coverImage: undefined
-            });
-            // In a perfect world we revalidate path, so we don't need to manually update state strictly,
-            // but optimistic update is nice.
-        } catch (error) {
-            console.error("Failed to create room", error);
-        } finally {
-            setIsCreating(false);
-        }
-    };
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     return (
         <div className="flex flex-col h-full animate-in fade-in duration-500 pb-0 overflow-hidden w-full">
@@ -113,7 +82,7 @@ export default function RoomsClient({ rooms: initialRooms, projectId }: RoomsCli
 
                 {/* 2. Add Button - Separate Element */}
                 <Button
-                    onClick={() => setIsCreating(true)}
+                    onClick={() => setIsModalOpen(true)}
                     className="self-center md:self-stretch h-[80px] bg-[#151515] hover:bg-[#252525] text-white px-6 rounded-2xl text-sm font-medium transition-colors whitespace-nowrap flex items-center gap-2 shadow-sm w-full md:w-auto"
                 >
                     <Plus className="w-5 h-5" />
@@ -241,9 +210,10 @@ export default function RoomsClient({ rooms: initialRooms, projectId }: RoomsCli
                 )}
             </div>
 
-            <AddRoomSidebar
-                open={isCreating}
-                onOpenChange={setIsCreating}
+            {/* Create Room Modal */}
+            <CreateRoomModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
                 projectId={projectId}
             />
         </div>
