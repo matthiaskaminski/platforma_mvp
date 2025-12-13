@@ -126,36 +126,36 @@ if (project) {
     },
     activeTasks: project.tasks.length
   }
-}
 
-// Serializable Data
-const serializedProject = project ? {
-  ...project,
-  budgetGoal: Number(project.budgetGoal),
-  startDate: project.startDate,
-  deadline: project.deadline,
-  rooms: project.rooms.map(r => ({
-    ...r,
-    budgetAllocated: Number(r.budgetAllocated)
-  }))
-} : null
 
-return (
-  <div className="p-8 space-y-8 animate-in fade-in duration-500">
-    {/* Temporary Debug Button */}
-    <div className="absolute top-4 right-4 z-50">
-      <form action={async () => {
-        'use server'
-        await resetOnboarding()
-      }}>
-        <button type="submit" className="bg-red-500 text-white px-3 py-1 text-xs rounded hover:bg-red-600">
-          Reset Onboarding (Debug)
-        </button>
-      </form>
+  // Serializable Data
+  const serializedProject = project ? {
+    ...project,
+    budgetGoal: Number(project.budgetGoal),
+    startDate: project.startDate,
+    deadline: project.deadline,
+    rooms: project.rooms.map(r => ({
+      ...r,
+      budgetAllocated: Number(r.budgetAllocated)
+    }))
+  } : null
+
+  return (
+    <div className="p-8 space-y-8 animate-in fade-in duration-500">
+      {/* Temporary Debug Button */}
+      <div className="absolute top-4 right-4 z-50">
+        <form action={async () => {
+          'use server'
+          await resetOnboarding()
+        }}>
+          <button type="submit" className="bg-red-500 text-white px-3 py-1 text-xs rounded hover:bg-red-600">
+            Reset Onboarding (Debug)
+          </button>
+        </form>
+      </div>
+
+      {/* Header Section */}
+      <DashboardClient user={profile} project={serializedProject} stats={stats} />
     </div>
-
-    {/* Header Section */}
-    <DashboardClient user={profile} project={serializedProject} stats={stats} />
-  </div>
-)
+  )
 }
