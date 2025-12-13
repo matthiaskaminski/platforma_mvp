@@ -562,7 +562,7 @@ export default function DashboardClient({ user, project, stats, recentProducts =
                                 // 4-icon placeholder state
                                 Array.from({ length: 4 }).map((_, i) => (
                                     <div key={i} className="flex items-center justify-center bg-[#1B1B1B] rounded-lg">
-                                        <ImageIcon className="w-10 h-10 text-white/5 opacity-50" strokeWidth={1.5} />
+                                        <ImageIcon className="w-5 h-5 text-muted-foreground" strokeWidth={1.5} />
                                     </div>
                                 ))
                             )}
