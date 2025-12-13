@@ -104,7 +104,7 @@ export default async function DashboardPage() {
   } : null
 
   return (
-    <div className="p-8 space-y-8 animate-in fade-in duration-500">
+    <div className="h-full flex flex-col animate-in fade-in duration-500">
       {/* Temporary Debug Button */}
       <div className="absolute top-4 right-4 z-50">
         <form action={async () => {
