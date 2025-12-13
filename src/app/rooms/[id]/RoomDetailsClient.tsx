@@ -32,6 +32,16 @@ interface Product {
     status: string;
 }
 
+interface Task {
+    id: string;
+    title: string;
+    status: string;
+    assignedTo: string | null;
+    dueDate: Date | null;
+    createdAt: Date;
+    updatedAt: Date;
+}
+
 interface RoomDetailsClientProps {
     roomData: {
         id: string;
@@ -45,9 +55,10 @@ interface RoomDetailsClientProps {
         coverImage: string | null;
     };
     products: Product[];
+    tasks: Task[];
 }
 
-export default function RoomDetailsClient({ roomData, products }: RoomDetailsClientProps) {
+export default function RoomDetailsClient({ roomData, products, tasks }: RoomDetailsClientProps) {
     const [activeTab, setActiveTab] = useState("Produkty");
 
     return (
@@ -189,7 +200,7 @@ export default function RoomDetailsClient({ roomData, products }: RoomDetailsCli
                             <ProductGrid products={products} />
                         </div>
                     ) : activeTab === "Zadania" ? (
-                        <TasksList />
+                        <TasksList tasks={tasks} />
                     ) : activeTab === "Dokumenty" ? (
                         <div className="flex-1 overflow-y-auto no-scrollbar">
                             <DocumentsGrid />
