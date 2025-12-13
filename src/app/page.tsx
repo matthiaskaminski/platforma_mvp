@@ -91,7 +91,30 @@ export default async function DashboardPage() {
     }
   }
 
-  // 5. Serializable Data
+  // 5. Fetch Recent Products & Visualizations if project exists
+  let recentProducts = []
+  let visualizations = []
+
+  if (project) {
+    recentProducts = await prisma.productItem.findMany({
+      where: {
+        room: { projectId: project.id }
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 3,
+      include: { room: true }
+    })
+
+    visualizations = await prisma.galleryImage.findMany({
+      where: {
+        room: { projectId: project.id }
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 4
+    })
+  }
+
+  // 6. Serializable Data
   const serializedProject = project ? {
     ...project,
     budgetGoal: Number(project.budgetGoal),
@@ -102,6 +125,13 @@ export default async function DashboardPage() {
       budgetAllocated: Number(r.budgetAllocated)
     }))
   } : null
+
+  // Serialize relations
+  const serializedProducts = recentProducts.map(p => ({
+    ...p,
+    price: Number(p.price),
+    paidAmount: Number(p.paidAmount)
+  }))
 
   return (
     <div className="h-full flex flex-col animate-in fade-in duration-500">
@@ -118,7 +148,13 @@ export default async function DashboardPage() {
       </div>
 
       {/* Header Section */}
-      <DashboardClient user={profile} project={serializedProject} stats={stats} />
+      <DashboardClient
+        user={profile}
+        project={serializedProject}
+        stats={stats}
+        recentProducts={serializedProducts}
+        visualizations={visualizations}
+      />
     </div>
   )
 }

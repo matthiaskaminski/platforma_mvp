@@ -13,11 +13,7 @@ import { Badge } from "@/components/ui/Badge";
 import type { User } from '@supabase/supabase-js'
 
 // Mock Data
-const budgetData = [
-    { name: "Wydano", value: 168400, color: "#E5E5E5" }, // White for Spent (Prominent)
-    { name: "Planowane", value: 115200, color: "#6E6E6E" }, // Gray for Planned
-    { name: "Pozostało", value: 86400, color: "#232323" }, // Dark for Remaining
-];
+
 
 const initialTiles = [
     { id: 'tile-1', label: "Mieszkanie", value: "", sub: "Rodzaj zabudowy" },
@@ -28,33 +24,7 @@ const initialTiles = [
     { id: 'tile-6', label: "12", value: "", sub: "Wykonane zadania" },
 ];
 
-const newProducts = [
-    {
-        name: "Łóżko z drewna z plecionką",
-        brand: "Westwing",
-        price: "3 719,00 zł",
-        image: "https://zotnacipqsjewlzofpga.supabase.co/storage/v1/object/public/Liru/DEQ23WES93078-204130_d6587456a27fd9ecc8c678b730505a43_dtl_1.webp"
-    },
-    {
-        name: "Stolik pomocniczy Tarse",
-        brand: "Kave Home",
-        price: "489,00 zł",
-        image: "https://zotnacipqsjewlzofpga.supabase.co/storage/v1/object/public/Liru/Screenshot_119.png"
-    },
-    {
-        name: "Dywan Tigris - Beige/Brown",
-        brand: "Nordic Knots",
-        price: "2 750,00 zł",
-        image: "https://zotnacipqsjewlzofpga.supabase.co/storage/v1/object/public/Liru/509_0776c21ac3-tigr-bei-pp-1600.jpg"
-    },
-];
 
-const visualizationImages = [
-    "https://zotnacipqsjewlzofpga.supabase.co/storage/v1/object/public/Liru/526570979_1355299693265757_7539015905078556121_n.jpg",
-    "https://zotnacipqsjewlzofpga.supabase.co/storage/v1/object/public/Liru/526585939_1355299613265765_6668356102677043657_n.jpg",
-    "https://zotnacipqsjewlzofpga.supabase.co/storage/v1/object/public/Liru/526853319_1355299779932415_3850250429931914731_n.jpg",
-    "https://zotnacipqsjewlzofpga.supabase.co/storage/v1/object/public/Liru/527337457_1355299866599073_4633219416307881665_n.jpg"
-];
 
 // Presentation Component
 function Tile({ tile, isOverlay, ...props }: { tile: any, isOverlay?: boolean } & React.HTMLAttributes<HTMLDivElement>) {
@@ -91,25 +61,34 @@ function SortableTile({ id, tile }: { id: string, tile: any }) {
 }
 
 interface DashboardClientProps {
-    user: any // Accepting generic object (Profile or User) with email
-    project: any // Type this properly if possible, or use explicit interface
+    user: any
+    project: any
     stats: {
         budget: { spent: number; planned: number; total: number; remaining: number }
         daysConfig: { start: Date; end: Date }
         activeTasks: number
     }
+    recentProducts: any[]
+    visualizations: any[]
 }
 
-export default function DashboardClient({ user, project, stats }: DashboardClientProps) {
+export default function DashboardClient({ user, project, stats, recentProducts = [], visualizations = [] }: DashboardClientProps) {
     const [statsTiles, setStatsTiles] = useState(initialTiles);
     const [activeId, setActiveId] = useState<string | null>(null);
+
+    // Dynamic Budget Data
+    const budgetData = [
+        { name: "Wydano", value: stats?.budget?.spent || 0, color: "#E5E5E5" },
+        { name: "Planowane", value: stats?.budget?.planned || 0, color: "#6E6E6E" },
+        { name: "Pozostało", value: stats?.budget?.remaining || 0, color: "#232323" },
+    ];
 
     // Update tiles with real data if project exists
     React.useEffect(() => {
         if (project && stats) {
             setStatsTiles(tiles => tiles.map(tile => {
                 switch (tile.id) {
-                    case 'tile-1': return { ...tile, value: project.name } // Use Name instead of type for now
+                    case 'tile-1': return { ...tile, value: project.name }
                     case 'tile-2': return { ...tile, value: `${project.totalArea || 0}m²` }
                     case 'tile-3': return { ...tile, value: String(project.floorsCount || 0) }
                     case 'tile-4': return { ...tile, value: String(project.roomsCount || 0) }
@@ -288,13 +267,13 @@ export default function DashboardClient({ user, project, stats }: DashboardClien
                                 <ResponsiveContainer width="100%" height="100%">
                                     <PieChart>
                                         <Pie
-                                            data={budgetData}
-                                            innerRadius="75%" // Thinner donut
+                                            data={budgetData} // TODO: Use real budget data for chart
+                                            innerRadius="75%"
                                             outerRadius="92%"
-                                            paddingAngle={5} // Gaps
+                                            paddingAngle={5}
                                             dataKey="value"
                                             stroke="none"
-                                            cornerRadius={8} // Rounded ends
+                                            cornerRadius={8}
                                         >
                                             {budgetData.map((entry, index) => (
                                                 <Cell key={`cell-${index}`} fill={entry.color} />
@@ -309,37 +288,37 @@ export default function DashboardClient({ user, project, stats }: DashboardClien
                             </div>
 
                             {/* Categories */}
-                            <div className="flex-1 w-full flex flex-col justify-center gap-5"> {/* Increased gap (gap-5) */}
-                                <div className="flex flex-col gap-4"> {/* Increased item gap (gap-4) */}
+                            <div className="flex-1 w-full flex flex-col justify-center gap-5">
+                                <div className="flex flex-col gap-4">
                                     {/* Kategoria 1 */}
                                     <div>
-                                        <div className="flex justify-between text-[14px] mb-1.5"> {/* 14px Text */}
+                                        <div className="flex justify-between text-[14px] mb-1.5">
                                             <span className="text-[#E5E5E5] font-medium">Materiały budowlane</span>
                                             <span className="text-[#6E6E6E]">90%</span>
                                         </div>
-                                        <div className="h-2.5 w-full bg-[#1B1B1B] rounded-full overflow-hidden border-none"> {/* Thicker bar h-2.5 */}
+                                        <div className="h-2.5 w-full bg-[#1B1B1B] rounded-full overflow-hidden border-none">
                                             <div className="h-full bg-[#E5E5E5] w-[90%] rounded-full"></div>
                                         </div>
                                     </div>
 
                                     {/* Kategoria 2 */}
                                     <div>
-                                        <div className="flex justify-between text-[14px] mb-1.5"> {/* 14px Text */}
+                                        <div className="flex justify-between text-[14px] mb-1.5">
                                             <span className="text-[#E5E5E5] font-medium">Meble i dekoracje</span>
                                             <span className="text-[#6E6E6E]">40%</span>
                                         </div>
-                                        <div className="h-2.5 w-full bg-[#1B1B1B] rounded-full overflow-hidden border-none"> {/* Thicker bar h-2.5 */}
+                                        <div className="h-2.5 w-full bg-[#1B1B1B] rounded-full overflow-hidden border-none">
                                             <div className="h-full bg-[#6E6E6E] w-[40%] rounded-full"></div>
                                         </div>
                                     </div>
 
                                     {/* Kategoria 3 */}
                                     <div>
-                                        <div className="flex justify-between text-[14px] mb-1.5"> {/* 14px Text */}
+                                        <div className="flex justify-between text-[14px] mb-1.5">
                                             <span className="text-[#E5E5E5] font-medium">Robocizna</span>
                                             <span className="text-[#6E6E6E]">60%</span>
                                         </div>
-                                        <div className="h-2.5 w-full bg-[#1B1B1B] rounded-full overflow-hidden border-none"> {/* Thicker bar h-2.5 */}
+                                        <div className="h-2.5 w-full bg-[#1B1B1B] rounded-full overflow-hidden border-none">
                                             <div className="h-full bg-[#232323] w-[60%] rounded-full"></div>
                                         </div>
                                     </div>
@@ -349,7 +328,7 @@ export default function DashboardClient({ user, project, stats }: DashboardClien
                                 <div className="pt-2 flex items-center border-t border-white/5 mt-1">
                                     <div className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
                                         <span className="w-2.5 h-2.5 rounded-full bg-[#E8B491] shadow-[0_0_8px_rgba(232,180,145,0.4)]"></span>
-                                        <span className="text-[14px] font-medium text-[#E5E5E5]">2 nieopłacone faktury</span> {/* 14px Text */}
+                                        <span className="text-[14px] font-medium text-[#E5E5E5]">2 nieopłacone faktury</span>
                                     </div>
                                 </div>
                             </div>
@@ -359,28 +338,28 @@ export default function DashboardClient({ user, project, stats }: DashboardClien
                         <div className="grid grid-cols-4 gap-2 border-t border-white/5 pt-4">
                             <div className="flex flex-col">
                                 <div className="flex items-center gap-2 mb-1">
-                                    <div className="w-2 h-2 rounded-full bg-[#E5E5E5]"></div> {/* Color dot from Chart (Wydano) */}
-                                    <span className="text-[14px] text-[#6E6E6E]">Wydano</span> {/* 14px Label */}
+                                    <div className="w-2 h-2 rounded-full bg-[#E5E5E5]"></div>
+                                    <span className="text-[14px] text-[#6E6E6E]">Wydano</span>
                                 </div>
-                                <span className="text-[16px] font-medium text-[#6E6E6E]">{formatMoney(stats.budget.spent)}</span> {/* 16px Value */}
+                                <span className="text-[16px] font-medium text-[#6E6E6E]">{formatMoney(stats.budget.spent)}</span>
                             </div>
                             <div className="flex flex-col border-l border-white/5 pl-2">
                                 <div className="flex items-center gap-2 mb-1">
-                                    <div className="w-2 h-2 rounded-full bg-[#6E6E6E]"></div> {/* Color dot from Chart (Planowane) */}
-                                    <span className="text-[14px] text-[#6E6E6E]">Planowane</span> {/* 14px Label */}
+                                    <div className="w-2 h-2 rounded-full bg-[#6E6E6E]"></div>
+                                    <span className="text-[14px] text-[#6E6E6E]">Planowane</span>
                                 </div>
-                                <span className="text-[16px] font-medium text-[#E5E5E5]">{formatMoney(stats.budget.planned)}</span> {/* 16px Value */}
+                                <span className="text-[16px] font-medium text-[#E5E5E5]">{formatMoney(stats.budget.planned)}</span>
                             </div>
                             <div className="flex flex-col border-l border-white/5 pl-2">
                                 <div className="flex items-center gap-2 mb-1">
-                                    <div className="w-2 h-2 rounded-full bg-[#232323]"></div> {/* Color dot from Chart (Pozostało) */}
-                                    <span className="text-[14px] text-[#6E6E6E]">Pozostało</span> {/* 14px Label, Replaces Razem */}
+                                    <div className="w-2 h-2 rounded-full bg-[#232323]"></div>
+                                    <span className="text-[14px] text-[#6E6E6E]">Pozostało</span>
                                 </div>
-                                <span className="text-[16px] font-bold text-[#E5E5E5]">{formatMoney(stats.budget.remaining)}</span> {/* 16px Value */}
+                                <span className="text-[16px] font-bold text-[#E5E5E5]">{formatMoney(stats.budget.remaining)}</span>
                             </div>
                             <div className="flex flex-col border-l border-white/5 pl-2">
-                                <span className="text-[14px] text-[#6E6E6E] mb-1">Ten mies.</span> {/* 14px Label */}
-                                <span className="text-[16px] font-medium text-[#E5E5E5]">{formatMoney(0)}</span> {/* 16px Value */}
+                                <span className="text-[14px] text-[#6E6E6E] mb-1">Ten mies.</span>
+                                <span className="text-[16px] font-medium text-[#E5E5E5]">{formatMoney(0)}</span>
                             </div>
                         </div>
                     </Card>
@@ -482,24 +461,30 @@ export default function DashboardClient({ user, project, stats }: DashboardClien
                             <Button variant="secondary" size="sm" className="rounded-full h-auto py-1 px-3 border border-white/5 bg-[#232323] hover:bg-[#2a2a2a]">Zarządzaj</Button>
                         </div>
                         <div className="flex flex-col gap-3 overflow-y-auto pr-1 flex-1 min-h-0 no-scrollbar">
-                            {newProducts.map((prod, i) => (
-                                <div key={i} className="h-24 shrink-0 flex gap-4 items-center p-2 bg-[#1B1B1B] rounded-xl group cursor-pointer hover:bg-[#232323] transition-colors overflow-hidden">
-                                    <div className="h-full aspect-square bg-white rounded-lg flex-shrink-0 relative flex items-center justify-center p-2">
-                                        <img src={prod.image} className="max-w-full max-h-full object-contain" alt={prod.name} />
-                                    </div>
-                                    <div className="flex-1 min-w-0 py-1 pr-2">
-                                        <div className="flex justify-between items-start">
-                                            <div className="text-[16px] font-medium leading-tight mb-1 line-clamp-2">{prod.name}</div>
-                                            <ArrowUpRight className="w-4 h-4 text-muted-foreground flex-shrink-0 ml-2" />
+                            {recentProducts.length > 0 ? (
+                                recentProducts.map((prod, i) => (
+                                    <div key={i} className="h-24 shrink-0 flex gap-4 items-center p-2 bg-[#1B1B1B] rounded-xl group cursor-pointer hover:bg-[#232323] transition-colors overflow-hidden">
+                                        <div className="h-full aspect-square bg-white rounded-lg flex-shrink-0 relative flex items-center justify-center p-2">
+                                            <img src={prod.imageUrl || "/placeholder.png"} className="max-w-full max-h-full object-contain" alt={prod.name} />
                                         </div>
-                                        <div className="text-sm text-muted-foreground">{prod.brand}</div>
-                                        <div className="flex justify-between items-end mt-2">
-                                            <div className="text-[16px] font-semibold">{prod.price}</div>
-                                            <div className="text-sm text-muted-foreground">1szt.</div>
+                                        <div className="flex-1 min-w-0 py-1 pr-2">
+                                            <div className="flex justify-between items-start">
+                                                <div className="text-[16px] font-medium leading-tight mb-1 line-clamp-2">{prod.name}</div>
+                                                <ArrowUpRight className="w-4 h-4 text-muted-foreground flex-shrink-0 ml-2" />
+                                            </div>
+                                            <div className="text-sm text-muted-foreground">{prod.supplier || "Brak marki"}</div>
+                                            <div className="flex justify-between items-end mt-2">
+                                                <div className="text-[16px] font-semibold">{formatMoney(prod.price)}</div>
+                                                <div className="text-sm text-muted-foreground">{prod.quantity} szt.</div>
+                                            </div>
                                         </div>
                                     </div>
+                                ))
+                            ) : (
+                                <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
+                                    Brak produktów. Dodaj pierwszy produkt!
                                 </div>
-                            ))}
+                            )}
                         </div>
                     </Card>
 
@@ -510,11 +495,17 @@ export default function DashboardClient({ user, project, stats }: DashboardClien
                             <Button variant="secondary" size="sm" className="rounded-full h-auto py-1 px-3 border border-white/5 bg-[#232323] hover:bg-[#2a2a2a]">Zarządzaj</Button>
                         </div>
                         <div className="grid grid-cols-2 grid-rows-2 gap-2 h-full min-h-0 flex-1">
-                            {visualizationImages.slice(0, 4).map((imgSrc, i) => (
-                                <div key={i} className="relative bg-zinc-800 rounded-lg border border-[var(--color-border)]/50 overflow-hidden group w-full h-full min-h-[100px]">
-                                    <img src={imgSrc} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" alt={`Wizualizacja ${i + 1}`} />
+                            {visualizations.length > 0 ? (
+                                visualizations.slice(0, 4).map((img, i) => (
+                                    <div key={i} className="relative bg-zinc-800 rounded-lg border border-[var(--color-border)]/50 overflow-hidden group w-full h-full min-h-[100px]">
+                                        <img src={img.url} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" alt={`Wizualizacja ${i + 1}`} />
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="col-span-2 row-span-2 flex items-center justify-center text-muted-foreground text-sm bg-[#1B1B1B] rounded-lg">
+                                    Brak wizualizacji.
                                 </div>
-                            ))}
+                            )}
                         </div>
                     </Card>
                 </div>
