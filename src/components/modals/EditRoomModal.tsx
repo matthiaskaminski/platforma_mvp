@@ -1,19 +1,28 @@
 "use client";
 
-import React, { useState, useRef } from "react";
-import { X, Armchair, Utensils, BedDouble, Bath, Baby, DoorOpen, LayoutGrid, Upload, Image as ImageIcon } from "lucide-react";
+import React, { useState, useRef, useEffect } from "react";
+import { X, Armchair, Utensils, BedDouble, Bath, Baby, DoorOpen, LayoutGrid, Upload } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Badge } from "@/components/ui/Badge";
-import { createRoom } from "@/app/actions/rooms";
-import { uploadImage } from "@/app/actions/uploads";
+import { updateRoom } from "@/app/actions/rooms";
+import { uploadImage, deleteImage } from "@/app/actions/uploads";
 import { cn } from "@/lib/utils";
 import { RoomType, RoomStatus } from "@prisma/client";
 
-interface CreateRoomModalProps {
+interface EditRoomModalProps {
     isOpen: boolean;
     onClose: () => void;
-    projectId: string;
+    room: {
+        id: string;
+        name: string;
+        type: RoomType;
+        status: RoomStatus;
+        area?: number | null;
+        budgetAllocated?: number | null;
+        floorNumber?: number | null;
+        coverImage?: string | null;
+    };
 }
 
 const ROOM_TYPES = [
@@ -27,30 +36,38 @@ const ROOM_TYPES = [
     { id: 'OTHER' as RoomType, label: "Inne", Icon: LayoutGrid },
 ];
 
-// Helper function to get Polish room type label
-export const getRoomTypeLabel = (type: string): string => {
-    const roomType = ROOM_TYPES.find(t => t.id === type);
-    return roomType ? roomType.label : 'Inne';
-};
-
 const STATUS_OPTIONS = [
     { id: 'NOT_STARTED' as RoomStatus, label: "Nie rozpoczęte", badgeStatus: 'not_started' as const },
     { id: 'IN_PROGRESS' as RoomStatus, label: "W trakcie", badgeStatus: 'in_progress' as const },
     { id: 'FINISHED' as RoomStatus, label: "Zakończone", badgeStatus: 'finished' as const },
 ];
 
-export function CreateRoomModal({ isOpen, onClose, projectId }: CreateRoomModalProps) {
-    const [name, setName] = useState('');
-    const [selectedType, setSelectedType] = useState<RoomType>('LIVING');
-    const [selectedStatus, setSelectedStatus] = useState<RoomStatus>('NOT_STARTED');
-    const [area, setArea] = useState('');
-    const [budget, setBudget] = useState('');
-    const [floorNumber, setFloorNumber] = useState('');
+export function EditRoomModal({ isOpen, onClose, room }: EditRoomModalProps) {
+    const [name, setName] = useState(room.name);
+    const [selectedType, setSelectedType] = useState<RoomType>(room.type);
+    const [selectedStatus, setSelectedStatus] = useState<RoomStatus>(room.status);
+    const [area, setArea] = useState(room.area?.toString() || '');
+    const [budget, setBudget] = useState(room.budgetAllocated?.toString() || '');
+    const [floorNumber, setFloorNumber] = useState(room.floorNumber?.toString() || '');
     const [coverImage, setCoverImage] = useState<File | null>(null);
-    const [imagePreview, setImagePreview] = useState<string>('');
+    const [imagePreview, setImagePreview] = useState<string>(room.coverImage || '');
+    const [originalImage, setOriginalImage] = useState<string>(room.coverImage || '');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [uploadError, setUploadError] = useState('');
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // Update form when room prop changes
+    useEffect(() => {
+        setName(room.name);
+        setSelectedType(room.type);
+        setSelectedStatus(room.status);
+        setArea(room.area?.toString() || '');
+        setBudget(room.budgetAllocated?.toString() || '');
+        setFloorNumber(room.floorNumber?.toString() || '');
+        setImagePreview(room.coverImage || '');
+        setOriginalImage(room.coverImage || '');
+        setCoverImage(null);
+    }, [room]);
 
     if (!isOpen) return null;
 
@@ -95,19 +112,17 @@ export function CreateRoomModal({ isOpen, onClose, projectId }: CreateRoomModalP
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        // Auto-generate name if empty
-        let finalName = name.trim();
-        if (!finalName) {
-            const typeLabel = ROOM_TYPES.find(t => t.id === selectedType)?.label;
-            finalName = typeLabel || 'Nowe pomieszczenie';
+        if (!name.trim()) {
+            setUploadError('Nazwa pomieszczenia jest wymagana');
+            return;
         }
 
         setIsSubmitting(true);
         setUploadError('');
         try {
-            let imageUrl: string | undefined;
+            let imageUrl: string | undefined = imagePreview || undefined;
 
-            // Upload image if provided
+            // Upload new image if provided
             if (coverImage) {
                 const formData = new FormData();
                 formData.append('file', coverImage);
@@ -115,40 +130,39 @@ export function CreateRoomModal({ isOpen, onClose, projectId }: CreateRoomModalP
                 const uploadResult = await uploadImage(formData);
                 if (uploadResult.success && uploadResult.url) {
                     imageUrl = uploadResult.url;
+
+                    // Delete old image if exists and different from new one
+                    if (originalImage && originalImage !== imageUrl) {
+                        await deleteImage(originalImage);
+                    }
                 } else {
                     setUploadError(uploadResult.error || 'Failed to upload image');
                     setIsSubmitting(false);
                     return;
                 }
+            } else if (!imagePreview && originalImage) {
+                // Image was removed
+                await deleteImage(originalImage);
+                imageUrl = undefined;
             }
 
-            await createRoom({
-                projectId,
-                name: finalName,
+            await updateRoom(room.id, {
+                name: name.trim(),
                 type: selectedType,
+                status: selectedStatus,
                 area: area ? parseFloat(area) : undefined,
                 budgetAllocated: budget ? parseFloat(budget) : undefined,
                 floorNumber: floorNumber ? parseInt(floorNumber) : undefined,
                 coverImage: imageUrl,
             });
 
-            // Reset form
-            setName('');
-            setSelectedType('LIVING');
-            setSelectedStatus('NOT_STARTED');
-            setArea('');
-            setBudget('');
-            setFloorNumber('');
-            setCoverImage(null);
-            setImagePreview('');
-            setUploadError('');
             onClose();
 
             // Force router refresh to reload the page data
             window.location.reload();
         } catch (error) {
-            console.error('Error creating room:', error);
-            setUploadError('Wystąpił błąd podczas tworzenia pomieszczenia');
+            console.error('Error updating room:', error);
+            setUploadError('Wystąpił błąd podczas aktualizacji pomieszczenia');
         } finally {
             setIsSubmitting(false);
         }
@@ -166,7 +180,7 @@ export function CreateRoomModal({ isOpen, onClose, projectId }: CreateRoomModalP
             <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-[#151515] rounded-2xl shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-200 border border-white/10 max-h-[90vh] overflow-y-auto">
                 {/* Header */}
                 <div className="flex items-center justify-between p-6 border-b border-white/10 sticky top-0 bg-[#151515] z-10">
-                    <h2 className="text-xl font-semibold">Dodaj nowe pomieszczenie</h2>
+                    <h2 className="text-xl font-semibold">Edytuj pomieszczenie</h2>
                     <button
                         onClick={onClose}
                         className="p-2 hover:bg-white/5 rounded-lg transition-colors"
@@ -205,17 +219,15 @@ export function CreateRoomModal({ isOpen, onClose, projectId }: CreateRoomModalP
                     {/* Name */}
                     <div>
                         <label className="block text-sm font-medium mb-2">
-                            Nazwa pomieszczenia
+                            Nazwa pomieszczenia <span className="text-red-400">*</span>
                         </label>
                         <Input
                             type="text"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            placeholder={`np. ${ROOM_TYPES.find(t => t.id === selectedType)?.label} główny`}
+                            placeholder="np. Salon główny"
+                            required
                         />
-                        <p className="text-xs text-muted-foreground mt-1">
-                            Pozostaw puste, aby użyć domyślnej nazwy
-                        </p>
                     </div>
 
                     {/* Status */}
@@ -385,7 +397,7 @@ export function CreateRoomModal({ isOpen, onClose, projectId }: CreateRoomModalP
                             className="flex-1"
                             disabled={isSubmitting}
                         >
-                            {isSubmitting ? 'Tworzenie...' : 'Utwórz pomieszczenie'}
+                            {isSubmitting ? 'Zapisywanie...' : 'Zapisz zmiany'}
                         </Button>
                     </div>
                 </form>

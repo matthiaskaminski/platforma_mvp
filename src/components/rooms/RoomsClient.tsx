@@ -8,6 +8,9 @@ import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { cn } from "@/lib/utils";
 import { CreateRoomModal, getRoomTypeLabel } from "@/components/modals/CreateRoomModal";
+import { EditRoomModal } from "@/components/modals/EditRoomModal";
+import { deleteRoom } from "@/app/actions/rooms";
+import { RoomType, RoomStatus } from "@prisma/client";
 
 // Mock Data for fallback
 const PLACEHOLDER_IMG = "https://zotnacipqsjewlzofpga.supabase.co/storage/v1/object/public/Liru/526585939_1355299613265765_6668356102677043657_n.jpg";
@@ -37,6 +40,7 @@ interface RoomData {
     productsCount: number;
     budget: number;
     spent: number;
+    floorNumber?: number | null;
     img?: string;
     daysAgo?: string;
 }
@@ -49,6 +53,24 @@ interface RoomsClientProps {
 export default function RoomsClient({ rooms: initialRooms, projectId }: RoomsClientProps) {
     const [rooms, setRooms] = useState<RoomData[]>(initialRooms);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editingRoom, setEditingRoom] = useState<RoomData | null>(null);
+    const [deletingRoomId, setDeletingRoomId] = useState<string | null>(null);
+
+    const handleDeleteRoom = async (roomId: string) => {
+        if (!confirm('Czy na pewno chcesz usunąć to pomieszczenie? Tej operacji nie można cofnąć.')) {
+            return;
+        }
+
+        setDeletingRoomId(roomId);
+        try {
+            await deleteRoom(roomId);
+            window.location.reload();
+        } catch (error) {
+            console.error('Error deleting room:', error);
+            alert('Wystąpił błąd podczas usuwania pomieszczenia');
+            setDeletingRoomId(null);
+        }
+    };
 
     return (
         <div className="flex flex-col h-full animate-in fade-in duration-500 pb-0 overflow-hidden w-full">
@@ -191,13 +213,22 @@ export default function RoomsClient({ rooms: initialRooms, projectId }: RoomsCli
                                         Przejdź do pomieszczenia
                                     </Button>
                                 </Link>
-                                <Button variant="secondary" className="px-5 bg-[#1B1B1B] hover:bg-[#252525] rounded-lg text-muted-foreground hover:text-white transition-colors flex items-center gap-2 text-sm font-medium h-[48px]">
+                                <Button
+                                    variant="secondary"
+                                    onClick={() => setEditingRoom(room)}
+                                    className="px-5 bg-[#1B1B1B] hover:bg-[#252525] rounded-lg text-muted-foreground hover:text-white transition-colors flex items-center gap-2 text-sm font-medium h-[48px]"
+                                >
                                     <MoreHorizontal className="w-5 h-5" />
                                     Edytuj
                                 </Button>
-                                <Button variant="secondary" className="px-5 bg-[#1B1B1B] hover:bg-[#252525] rounded-lg text-muted-foreground hover:text-red-400 transition-colors flex items-center gap-2 text-sm font-medium h-[48px]">
+                                <Button
+                                    variant="secondary"
+                                    onClick={() => handleDeleteRoom(room.id)}
+                                    disabled={deletingRoomId === room.id}
+                                    className="px-5 bg-[#1B1B1B] hover:bg-[#252525] rounded-lg text-muted-foreground hover:text-red-400 transition-colors flex items-center gap-2 text-sm font-medium h-[48px]"
+                                >
                                     <Trash2 className="w-5 h-5" />
-                                    Usuń
+                                    {deletingRoomId === room.id ? 'Usuwanie...' : 'Usuń'}
                                 </Button>
                             </div>
                         </Card>
@@ -216,6 +247,24 @@ export default function RoomsClient({ rooms: initialRooms, projectId }: RoomsCli
                 onClose={() => setIsModalOpen(false)}
                 projectId={projectId}
             />
+
+            {/* Edit Room Modal */}
+            {editingRoom && (
+                <EditRoomModal
+                    isOpen={!!editingRoom}
+                    onClose={() => setEditingRoom(null)}
+                    room={{
+                        id: editingRoom.id,
+                        name: editingRoom.name,
+                        type: editingRoom.type.toUpperCase() as RoomType,
+                        status: editingRoom.status.toUpperCase() as RoomStatus,
+                        area: editingRoom.area,
+                        budgetAllocated: editingRoom.budget,
+                        floorNumber: editingRoom.floorNumber,
+                        coverImage: editingRoom.img || null,
+                    }}
+                />
+            )}
         </div>
     );
 }
