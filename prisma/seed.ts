@@ -33,6 +33,7 @@ async function main() {
     const project = await prisma.project.create({
         data: {
             clientId: client1.id,
+            designerId: me.id,
             name: 'Apartament Złota 44',
             status: 'ACTIVE',
             address: 'Warszawa, ul. Złota 44/12',

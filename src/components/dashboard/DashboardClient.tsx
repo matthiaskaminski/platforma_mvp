@@ -92,14 +92,40 @@ function SortableTile({ id, tile }: { id: string, tile: any }) {
 
 interface DashboardClientProps {
     user: User | null
+    project: any // Type this properly if possible, or use explicit interface
+    stats: {
+        budget: { spent: number; planned: number; total: number; remaining: number }
+        daysConfig: { start: Date; end: Date }
+        activeTasks: number
+    }
 }
 
-export default function DashboardClient({ user }: DashboardClientProps) {
+export default function DashboardClient({ user, project, stats }: DashboardClientProps) {
     const [statsTiles, setStatsTiles] = useState(initialTiles);
     const [activeId, setActiveId] = useState<string | null>(null);
 
+    // Update tiles with real data if project exists
+    React.useEffect(() => {
+        if (project && stats) {
+            setStatsTiles(tiles => tiles.map(tile => {
+                switch (tile.id) {
+                    case 'tile-1': return { ...tile, value: project.name } // Use Name instead of type for now
+                    case 'tile-2': return { ...tile, value: `${project.totalArea || 0}m²` }
+                    case 'tile-3': return { ...tile, value: String(project.floorsCount || 0) }
+                    case 'tile-4': return { ...tile, value: String(project.roomsCount || 0) }
+                    case 'tile-5': return { ...tile, value: "0" } // TODO: Count products properly
+                    case 'tile-6': return { ...tile, value: String(stats.activeTasks) }
+                    default: return tile
+                }
+            }))
+        }
+    }, [project, stats])
+
+    // Helpers for formatting
+    const formatMoney = (amount: number) => new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN', maximumFractionDigits: 0 }).format(amount).replace('zł', ' zł')
+
     const sensors = useSensors(
-        useSensor(PointerSensor, { activationConstraint: { distance: 8 } }), // Add distance constraint for smoother start
+        useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
         useSensor(KeyboardSensor, {
             coordinateGetter: sortableKeyboardCoordinates,
         })
@@ -154,17 +180,19 @@ export default function DashboardClient({ user }: DashboardClientProps) {
 
                 <div className="flex items-center gap-2 text-sm text-muted-foreground font-medium">
                     <span className="text-muted-foreground">Data rozpoczęcia:</span>
-                    <span className="text-foreground text-[20px]">20.01.2024</span>
+                    <span className="text-foreground text-[20px]">{new Date(project?.startDate || new Date()).toLocaleDateString('pl-PL')}</span>
                 </div>
 
                 <div className="flex items-center gap-2 text-sm text-muted-foreground font-medium">
                     <span className="text-muted-foreground">Data zakończenia:</span>
-                    <span className="text-foreground text-[20px]">22.12.2025</span>
+                    <span className="text-foreground text-[20px]">{new Date(project?.deadline || new Date()).toLocaleDateString('pl-PL')}</span>
                 </div>
 
                 <div className="flex items-center gap-2 text-sm text-muted-foreground font-medium">
                     <span className="text-muted-foreground">Pozostało:</span>
-                    <span className="text-foreground text-[20px]">70 dni</span>
+                    <span className="text-foreground text-[20px]">
+                        {Math.ceil((new Date(project?.deadline || new Date()).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} dni
+                    </span>
                 </div>
             </Card>
 
@@ -276,7 +304,7 @@ export default function DashboardClient({ user }: DashboardClientProps) {
                                 </ResponsiveContainer>
                                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                                     <span className="text-[#6E6E6E] text-xs font-medium mb-0.5">Całkowity</span>
-                                    <span className="text-[20px] font-bold tracking-tight text-[#E5E5E5]">380 000 zł</span>
+                                    <span className="text-[20px] font-bold tracking-tight text-[#E5E5E5]">{formatMoney(stats.budget.total)}</span>
                                 </div>
                             </div>
 
@@ -334,25 +362,25 @@ export default function DashboardClient({ user }: DashboardClientProps) {
                                     <div className="w-2 h-2 rounded-full bg-[#E5E5E5]"></div> {/* Color dot from Chart (Wydano) */}
                                     <span className="text-[14px] text-[#6E6E6E]">Wydano</span> {/* 14px Label */}
                                 </div>
-                                <span className="text-[16px] font-medium text-[#6E6E6E]">158 400 zł</span> {/* 16px Value */}
+                                <span className="text-[16px] font-medium text-[#6E6E6E]">{formatMoney(stats.budget.spent)}</span> {/* 16px Value */}
                             </div>
                             <div className="flex flex-col border-l border-white/5 pl-2">
                                 <div className="flex items-center gap-2 mb-1">
                                     <div className="w-2 h-2 rounded-full bg-[#6E6E6E]"></div> {/* Color dot from Chart (Planowane) */}
                                     <span className="text-[14px] text-[#6E6E6E]">Planowane</span> {/* 14px Label */}
                                 </div>
-                                <span className="text-[16px] font-medium text-[#E5E5E5]">115 200 zł</span> {/* 16px Value */}
+                                <span className="text-[16px] font-medium text-[#E5E5E5]">{formatMoney(stats.budget.planned)}</span> {/* 16px Value */}
                             </div>
                             <div className="flex flex-col border-l border-white/5 pl-2">
                                 <div className="flex items-center gap-2 mb-1">
                                     <div className="w-2 h-2 rounded-full bg-[#232323]"></div> {/* Color dot from Chart (Pozostało) */}
                                     <span className="text-[14px] text-[#6E6E6E]">Pozostało</span> {/* 14px Label, Replaces Razem */}
                                 </div>
-                                <span className="text-[16px] font-bold text-[#E5E5E5]">86 400 zł</span> {/* 16px Value */}
+                                <span className="text-[16px] font-bold text-[#E5E5E5]">{formatMoney(stats.budget.remaining)}</span> {/* 16px Value */}
                             </div>
                             <div className="flex flex-col border-l border-white/5 pl-2">
                                 <span className="text-[14px] text-[#6E6E6E] mb-1">Ten mies.</span> {/* 14px Label */}
-                                <span className="text-[16px] font-medium text-[#E5E5E5]">12 400 zł</span> {/* 16px Value */}
+                                <span className="text-[16px] font-medium text-[#E5E5E5]">{formatMoney(0)}</span> {/* 16px Value */}
                             </div>
                         </div>
                     </Card>
