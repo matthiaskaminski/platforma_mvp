@@ -91,7 +91,7 @@ function SortableTile({ id, tile }: { id: string, tile: any }) {
 }
 
 interface DashboardClientProps {
-    user: User | null
+    user: any // Accepting generic object (Profile or User) with email
     project: any // Type this properly if possible, or use explicit interface
     stats: {
         budget: { spent: number; planned: number; total: number; remaining: number }
