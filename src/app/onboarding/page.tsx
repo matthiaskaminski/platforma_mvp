@@ -18,12 +18,19 @@ export default async function OnboardingPage() {
         })
     } catch (error) {
         console.error("DB Error in Onboarding Page:", error)
-        // If DB is down, we can't really proceed, but logging is crucial
         throw error
     }
 
-    if (profile?.onboardingCompleted) {
-        redirect('/')
+    // Check if onboarding is complete by checking if a project exists
+    // (Since we removed the boolean flag from schema)
+    if (profile) {
+        const project = await prisma.project.findFirst({
+            where: { designerId: profile.id }
+        })
+
+        if (project) {
+            redirect('/')
+        }
     }
 
     return <OnboardingWizard initialProfile={profile} />
