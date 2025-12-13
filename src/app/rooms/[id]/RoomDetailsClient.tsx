@@ -158,18 +158,26 @@ export default function RoomDetailsClient({ roomData, products }: RoomDetailsCli
                                 </Button>
                             ) : (
                                 <>
-                                    <Button className="flex items-center gap-2 bg-[#232323] hover:bg-[#2a2a2a] text-white px-5 py-3 rounded-lg text-sm font-medium transition-colors whitespace-nowrap shadow-sm min-h-[48px]">
-                                        <Plus className="w-5 h-5" /> Stwórz prezentację
-                                    </Button>
-                                    <Button className="flex items-center gap-2 bg-[#1B1B1B] hover:bg-[#232323] text-muted-foreground hover:text-white px-5 py-3 rounded-lg text-sm font-medium transition-colors whitespace-nowrap min-h-[48px]">
-                                        <LayoutGrid className="w-5 h-5" /> Dodaj do koszyka
-                                    </Button>
-                                    <Button className="flex items-center gap-2 bg-[#1B1B1B] hover:bg-[#232323] text-muted-foreground hover:text-white px-5 py-3 rounded-lg text-sm font-medium transition-colors min-h-[48px]">
-                                        <MoreHorizontal className="w-5 h-5" /> Edytuj
-                                    </Button>
-                                    <Button className="flex items-center gap-2 bg-[#1B1B1B] hover:bg-[#232323] text-muted-foreground hover:text-white px-5 py-3 rounded-lg text-sm font-medium transition-colors min-h-[48px]">
-                                        <Trash2 className="w-5 h-5" /> Usuń
-                                    </Button>
+                                    {products.length === 0 ? (
+                                        <Button className="flex items-center gap-2 bg-[#232323] hover:bg-[#2a2a2a] text-white px-5 py-3 rounded-lg text-sm font-medium transition-colors whitespace-nowrap shadow-sm min-h-[48px]">
+                                            <Plus className="w-5 h-5" /> Dodaj produkty
+                                        </Button>
+                                    ) : (
+                                        <>
+                                            <Button className="flex items-center gap-2 bg-[#232323] hover:bg-[#2a2a2a] text-white px-5 py-3 rounded-lg text-sm font-medium transition-colors whitespace-nowrap shadow-sm min-h-[48px]">
+                                                <Plus className="w-5 h-5" /> Stwórz prezentację
+                                            </Button>
+                                            <Button className="flex items-center gap-2 bg-[#1B1B1B] hover:bg-[#232323] text-muted-foreground hover:text-white px-5 py-3 rounded-lg text-sm font-medium transition-colors whitespace-nowrap min-h-[48px]">
+                                                <LayoutGrid className="w-5 h-5" /> Dodaj do koszyka
+                                            </Button>
+                                            <Button className="flex items-center gap-2 bg-[#1B1B1B] hover:bg-[#232323] text-muted-foreground hover:text-white px-5 py-3 rounded-lg text-sm font-medium transition-colors min-h-[48px]">
+                                                <MoreHorizontal className="w-5 h-5" /> Edytuj
+                                            </Button>
+                                            <Button className="flex items-center gap-2 bg-[#1B1B1B] hover:bg-[#232323] text-muted-foreground hover:text-white px-5 py-3 rounded-lg text-sm font-medium transition-colors min-h-[48px]">
+                                                <Trash2 className="w-5 h-5" /> Usuń
+                                            </Button>
+                                        </>
+                                    )}
                                 </>
                             )}
                         </div>

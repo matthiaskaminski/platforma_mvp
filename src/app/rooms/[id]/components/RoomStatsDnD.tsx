@@ -37,7 +37,7 @@ const iconMap: Record<string, any> = {
 
 // Status labels and colors
 const statusConfig: Record<string, { label: string; color: string }> = {
-    'not_started': { label: "Nierozpoczęte", color: "#808080" },
+    'not_started': { label: "Nierozpoczęte", color: "#91A3E8" },
     'in_progress': { label: "W trakcie", color: "#91E8B2" },
     'finished': { label: "Zakończone", color: "#4A90E2" }
 }
