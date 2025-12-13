@@ -118,8 +118,7 @@ if (project) {
       spent,
       planned,
       total: totalBudget,
-      remaining: totalBudget - spent // Or Total - Planned? Usually Budget - Spent is "Remaining Cash", but Budget - Planned is "Remaining Budget Space".
-      // Let's stick to Cash logic: Remaining = Goal - Spent.
+      remaining: totalBudget - spent
     },
     daysConfig: {
       start: project.startDate || new Date(),
@@ -129,10 +128,7 @@ if (project) {
   }
 }
 
-// Serializable Data (Dates to Strings/ISO if needed, or pass Date if supported by SC->CC)
-// Next.js passes dates fine if not using 'use client' boundary directly on objects? 
-// Actually, passing Date objects from Server to Client component warns. Better convert to string.
-
+// Serializable Data
 const serializedProject = project ? {
   ...project,
   budgetGoal: Number(project.budgetGoal),
@@ -144,5 +140,22 @@ const serializedProject = project ? {
   }))
 } : null
 
-return <DashboardClient user={user} project={serializedProject} stats={stats} />
+return (
+  <div className="p-8 space-y-8 animate-in fade-in duration-500">
+    {/* Temporary Debug Button */}
+    <div className="absolute top-4 right-4 z-50">
+      <form action={async () => {
+        'use server'
+        await resetOnboarding()
+      }}>
+        <button type="submit" className="bg-red-500 text-white px-3 py-1 text-xs rounded hover:bg-red-600">
+          Reset Onboarding (Debug)
+        </button>
+      </form>
+    </div>
+
+    {/* Header Section */}
+    <DashboardClient user={profile} project={serializedProject} stats={stats} />
+  </div>
+)
 }
