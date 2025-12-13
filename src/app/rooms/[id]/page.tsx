@@ -1,20 +1,24 @@
-import { getRoomById, getRoomProducts, getRoomTasks, getRoomBudget, getRoomGallery, getRoomNotes } from '@/app/actions/rooms';
+import { getRoomById, getRoomProducts, getRoomTasks, getRoomBudget, getRoomGallery, getRoomNotes, getProjectSummary } from '@/app/actions/rooms';
 import { redirect } from 'next/navigation';
 import RoomDetailsClient from './RoomDetailsClient';
 
 export default async function RoomDetailsPage({ params }: { params: { id: string } }) {
-    const [room, products, tasks, budgetItems, galleryImages, notes] = await Promise.all([
-        getRoomById(params.id),
-        getRoomProducts(params.id),
-        getRoomTasks(params.id),
-        getRoomBudget(params.id),
-        getRoomGallery(params.id),
-        getRoomNotes(params.id)
-    ]);
+    // First get room to extract projectId
+    const room = await getRoomById(params.id);
 
     if (!room) {
         redirect('/rooms');
     }
+
+    // Then fetch all other data in parallel
+    const [products, tasks, budgetItems, galleryImages, notes, projectSummary] = await Promise.all([
+        getRoomProducts(params.id),
+        getRoomTasks(params.id),
+        getRoomBudget(params.id),
+        getRoomGallery(params.id),
+        getRoomNotes(params.id),
+        getProjectSummary(room.project.id)
+    ]);
 
     // Map status for client
     const statusMap: Record<string, string> = {
@@ -37,5 +41,5 @@ export default async function RoomDetailsPage({ params }: { params: { id: string
         projectCoverImage: room.project.coverImage,
     };
 
-    return <RoomDetailsClient roomData={roomData} products={products} tasks={tasks} budgetItems={budgetItems} galleryImages={galleryImages} notes={notes} />;
+    return <RoomDetailsClient roomData={roomData} products={products} tasks={tasks} budgetItems={budgetItems} galleryImages={galleryImages} notes={notes} projectSummary={projectSummary} />;
 }

@@ -2,18 +2,145 @@
 
 import React, { useState } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
-import { ChevronDown, AlertCircle } from "lucide-react";
+import { ChevronDown, ListTodo } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
 
-const budgetData = [
-    { name: "Produkty", value: 73400, color: "#F3F3F3" },
-    { name: "Materiały", value: 8200, color: "#6E6E6E" },
-    { name: "Usługi", value: 4000, color: "#2F2F2F" },
-    { name: "Pozostało", value: 4000, color: "#232323" },
-];
+interface ProjectSummary {
+    budgetGoal: any;
+    rooms: {
+        productItems: {
+            price: any;
+            quantity: number;
+            paidAmount: any;
+            category: string | null;
+        }[];
+    }[];
+    tasks: {
+        id: string;
+        title: string;
+        status: string;
+        dueDate: Date | null;
+    }[];
+}
 
-export function SummaryAccordion() {
+interface SummaryAccordionProps {
+    projectSummary: ProjectSummary | null;
+}
+
+const statusConfig: Record<string, { label: string; badgeStatus: "overdue" | "in_progress" | "not_started" | "completed" }> = {
+    'TODO': { label: "Do zrobienia", badgeStatus: "not_started" },
+    'IN_PROGRESS': { label: "W trakcie", badgeStatus: "in_progress" },
+    'DONE': { label: "Zakończone", badgeStatus: "completed" }
+};
+
+export function SummaryAccordion({ projectSummary }: SummaryAccordionProps) {
     const [isOpen, setIsOpen] = useState(true);
+
+    // Calculate budget data from project summary
+    const calculateBudget = () => {
+        if (!projectSummary) {
+            return {
+                products: 0,
+                materials: 0,
+                services: 0,
+                total: 0,
+                budgetGoal: 0,
+                percentage: 0
+            };
+        }
+
+        let products = 0;
+        let materials = 0;
+        let services = 0;
+
+        // Sum up all product items across all rooms
+        projectSummary.rooms.forEach(room => {
+            room.productItems.forEach(item => {
+                const price = Number(item.price) || 0;
+                const total = price * item.quantity;
+
+                // Categorize by category field
+                const category = item.category?.toLowerCase() || '';
+                if (category.includes('materiał') || category.includes('material')) {
+                    materials += total;
+                } else if (category.includes('usługa') || category.includes('service')) {
+                    services += total;
+                } else {
+                    products += total;
+                }
+            });
+        });
+
+        const total = products + materials + services;
+        const budgetGoal = Number(projectSummary.budgetGoal) || 0;
+        const remaining = budgetGoal - total;
+        const percentage = budgetGoal > 0 ? Math.round((total / budgetGoal) * 100) : 0;
+
+        return {
+            products,
+            materials,
+            services,
+            remaining: remaining > 0 ? remaining : 0,
+            total,
+            budgetGoal,
+            percentage
+        };
+    };
+
+    const budget = calculateBudget();
+
+    // Prepare chart data
+    const budgetData = [
+        { name: "Produkty", value: budget.products, color: "#F3F3F3" },
+        { name: "Materiały", value: budget.materials, color: "#6E6E6E" },
+        { name: "Usługi", value: budget.services, color: "#2F2F2F" },
+        { name: "Pozostało", value: budget.remaining, color: "#232323" },
+    ].filter(item => item.value > 0); // Only show categories with values
+
+    // Format currency
+    const formatCurrency = (value: number) => {
+        return new Intl.NumberFormat('pl-PL', {
+            style: 'currency',
+            currency: 'PLN',
+            minimumFractionDigits: 2
+        }).format(value);
+    };
+
+    // Format date
+    const formatDate = (date: Date | null) => {
+        if (!date) return "Brak terminu";
+
+        const dateObj = new Date(date);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const taskDate = new Date(dateObj);
+        taskDate.setHours(0, 0, 0, 0);
+
+        if (taskDate.getTime() === today.getTime()) {
+            return `dziś ${dateObj.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })}`;
+        }
+
+        return dateObj.toLocaleDateString('pl-PL', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+        });
+    };
+
+    // Check if task is overdue
+    const isOverdue = (task: any) => {
+        if (!task.dueDate || task.status === 'DONE') return false;
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const dueDate = new Date(task.dueDate);
+        dueDate.setHours(0, 0, 0, 0);
+        return dueDate < today;
+    };
+
+    // Get top 2 tasks
+    const topTasks = projectSummary?.tasks.slice(0, 2) || [];
 
     return (
         <div className="bg-[#151515] rounded-2xl overflow-hidden shrink-0">
@@ -36,84 +163,98 @@ export function SummaryAccordion() {
                         className="overflow-hidden"
                     >
                         <div className="px-4 pb-4 flex flex-col xl:flex-row gap-8 items-stretch">
-                            {/* Left: Alerts ("Wymaga uwagi") - 45% width */}
-                            <div className="w-[45%] shrink-0 flex flex-col">
+                            {/* Left: Tasks ("Wymaga uwagi") - 45% width */}
+                            <div className="w-full xl:w-[45%] shrink-0 flex flex-col">
                                 <h3 className="text-sm font-medium text-muted-foreground mb-4">Wymaga uwagi</h3>
                                 <div className="flex flex-col gap-3 flex-1">
-                                    <div className="bg-[#1B1B1B] p-4 rounded-xl flex justify-between items-start group hover:bg-[#232323] transition-colors cursor-pointer flex-1">
-                                        <div className="pr-4 flex flex-col justify-between h-full">
-                                            <div className="text-sm font-medium text-white mb-1">Skontaktować się z dostawcą lamp</div>
-                                            <div className="flex items-center gap-2">
-                                                <span className="w-2.5 h-2.5 rounded-full bg-[#E8B491] shadow-[0_0_8px_rgba(232,180,145,0.4)]"></span>
-                                                <span className="text-[14px] text-[#F3F3F3]">Przeterminowane</span>
-                                            </div>
+                                    {topTasks.length === 0 ? (
+                                        <div className="bg-[#1B1B1B] p-6 rounded-xl flex flex-col items-center justify-center text-center flex-1">
+                                            <ListTodo className="w-8 h-8 mb-3 text-muted-foreground" />
+                                            <p className="text-sm text-muted-foreground mb-3">Brak zadań do wykonania</p>
+                                            <Button size="sm" variant="ghost">
+                                                Dodaj zadanie
+                                            </Button>
                                         </div>
-                                        <span className="text-sm text-muted-foreground whitespace-nowrap">Do: 10.11.2024</span>
-                                    </div>
-                                    <div className="bg-[#1B1B1B] p-4 rounded-xl flex justify-between items-start group hover:bg-[#232323] transition-colors cursor-pointer flex-1">
-                                        <div className="pr-4 flex flex-col justify-between h-full">
-                                            <div className="text-sm font-medium text-white mb-1">Zatwierdzić próbki tkanin do sofy</div>
-                                            <div className="flex items-center gap-2">
-                                                <span className="w-2.5 h-2.5 rounded-full bg-[#E8B491] shadow-[0_0_8px_rgba(232,180,145,0.4)]"></span>
-                                                <span className="text-[14px] text-[#F3F3F3]">Przeterminowane</span>
-                                            </div>
-                                        </div>
-                                        <span className="text-sm text-muted-foreground whitespace-nowrap">Do: dziś 18:00</span>
-                                    </div>
+                                    ) : (
+                                        topTasks.map((task) => {
+                                            const taskOverdue = isOverdue(task);
+                                            const statusInfo = statusConfig[task.status] || statusConfig['TODO'];
+
+                                            return (
+                                                <div key={task.id} className="bg-[#1B1B1B] p-4 rounded-xl flex justify-between items-start group hover:bg-[#232323] transition-colors cursor-pointer flex-1">
+                                                    <div className="pr-4 flex flex-col justify-between h-full">
+                                                        <div className="text-sm font-medium text-white mb-1">{task.title}</div>
+                                                        <Badge
+                                                            status={taskOverdue ? "overdue" : statusInfo.badgeStatus}
+                                                            dot
+                                                            className="bg-transparent px-0 text-[14px] gap-2 hover:bg-transparent"
+                                                        >
+                                                            {taskOverdue ? "Przeterminowane" : statusInfo.label}
+                                                        </Badge>
+                                                    </div>
+                                                    <span className="text-sm text-muted-foreground whitespace-nowrap">
+                                                        Do: {formatDate(task.dueDate)}
+                                                    </span>
+                                                </div>
+                                            );
+                                        })
+                                    )}
                                 </div>
                             </div>
 
                             {/* Right: Budget - Fills remaining space and height */}
-                            <div className="flex-1 flex gap-6 justify-end min-w-0 flex flex-col h-full justify-between">
-                                <div className="flex gap-6 h-full">
+                            <div className="flex-1 flex gap-6 justify-end min-w-0">
+                                <div className="flex gap-6 h-full w-full">
                                     {/* List - Flexible */}
                                     <div className="flex-1 min-w-0 flex flex-col justify-center">
                                         <h3 className="text-sm font-medium text-muted-foreground mb-4">Budżet</h3>
                                         <div className="space-y-3">
                                             {[
-                                                { label: "Produkty", val: "73 400,00 zł", color: "bg-[#F3F3F3]" },
-                                                { label: "Materiały", val: "8 200,00 zł", color: "bg-[#6E6E6E]" },
-                                                { label: "Usługi", val: "4 000,00 zł", color: "bg-[#2F2F2F]" },
-                                                { label: "Pozostało", val: "4 000,00 zł", color: "bg-[#232323]" },
-                                            ].map((item) => (
+                                                { label: "Produkty", val: budget.products, color: "bg-[#F3F3F3]" },
+                                                { label: "Materiały", val: budget.materials, color: "bg-[#6E6E6E]" },
+                                                { label: "Usługi", val: budget.services, color: "bg-[#2F2F2F]" },
+                                                { label: "Pozostało", val: budget.remaining, color: "bg-[#232323]" },
+                                            ].filter(item => item.val > 0).map((item) => (
                                                 <div key={item.label} className="flex justify-between items-center text-sm">
                                                     <div className="flex items-center gap-2">
                                                         <div className={`w-3 h-2 rounded-full ${item.color}`}></div>
                                                         <span className="text-muted-foreground">{item.label}</span>
                                                     </div>
-                                                    <span className="font-medium text-white">{item.val}</span>
+                                                    <span className="font-medium text-white">{formatCurrency(item.val)}</span>
                                                 </div>
                                             ))}
                                             <div className="pt-2 mt-2 border-t border-white/5 flex justify-between text-sm">
                                                 <span className="text-muted-foreground">Łącznie</span>
-                                                <span className="font-semibold text-white">96 000,00 zł</span>
+                                                <span className="font-semibold text-white">{formatCurrency(budget.total)}</span>
                                             </div>
                                         </div>
                                     </div>
 
                                     {/* Chart */}
-                                    <div className="w-[220px] h-[220px] relative shrink-0 self-center">
-                                        <ResponsiveContainer width="100%" height="100%">
-                                            <PieChart>
-                                                <Pie
-                                                    data={budgetData}
-                                                    innerRadius="75%"
-                                                    outerRadius="92%"
-                                                    paddingAngle={5}
-                                                    dataKey="value"
-                                                    stroke="none"
-                                                    cornerRadius={4}
-                                                >
-                                                    {budgetData.map((entry, index) => (
-                                                        <Cell key={`cell-${index}`} fill={entry.color} />
-                                                    ))}
-                                                </Pie>
-                                            </PieChart>
-                                        </ResponsiveContainer>
-                                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                            <span className="text-[28px] font-bold text-white">89%</span>
+                                    {budgetData.length > 0 && budget.total > 0 && (
+                                        <div className="w-[220px] h-[220px] relative shrink-0 self-center">
+                                            <ResponsiveContainer width="100%" height="100%">
+                                                <PieChart>
+                                                    <Pie
+                                                        data={budgetData}
+                                                        innerRadius="75%"
+                                                        outerRadius="92%"
+                                                        paddingAngle={5}
+                                                        dataKey="value"
+                                                        stroke="none"
+                                                        cornerRadius={4}
+                                                    >
+                                                        {budgetData.map((entry, index) => (
+                                                            <Cell key={`cell-${index}`} fill={entry.color} />
+                                                        ))}
+                                                    </Pie>
+                                                </PieChart>
+                                            </ResponsiveContainer>
+                                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                                <span className="text-[28px] font-bold text-white">{budget.percentage}%</span>
+                                            </div>
                                         </div>
-                                    </div>
+                                    )}
                                 </div>
                             </div>
 

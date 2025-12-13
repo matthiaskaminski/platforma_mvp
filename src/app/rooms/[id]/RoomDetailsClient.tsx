@@ -68,6 +68,24 @@ interface Note {
     updatedAt: Date;
 }
 
+interface ProjectSummary {
+    budgetGoal: any;
+    rooms: {
+        productItems: {
+            price: any;
+            quantity: number;
+            paidAmount: any;
+            category: string | null;
+        }[];
+    }[];
+    tasks: {
+        id: string;
+        title: string;
+        status: string;
+        dueDate: Date | null;
+    }[];
+}
+
 interface RoomDetailsClientProps {
     roomData: {
         id: string;
@@ -87,9 +105,10 @@ interface RoomDetailsClientProps {
     budgetItems: BudgetItem[];
     galleryImages: GalleryImage[];
     notes: Note[];
+    projectSummary: ProjectSummary | null;
 }
 
-export default function RoomDetailsClient({ roomData, products, tasks, budgetItems, galleryImages, notes }: RoomDetailsClientProps) {
+export default function RoomDetailsClient({ roomData, products, tasks, budgetItems, galleryImages, notes, projectSummary }: RoomDetailsClientProps) {
     const [activeTab, setActiveTab] = useState("Produkty");
 
     return (
@@ -135,7 +154,7 @@ export default function RoomDetailsClient({ roomData, products, tasks, budgetIte
             <div className="flex-1 flex flex-col min-w-0 h-full gap-3 overflow-hidden">
 
                 {/* 1. Collapsible Summary Bar */}
-                <SummaryAccordion />
+                <SummaryAccordion projectSummary={projectSummary} />
 
                 {/* 2. Main Content Container */}
                 <div className="flex-1 flex flex-col min-h-0">
