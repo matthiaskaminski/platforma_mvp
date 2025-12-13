@@ -74,7 +74,7 @@ export default async function RoomsPage() {
             productsCount: room.productItems.length,
             budget: Number(room.budgetAllocated) || 0,
             spent: spent,
-            img: null, // No image yet on room directly (unless we fetch one from gallery)
+            img: undefined, // No image yet on room directly (unless we fetch one from gallery)
             daysAgo: daysAgo
         }
     })
