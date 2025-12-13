@@ -21,11 +21,17 @@ const ROOM_TYPES = [
     { id: 'KITCHEN' as RoomType, label: "Kuchnia", Icon: Utensils },
     { id: 'BEDROOM' as RoomType, label: "Sypialnia", Icon: BedDouble },
     { id: 'BATHROOM' as RoomType, label: "Łazienka", Icon: Bath },
-    { id: 'KIDS' as RoomType, label: "Dziecięcy", Icon: Baby },
+    { id: 'KIDS' as RoomType, label: "Pokój dziecięcy", Icon: Baby },
     { id: 'HALL' as RoomType, label: "Przedpokój", Icon: DoorOpen },
     { id: 'OFFICE' as RoomType, label: "Biuro", Icon: LayoutGrid },
     { id: 'OTHER' as RoomType, label: "Inne", Icon: LayoutGrid },
 ];
+
+// Helper function to get Polish room type label
+export const getRoomTypeLabel = (type: string): string => {
+    const roomType = ROOM_TYPES.find(t => t.id === type);
+    return roomType ? roomType.label : 'Inne';
+};
 
 const STATUS_OPTIONS = [
     { id: 'NOT_STARTED' as RoomStatus, label: "Nie rozpoczęte", badgeStatus: 'not_started' as const },
@@ -39,6 +45,7 @@ export function CreateRoomModal({ isOpen, onClose, projectId }: CreateRoomModalP
     const [selectedStatus, setSelectedStatus] = useState<RoomStatus>('NOT_STARTED');
     const [area, setArea] = useState('');
     const [budget, setBudget] = useState('');
+    const [floorNumber, setFloorNumber] = useState('');
     const [coverImage, setCoverImage] = useState<File | null>(null);
     const [imagePreview, setImagePreview] = useState<string>('');
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -121,6 +128,7 @@ export function CreateRoomModal({ isOpen, onClose, projectId }: CreateRoomModalP
                 type: selectedType,
                 area: area ? parseFloat(area) : undefined,
                 budgetAllocated: budget ? parseFloat(budget) : undefined,
+                floorNumber: floorNumber ? parseInt(floorNumber) : undefined,
                 coverImage: imageUrl,
             });
 
@@ -130,6 +138,7 @@ export function CreateRoomModal({ isOpen, onClose, projectId }: CreateRoomModalP
             setSelectedStatus('NOT_STARTED');
             setArea('');
             setBudget('');
+            setFloorNumber('');
             setCoverImage(null);
             setImagePreview('');
             setUploadError('');
@@ -241,8 +250,8 @@ export function CreateRoomModal({ isOpen, onClose, projectId }: CreateRoomModalP
                         </div>
                     </div>
 
-                    {/* Area & Budget */}
-                    <div className="grid grid-cols-2 gap-4">
+                    {/* Area, Budget & Floor */}
+                    <div className="grid grid-cols-3 gap-4">
                         <div>
                             <label className="block text-sm font-medium mb-2">
                                 Metraż (m²)
@@ -266,6 +275,19 @@ export function CreateRoomModal({ isOpen, onClose, projectId }: CreateRoomModalP
                                 min="0"
                                 value={budget}
                                 onChange={(e) => setBudget(e.target.value)}
+                                placeholder="0"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium mb-2">
+                                Piętro
+                            </label>
+                            <Input
+                                type="number"
+                                step="1"
+                                min="0"
+                                value={floorNumber}
+                                onChange={(e) => setFloorNumber(e.target.value)}
                                 placeholder="0"
                             />
                         </div>

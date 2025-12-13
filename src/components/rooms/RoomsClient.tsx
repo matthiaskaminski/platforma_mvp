@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { cn } from "@/lib/utils";
-import { CreateRoomModal } from "@/components/modals/CreateRoomModal";
+import { CreateRoomModal, getRoomTypeLabel } from "@/components/modals/CreateRoomModal";
 
 // Mock Data for fallback
 const PLACEHOLDER_IMG = "https://zotnacipqsjewlzofpga.supabase.co/storage/v1/object/public/Liru/526585939_1355299613265765_6668356102677043657_n.jpg";
@@ -157,7 +157,7 @@ export default function RoomsClient({ rooms: initialRooms, projectId }: RoomsCli
                                         </div>
                                         <div className="flex justify-between items-end">
                                             <span className="text-sm text-muted-foreground">Typ</span>
-                                            <span className="text-base font-medium truncate max-w-[80px]" title={room.type}>{room.type}</span>
+                                            <span className="text-base font-medium truncate max-w-[120px]" title={getRoomTypeLabel(room.type)}>{getRoomTypeLabel(room.type)}</span>
                                         </div>
                                         <div className="flex justify-between items-end">
                                             <span className="text-sm text-muted-foreground">Produkty</span>
