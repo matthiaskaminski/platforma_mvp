@@ -344,3 +344,48 @@ export async function getRoomBudget(roomId: string) {
 
     return products
 }
+
+/**
+ * Get gallery images for a room
+ */
+export async function getRoomGallery(roomId: string) {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user?.email) {
+        return []
+    }
+
+    const profile = await prisma.profile.findUnique({
+        where: { email: user.email }
+    })
+
+    if (!profile) {
+        return []
+    }
+
+    // Verify room ownership
+    const room = await prisma.room.findFirst({
+        where: {
+            id: roomId,
+            project: {
+                designerId: profile.id
+            }
+        }
+    })
+
+    if (!room) {
+        return []
+    }
+
+    const galleryImages = await prisma.galleryImage.findMany({
+        where: {
+            roomId: roomId
+        },
+        orderBy: {
+            createdAt: 'desc'
+        }
+    })
+
+    return galleryImages
+}

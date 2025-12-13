@@ -1,13 +1,14 @@
-import { getRoomById, getRoomProducts, getRoomTasks, getRoomBudget } from '@/app/actions/rooms';
+import { getRoomById, getRoomProducts, getRoomTasks, getRoomBudget, getRoomGallery } from '@/app/actions/rooms';
 import { redirect } from 'next/navigation';
 import RoomDetailsClient from './RoomDetailsClient';
 
 export default async function RoomDetailsPage({ params }: { params: { id: string } }) {
-    const [room, products, tasks, budgetItems] = await Promise.all([
+    const [room, products, tasks, budgetItems, galleryImages] = await Promise.all([
         getRoomById(params.id),
         getRoomProducts(params.id),
         getRoomTasks(params.id),
-        getRoomBudget(params.id)
+        getRoomBudget(params.id),
+        getRoomGallery(params.id)
     ]);
 
     if (!room) {
@@ -33,5 +34,5 @@ export default async function RoomDetailsPage({ params }: { params: { id: string
         coverImage: room.coverImage,
     };
 
-    return <RoomDetailsClient roomData={roomData} products={products} tasks={tasks} budgetItems={budgetItems} />;
+    return <RoomDetailsClient roomData={roomData} products={products} tasks={tasks} budgetItems={budgetItems} galleryImages={galleryImages} />;
 }

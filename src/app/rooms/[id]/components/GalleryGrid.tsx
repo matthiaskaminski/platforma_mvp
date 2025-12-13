@@ -1,16 +1,34 @@
 "use client";
 
 import React from "react";
-import { Plus, Trash2, MoreHorizontal } from "lucide-react";
+import { Plus, Image as ImageIcon } from "lucide-react";
 
-const photos = Array.from({ length: 8 }).map((_, i) => ({
-    id: i,
-    url: "https://zotnacipqsjewlzofpga.supabase.co/storage/v1/object/public/Liru/526853319_1355299779932415_3850250429931914731_n.jpg",
-    title: `Zdjęcie ${i + 1}`,
-    date: "12.11.2024"
-}));
+interface GalleryImage {
+    id: string;
+    url: string;
+    caption: string | null;
+    createdAt: Date;
+}
 
-export function GalleryGrid() {
+interface GalleryGridProps {
+    galleryImages: GalleryImage[];
+}
+
+export function GalleryGrid({ galleryImages }: GalleryGridProps) {
+    const formatDate = (date: Date) => {
+        return new Date(date).toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    };
+
+    if (galleryImages.length === 0) {
+        return (
+            <div className="flex flex-col items-center justify-center h-full p-6">
+                <ImageIcon className="w-12 h-12 mb-4 text-muted-foreground" />
+                <p className="text-base text-muted-foreground mb-2">Brak zdjęć w galerii</p>
+                <p className="text-sm text-muted-foreground">Dodaj zdjęcia, aby je tutaj zobaczyć</p>
+            </div>
+        );
+    }
+
     return (
         <div className="flex-1 overflow-y-auto no-scrollbar pb-10 px-6 pt-2">
             <div className="columns-1 md:columns-2 lg:columns-3 gap-4 space-y-4">
@@ -22,13 +40,13 @@ export function GalleryGrid() {
                     <div className="text-sm font-medium text-white">Dodaj zdjęcia</div>
                 </div>
 
-                {photos.map((photo) => (
+                {galleryImages.map((photo) => (
                     <div key={photo.id} className="break-inside-avoid bg-[#151515] rounded-xl overflow-hidden group cursor-pointer relative">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={photo.url} alt={photo.title} className="w-full h-auto object-cover hover:opacity-90 transition-opacity" />
+                        <img src={photo.url} alt={photo.caption || "Zdjęcie z galerii"} className="w-full h-auto object-cover hover:opacity-90 transition-opacity" />
                         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <div className="text-white text-sm font-medium">{photo.title}</div>
-                            <div className="text-xs text-white/70">{photo.date}</div>
+                            <div className="text-white text-sm font-medium">{photo.caption || "Bez tytułu"}</div>
+                            <div className="text-xs text-white/70">{formatDate(photo.createdAt)}</div>
                         </div>
                     </div>
                 ))}
