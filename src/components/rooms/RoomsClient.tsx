@@ -18,7 +18,7 @@ const PLACEHOLDER_IMG = "https://zotnacipqsjewlzofpga.supabase.co/storage/v1/obj
 const statusConfig = {
     finished: { label: "Zakończone", color: "text-zinc-400", dot: "bg-zinc-400" },
     in_progress: { label: "W trakcie", color: "text-[#91E8B2]", dot: "bg-[#91E8B2]" },
-    not_started: { label: "Nie rozpoczęte", color: "text-[#91A3E8]", dot: "bg-[#91A3E8]" },
+    not_started: { label: "Nierozpoczęte", color: "text-[#91A3E8]", dot: "bg-[#91A3E8]" },
 };
 
 const iconMap: Record<string, any> = {
