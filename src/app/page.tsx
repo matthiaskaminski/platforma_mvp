@@ -13,9 +13,20 @@ export default async function DashboardPage() {
   }
 
   // 1. Get Profile
-  const profile = await prisma.profile.findUnique({
-    where: { email: user.email }
-  })
+  let profile = null;
+  try {
+    if (user.email) {
+      profile = await prisma.profile.findUnique({
+        where: { email: user.email }
+      })
+    }
+  } catch (error) {
+    console.error("DB Error in Dashboard Page:", error);
+    // Fallback or rethrow depending on strategy. For now, let's log and maybe render empty state?
+    // But we need to check onboarding. If DB fails, we can't check onboarding.
+    // Rethrowing will cause 500 but log will be preserved.
+    throw error;
+  }
 
   // Redirect to Onboarding if not completed
   if (!profile?.onboardingCompleted) {
