@@ -27,19 +27,24 @@ export default async function DashboardPage() {
     throw error;
   }
 
-  // Redirect to Onboarding if not completed
-  if (!profile?.onboardingCompleted) {
+  // 2.1 Check if any project exists to determine onboarding status
+  const projectExistsCheck = profile ? await prisma.project.findFirst({
+    where: { designerId: profile.id }
+  }) : null
+
+  // Redirect to Onboarding if no project exists
+  if (!projectExistsCheck) {
     redirect('/onboarding')
   }
 
-  // 3. Get Project
+  // 3. Get Active Project (Specific for Dashboard)
   let project = null
 
   if (profile) {
     project = await prisma.project.findFirst({
       where: {
         designerId: profile.id,
-        status: 'ACTIVE'
+        status: 'ACTIVE' // Only fetch active project for display
       },
       include: {
         tasks: {
@@ -56,8 +61,13 @@ export default async function DashboardPage() {
     })
   }
 
-  // 4. Calculate Stats
+  // Reuse the `projectExistsCheck` result if no active project found? 
+  // No, if they have a project but it's not ACTIVE (e.g. COMPLETED), the dashboard might be empty or prompt to select.
+  // But for MVP, let's assume if 1 project exists, it's the active one or we show empty dashboard.
+  // If project is null here but projectExistsCheck is true, it means they have projects but none ACTIVE. 
+  // We can handle that gracefully in UI (empty state) instead of redirecting to onboarding.
 
+  // 4. Calculate Stats (Only if project exists)
   let stats = {
     budget: {
       spent: 0, planned: 0, total: 0, remaining: 0,
