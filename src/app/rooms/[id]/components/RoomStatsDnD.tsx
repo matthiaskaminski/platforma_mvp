@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
     DndContext,
     closestCenter,
@@ -131,6 +131,11 @@ export function RoomStatsDnD({ roomData }: RoomStatsDnDProps) {
 
     const [items, setItems] = useState(buildStats());
     const [activeId, setActiveId] = useState<string | null>(null);
+
+    // Update items when roomData changes
+    useEffect(() => {
+        setItems(buildStats());
+    }, [roomData.name, roomData.status, roomData.area, roomData.floorNumber, roomData.tasksCount, roomData.productsCount, roomData.type]);
 
     const sensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
