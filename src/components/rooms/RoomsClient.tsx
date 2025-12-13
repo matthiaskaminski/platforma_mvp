@@ -191,6 +191,10 @@ export default function RoomsClient({ rooms: initialRooms, projectId }: RoomsCli
                                             <span className="text-base font-medium truncate max-w-[120px]" title={getRoomTypeLabel(room.type)}>{getRoomTypeLabel(room.type)}</span>
                                         </div>
                                         <div className="flex justify-between items-end">
+                                            <span className="text-sm text-muted-foreground">Piętro</span>
+                                            <span className="text-base font-medium">{room.floorNumber ?? 'Brak'}</span>
+                                        </div>
+                                        <div className="flex justify-between items-end">
                                             <span className="text-sm text-muted-foreground">Produkty</span>
                                             <span className="text-base font-medium">{room.productsCount}</span>
                                         </div>
