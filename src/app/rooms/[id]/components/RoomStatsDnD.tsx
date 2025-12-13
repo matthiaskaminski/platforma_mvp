@@ -26,27 +26,37 @@ import { Armchair, Bath, Utensils, BedDouble, Baby, DoorOpen, MoreHorizontal } f
 
 // Icons Map
 const iconMap: Record<string, any> = {
-    bathroom: Bath,
-    living: Armchair,
-    kitchen: Utensils,
-    bedroom: BedDouble,
-    kids: Baby,
-    hall: DoorOpen
+    BATHROOM: Bath,
+    LIVING_ROOM: Armchair,
+    KITCHEN: Utensils,
+    BEDROOM: BedDouble,
+    KIDS_ROOM: Baby,
+    HALL: DoorOpen,
+    OTHER: DoorOpen
 }
 
-// Initial Data
-const initialStats = [
-    { id: 'stat-name', type: 'name', label: "Salon", sub: "Pomieszczenie", icon: true },
-    { id: 'stat-status', type: 'status', label: "W trakcie", sub: "Status", statusColor: "#91E8B2" },
-    { id: 'stat-area', type: 'text', label: "28m²", sub: "Metraż" },
-    { id: 'stat-floor', type: 'text', label: "1", sub: "Piętro" },
-    { id: 'stat-tasks', type: 'text', label: "7", sub: "Wykonane zadania" },
-    { id: 'stat-products', type: 'text', label: "18", sub: "Produkty" },
-];
+// Status labels and colors
+const statusConfig: Record<string, { label: string; color: string }> = {
+    'not_started': { label: "Nierozpoczęte", color: "#808080" },
+    'in_progress': { label: "W trakcie", color: "#91E8B2" },
+    'finished': { label: "Zakończone", color: "#4A90E2" }
+}
+
+interface RoomStatsDnDProps {
+    roomData: {
+        name: string;
+        type: string;
+        status: string;
+        area: number | null;
+        floorNumber: number | null;
+        tasksCount: number;
+        productsCount: number;
+    }
+}
 
 // Tile Component
-function RoomStatTile({ item, isOverlay, ...props }: { item: any, isOverlay?: boolean } & React.HTMLAttributes<HTMLDivElement>) {
-    const Icon = iconMap['living'] || Armchair;
+function RoomStatTile({ item, roomType, isOverlay, ...props }: { item: any, roomType: string, isOverlay?: boolean } & React.HTMLAttributes<HTMLDivElement>) {
+    const Icon = iconMap[roomType] || DoorOpen;
 
     return (
         <div
@@ -90,7 +100,7 @@ function RoomStatTile({ item, isOverlay, ...props }: { item: any, isOverlay?: bo
 }
 
 // Sortable Wrapper
-function SortableStatTile({ id, item }: { id: string, item: any }) {
+function SortableStatTile({ id, item, roomType }: { id: string, item: any, roomType: string }) {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
 
     const style = {
@@ -101,13 +111,25 @@ function SortableStatTile({ id, item }: { id: string, item: any }) {
 
     return (
         <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="h-full">
-            <RoomStatTile item={item} />
+            <RoomStatTile item={item} roomType={roomType} />
         </div>
     );
 }
 
-export function RoomStatsDnD() {
-    const [items, setItems] = useState(initialStats);
+export function RoomStatsDnD({ roomData }: RoomStatsDnDProps) {
+    const statusInfo = statusConfig[roomData.status] || statusConfig['not_started'];
+
+    // Build stats array from roomData
+    const buildStats = () => [
+        { id: 'stat-name', type: 'name', label: roomData.name, sub: "Pomieszczenie" },
+        { id: 'stat-status', type: 'status', label: statusInfo.label, sub: "Status", statusColor: statusInfo.color },
+        { id: 'stat-area', type: 'text', label: roomData.area ? `${roomData.area}m²` : "Brak", sub: "Metraż" },
+        { id: 'stat-floor', type: 'text', label: roomData.floorNumber?.toString() || "Brak", sub: "Piętro" },
+        { id: 'stat-tasks', type: 'text', label: roomData.tasksCount.toString(), sub: "Wykonane zadania" },
+        { id: 'stat-products', type: 'text', label: roomData.productsCount.toString(), sub: "Produkty" },
+    ];
+
+    const [items, setItems] = useState(buildStats());
     const [activeId, setActiveId] = useState<string | null>(null);
 
     const sensors = useSensors(
@@ -150,13 +172,13 @@ export function RoomStatsDnD() {
             <SortableContext items={items.map(i => i.id)} strategy={rectSortingStrategy}>
                 <div className="grid grid-cols-2 gap-2">
                     {items.map((item) => (
-                        <SortableStatTile key={item.id} id={item.id} item={item} />
+                        <SortableStatTile key={item.id} id={item.id} item={item} roomType={roomData.type} />
                     ))}
                 </div>
             </SortableContext>
 
             <DragOverlay dropAnimation={dropAnimation}>
-                {activeItem ? <RoomStatTile item={activeItem} isOverlay /> : null}
+                {activeItem ? <RoomStatTile item={activeItem} roomType={roomData.type} isOverlay /> : null}
             </DragOverlay>
         </DndContext>
     );

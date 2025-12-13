@@ -160,8 +160,8 @@ export default function RoomsClient({ rooms: initialRooms, projectId }: RoomsCli
                                             <img src={room.img} alt={room.name} className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity" />
                                         </div>
                                     ) : (
-                                        <div className="absolute inset-0 flex items-center justify-center bg-[#232323] border-2 border-dashed border-white/10">
-                                            <Icon className="w-16 h-16 text-white/20" />
+                                        <div className="absolute inset-0 flex items-center justify-center bg-[#232323]">
+                                            <Icon className="w-6 h-6 text-[#6E6E6E]" />
                                         </div>
                                     )}
                                 </div>
