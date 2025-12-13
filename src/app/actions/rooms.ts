@@ -435,3 +435,65 @@ export async function getRoomNotes(roomId: string) {
 
     return notes
 }
+
+/**
+ * Get project summary for room details page
+ */
+export async function getProjectSummary(projectId: string) {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user?.email) {
+        return null
+    }
+
+    const profile = await prisma.profile.findUnique({
+        where: { email: user.email }
+    })
+
+    if (!profile) {
+        return null
+    }
+
+    // Get project with budget and tasks
+    const project = await prisma.project.findFirst({
+        where: {
+            id: projectId,
+            designerId: profile.id
+        },
+        select: {
+            budgetGoal: true,
+            rooms: {
+                select: {
+                    productItems: {
+                        select: {
+                            price: true,
+                            quantity: true,
+                            paidAmount: true,
+                            category: true
+                        }
+                    }
+                }
+            },
+            tasks: {
+                where: {
+                    status: {
+                        in: ['TODO', 'IN_PROGRESS']
+                    }
+                },
+                orderBy: [
+                    { dueDate: 'asc' }
+                ],
+                take: 2,
+                select: {
+                    id: true,
+                    title: true,
+                    status: true,
+                    dueDate: true
+                }
+            }
+        }
+    })
+
+    return project
+}

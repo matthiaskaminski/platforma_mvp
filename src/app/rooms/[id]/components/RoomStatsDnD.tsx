@@ -23,6 +23,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Armchair, Bath, Utensils, BedDouble, Baby, DoorOpen, MoreHorizontal } from "lucide-react";
+import { Badge } from "@/components/ui/Badge";
 
 // Icons Map
 const iconMap: Record<string, any> = {
@@ -35,11 +36,11 @@ const iconMap: Record<string, any> = {
     OTHER: DoorOpen
 }
 
-// Status labels and colors
-const statusConfig: Record<string, { label: string; color: string }> = {
-    'not_started': { label: "Nierozpoczęte", color: "#91A3E8" },
-    'in_progress': { label: "W trakcie", color: "#91E8B2" },
-    'finished': { label: "Zakończone", color: "#4A90E2" }
+// Status labels and badge status mapping
+const statusConfig: Record<string, { label: string; badgeStatus: "not_started" | "in_progress" | "finished" }> = {
+    'not_started': { label: "Nierozpoczęte", badgeStatus: "not_started" },
+    'in_progress': { label: "W trakcie", badgeStatus: "in_progress" },
+    'finished': { label: "Zakończone", badgeStatus: "finished" }
 }
 
 interface RoomStatsDnDProps {
@@ -80,10 +81,9 @@ function RoomStatTile({ item, roomType, isOverlay, ...props }: { item: any, room
 
             {item.type === 'status' && (
                 <>
-                    <div className="flex items-center gap-2">
-                        <span className="w-2.5 h-2.5 rounded-full bg-[#91E8B2] shadow-[0_0_8px_rgba(145,232,178,0.5)]"></span>
-                        <span className="font-semibold text-[14px] text-[#F3F3F3]">{item.label}</span>
-                    </div>
+                    <Badge status={item.badgeStatus} dot className="bg-transparent px-0 font-semibold text-[14px] gap-2 rounded-none hover:bg-transparent">
+                        {item.label}
+                    </Badge>
                     <span className="text-sm text-muted-foreground">{item.sub}</span>
                     {!isOverlay && <div className="absolute top-4 right-4 text-muted-foreground/30"><MoreHorizontal className="w-4 h-4" /></div>}
                 </>
@@ -122,7 +122,7 @@ export function RoomStatsDnD({ roomData }: RoomStatsDnDProps) {
     // Build stats array from roomData
     const buildStats = () => [
         { id: 'stat-name', type: 'name', label: roomData.name, sub: "Pomieszczenie" },
-        { id: 'stat-status', type: 'status', label: statusInfo.label, sub: "Status", statusColor: statusInfo.color },
+        { id: 'stat-status', type: 'status', label: statusInfo.label, sub: "Status", badgeStatus: statusInfo.badgeStatus },
         { id: 'stat-area', type: 'text', label: roomData.area ? `${roomData.area}m²` : "Brak", sub: "Metraż" },
         { id: 'stat-floor', type: 'text', label: roomData.floorNumber?.toString() || "Brak", sub: "Piętro" },
         { id: 'stat-tasks', type: 'text', label: roomData.tasksCount.toString(), sub: "Wykonane zadania" },
