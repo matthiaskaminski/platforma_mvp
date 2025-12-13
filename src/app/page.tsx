@@ -69,6 +69,11 @@ export default async function DashboardPage() {
     interactions: { surveys: 0, moodboards: 0, messages: 0 }
   }
 
+  // Initialize lists
+  let recentTasks: any[] = []
+  let recentProducts: any[] = []
+  let visualizations: any[] = []
+
   if (project) {
     // Calculate Stats & Counts
     const totalBudget = Number(project.budgetGoal) || 0
