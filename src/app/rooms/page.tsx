@@ -3,6 +3,7 @@ import { createClient } from '@/utils/supabase/server'
 import prisma from '@/lib/prisma'
 import { redirect } from 'next/navigation'
 import RoomsClient from '@/components/rooms/RoomsClient'
+import { getActiveProjectId } from '../actions/projects'
 
 // Server Component for Rooms Page
 export default async function RoomsPage() {
@@ -24,25 +25,50 @@ export default async function RoomsPage() {
         redirect('/login')
     }
 
-    // 3. Get Active Project
-    const project = await prisma.project.findFirst({
-        where: {
-            designerId: profile.id,
-            status: 'ACTIVE'
-        },
-        include: {
-            rooms: {
-                include: {
-                    productItems: true,
-                    tasks: true
-                },
-                orderBy: { name: 'asc' } // or createdAt desc
+    // 3. Get Active Project from cookie
+    const activeProjectId = await getActiveProjectId()
+
+    let project = null
+
+    if (activeProjectId) {
+        project = await prisma.project.findFirst({
+            where: {
+                id: activeProjectId,
+                designerId: profile.id
+            },
+            include: {
+                rooms: {
+                    include: {
+                        productItems: true,
+                        tasks: true
+                    },
+                    orderBy: { name: 'asc' }
+                }
             }
-        }
-    })
+        })
+    }
+
+    // Fallback: get first ACTIVE project
+    if (!project) {
+        project = await prisma.project.findFirst({
+            where: {
+                designerId: profile.id,
+                status: 'ACTIVE'
+            },
+            include: {
+                rooms: {
+                    include: {
+                        productItems: true,
+                        tasks: true
+                    },
+                    orderBy: { name: 'asc' }
+                }
+            }
+        })
+    }
 
     if (!project) {
-        // Handle no project state - maybe redirect to create project or dashboard
+        // Handle no project state
         redirect('/')
     }
 

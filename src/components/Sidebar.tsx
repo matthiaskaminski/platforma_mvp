@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
     LayoutDashboard,
@@ -19,10 +19,12 @@ import {
     Image as ImageIcon,
     MonitorPlay,
     Archive,
-    Settings,
-    ChevronDown,
     PanelLeft
 } from "lucide-react";
+import { ProjectSwitcher } from "./ProjectSwitcher";
+import { UserMenu } from "./UserMenu";
+import { setActiveProject } from "@/app/actions/projects";
+import { logout } from "@/app/actions/auth";
 
 const sidebarData = [
     {
@@ -64,10 +66,43 @@ const sidebarData = [
 interface SidebarProps {
     isOpen?: boolean;
     onToggle?: () => void;
+    projects?: Array<{
+        id: string;
+        name: string;
+        icon?: string;
+        color?: string;
+        status: string;
+    }>;
+    currentProjectId?: string;
+    user?: {
+        email: string;
+        fullName?: string;
+        avatarUrl?: string;
+    };
 }
 
-export function Sidebar({ isOpen = true, onToggle }: SidebarProps) {
+export function Sidebar({
+    isOpen = true,
+    onToggle,
+    projects = [],
+    currentProjectId = '',
+    user
+}: SidebarProps) {
     const pathname = usePathname();
+    const router = useRouter();
+
+    const handleProjectChange = async (projectId: string) => {
+        await setActiveProject(projectId);
+        router.refresh();
+    };
+
+    const handleCreateProject = () => {
+        router.push('/onboarding');
+    };
+
+    const handleLogout = async () => {
+        await logout();
+    };
 
     return (
         <div className={cn(
@@ -99,13 +134,12 @@ export function Sidebar({ isOpen = true, onToggle }: SidebarProps) {
                 <div className="w-[280px] flex flex-col h-full">
                     {/* Project Selector - Only visible when open */}
                     <div className="px-4 mb-6 mt-4">
-                        <button className="w-full flex items-center justify-between px-3 py-2 bg-[#0E0E0E] hover:bg-[#0E0E0E] rounded-lg transition-colors text-base min-h-[48px]">
-                            <span className="flex items-center gap-2">
-                                <div className="w-6 h-6 bg-zinc-700 rounded flex items-center justify-center text-xs">P</div>
-                                Projekt Olga
-                            </span>
-                            <ChevronDown className="w-5 h-5 text-muted-foreground" />
-                        </button>
+                        <ProjectSwitcher
+                            projects={projects}
+                            currentProjectId={currentProjectId}
+                            onProjectChange={handleProjectChange}
+                            onCreateProject={handleCreateProject}
+                        />
                     </div>
 
                     {/* Navigation */}
@@ -149,16 +183,13 @@ export function Sidebar({ isOpen = true, onToggle }: SidebarProps) {
 
                     {/* User Profile */}
                     <div className="p-4 border-t border-border mt-auto">
-                        <div className="flex items-center justify-between p-2 rounded-lg hover:bg-[#0E0E0E] transition-colors cursor-pointer min-h-[48px]">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded bg-zinc-700 flex items-center justify-center text-sm font-medium">SL</div>
-                                <div className="flex flex-col">
-                                    <span className="text-base font-medium">Sonya Lubowitz</span>
-                                    <span className="text-sm text-muted-foreground">Plan premium</span>
-                                </div>
-                            </div>
-                            <Settings className="w-5 h-5 text-muted-foreground" />
-                        </div>
+                        {user && (
+                            <UserMenu
+                                user={user}
+                                onLogout={handleLogout}
+                                onSettings={() => router.push('/settings')}
+                            />
+                        )}
                     </div>
                 </div>
             </div>

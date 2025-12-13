@@ -24,7 +24,29 @@ const titles: Record<string, string> = {
     "/storage": "Przechowywanie",
 };
 
-export function ClientLayout({ children }: { children: React.ReactNode }) {
+interface ClientLayoutProps {
+    children: React.ReactNode;
+    projects?: Array<{
+        id: string;
+        name: string;
+        icon?: string;
+        color?: string;
+        status: string;
+    }>;
+    currentProjectId?: string;
+    user?: {
+        email: string;
+        fullName?: string;
+        avatarUrl?: string;
+    };
+}
+
+export function ClientLayout({
+    children,
+    projects = [],
+    currentProjectId = '',
+    user
+}: ClientLayoutProps) {
     const pathname = usePathname();
 
     let title: React.ReactNode = titles[pathname] || "Liru";
@@ -61,6 +83,9 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
             <Sidebar
                 isOpen={isSidebarOpen}
                 onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
+                projects={projects}
+                currentProjectId={currentProjectId}
+                user={user}
             />
 
             <div className="flex-1 flex flex-col h-full min-w-0 p-4 transition-all duration-300">

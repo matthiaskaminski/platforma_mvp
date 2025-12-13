@@ -3,6 +3,7 @@ import { createClient } from '@/utils/supabase/server'
 import DashboardClient from '@/components/dashboard/DashboardClient'
 import prisma from '@/lib/prisma'
 import { redirect } from 'next/navigation'
+import { getActiveProjectId } from './actions/projects'
 
 import { resetOnboarding } from './onboarding/actions'
 
@@ -37,28 +38,54 @@ export default async function DashboardPage() {
     redirect('/onboarding')
   }
 
-  // 3. Get Active Project (Specific for Dashboard)
+  // 3. Get Active Project from cookie or first ACTIVE project
   let project = null
 
   if (profile) {
-    project = await prisma.project.findFirst({
-      where: {
-        designerId: profile.id,
-        status: 'ACTIVE' // Only fetch active project for display
-      },
-      include: {
-        tasks: {
-          where: { status: { not: 'DONE' } }
+    const activeProjectId = await getActiveProjectId()
+
+    if (activeProjectId) {
+      // Get project by ID from cookie
+      project = await prisma.project.findFirst({
+        where: {
+          id: activeProjectId,
+          designerId: profile.id
         },
-        rooms: {
-          include: {
-            productItems: true
-          }
+        include: {
+          tasks: {
+            where: { status: { not: 'DONE' } }
+          },
+          rooms: {
+            include: {
+              productItems: true
+            }
+          },
+          calendarEvents: true
+        }
+      })
+    }
+
+    // Fallback: if no project found by cookie, get first ACTIVE project
+    if (!project) {
+      project = await prisma.project.findFirst({
+        where: {
+          designerId: profile.id,
+          status: 'ACTIVE'
         },
-        calendarEvents: true
-      },
-      orderBy: { createdAt: 'desc' }
-    })
+        include: {
+          tasks: {
+            where: { status: { not: 'DONE' } }
+          },
+          rooms: {
+            include: {
+              productItems: true
+            }
+          },
+          calendarEvents: true
+        },
+        orderBy: { createdAt: 'desc' }
+      })
+    }
   }
 
   // Reuse the `projectExistsCheck` result if no active project found? 
