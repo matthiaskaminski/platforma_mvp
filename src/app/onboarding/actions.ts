@@ -170,3 +170,26 @@ export async function createFirstProject(data: any) {
     revalidatePath('/')
     return { success: true, projectId: project.id }
 }
+
+export async function resetOnboarding() {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) throw new Error('Unauthorized')
+
+    // Find profile
+    const profile = await prisma.profile.findUnique({
+        where: { email: user.email! }
+    })
+
+    if (profile) {
+        // Update to false
+        await prisma.profile.update({
+            where: { id: profile.id },
+            data: { onboardingCompleted: false }
+        })
+    }
+
+    revalidatePath('/')
+    return { success: true }
+}
