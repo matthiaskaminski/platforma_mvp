@@ -12,27 +12,20 @@ async function main() {
         update: {},
         create: {
             email: 'sonya@liru.app',
-            firstName: 'Sonya',
-            lastName: 'Design',
-            userType: 'STUDIO',
+            fullName: 'Sonya Design',
+            role: 'DESIGNER',
             studioName: 'Liru Studio'
         },
     })
 
-    // 2. Create Clients
-    const client1 = await prisma.client.create({
-        data: {
-            designerId: me.id,
-            name: 'Jan Kowalski (Inwestor)',
-            type: 'PRIVATE',
-            email: 'jan@example.com'
-        }
-    })
+    // 2. Create Projects (and implicitly Clients for now? No, schema splits them)
+    // Wait, Schema has Client linked to Project.
+    // Let's create Project first, then Client?
+    // Schema: Client has projectId.
+    // Project has designerId.
 
-    // 3. Create Project
     const project = await prisma.project.create({
         data: {
-            clientId: client1.id,
             designerId: me.id,
             name: 'Apartament Złota 44',
             status: 'ACTIVE',
@@ -46,12 +39,24 @@ async function main() {
         }
     })
 
+    // Create Client linked to Project
+    const client1 = await prisma.client.create({
+        data: {
+            projectId: project.id, // Linked to project
+            fullName: 'Jan Kowalski',
+            email: 'jan@example.com'
+        }
+    })
+
+
     // 4. Create Rooms
+    // Enum RoomType: LIVING, KITCHEN, BEDROOM, BATHROOM, KIDS, HALL, OFFICE, OTHER
     const salon = await prisma.room.create({
         data: {
             projectId: project.id,
             name: 'Salon - Modern',
-            type: 'LIVING_ROOM',
+            type: 'LIVING',
+            status: 'IN_PROGRESS',
             area: 35.5,
             budgetAllocated: 120000
         }
@@ -62,6 +67,7 @@ async function main() {
             projectId: project.id,
             name: 'Kuchnia',
             type: 'KITCHEN',
+            status: 'NOT_STARTED',
             area: 12.0,
             budgetAllocated: 85000
         }
@@ -91,12 +97,13 @@ async function main() {
     })
 
     // 6. Create Calendar Events
+    // Model CalendarEvent: date DateTime, type String @default("MEETING")
     await prisma.calendarEvent.create({
         data: {
             projectId: project.id,
             title: 'Spotkanie na budowie - Odbiory',
-            startTime: new Date(),
-            type: 'Spotkanie'
+            date: new Date(),
+            type: 'MEETING'
         }
     })
 
