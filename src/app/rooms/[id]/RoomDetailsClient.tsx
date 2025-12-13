@@ -79,6 +79,8 @@ interface RoomDetailsClientProps {
         tasksCount: number;
         productsCount: number;
         coverImage: string | null;
+        projectId: string;
+        projectCoverImage: string | null;
     };
     products: Product[];
     tasks: Task[];
@@ -99,19 +101,33 @@ export default function RoomDetailsClient({ roomData, products, tasks, budgetIte
                 {/* 1. Drag & Drop Stats Grid */}
                 <RoomStatsDnD roomData={roomData} />
 
-                {/* 2. Big Image Tile - Fills remaining height */}
+                {/* 2. Big Image Tile - Project Cover Image - Fills remaining height */}
                 <Card className="flex-1 min-h-[300px] rounded-2xl overflow-hidden relative group">
-                    <div className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button size="icon" variant="ghost" className="p-2 rounded-full bg-black/50 text-white hover:bg-black/70 backdrop-blur-md w-auto h-auto">
-                            <Settings className="w-5 h-5" />
-                        </Button>
-                    </div>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                        src={roomData.coverImage || ROOM_IMG_PLACEHOLDER}
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                        alt="Room Visualization"
-                    />
+                    {roomData.projectCoverImage ? (
+                        <>
+                            <div className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Button size="icon" variant="ghost" className="p-2 rounded-full bg-black/50 text-white hover:bg-black/70 backdrop-blur-md w-auto h-auto">
+                                    <Settings className="w-5 h-5" />
+                                </Button>
+                            </div>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                                src={roomData.projectCoverImage}
+                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                alt="Project Visualization"
+                            />
+                        </>
+                    ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center bg-[#151515] p-8">
+                            <div className="w-16 h-16 rounded-full bg-[#1B1B1B] flex items-center justify-center mb-4">
+                                <Plus className="w-8 h-8 text-muted-foreground" />
+                            </div>
+                            <p className="text-white font-medium mb-2">Dodaj zdjęcie projektu</p>
+                            <p className="text-sm text-muted-foreground text-center max-w-xs">
+                                Kliknij aby dodać zdjęcie wizualizacji dla całego projektu
+                            </p>
+                        </div>
+                    )}
                 </Card>
             </div>
 

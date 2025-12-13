@@ -33,6 +33,8 @@ export default async function RoomDetailsPage({ params }: { params: { id: string
         tasksCount: room._count.tasks,
         productsCount: room._count.productItems,
         coverImage: room.coverImage,
+        projectId: room.project.id,
+        projectCoverImage: room.project.coverImage,
     };
 
     return <RoomDetailsClient roomData={roomData} products={products} tasks={tasks} budgetItems={budgetItems} galleryImages={galleryImages} notes={notes} />;

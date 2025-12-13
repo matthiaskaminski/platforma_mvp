@@ -189,7 +189,8 @@ export async function getRoomById(roomId: string) {
             project: {
                 select: {
                     id: true,
-                    name: true
+                    name: true,
+                    coverImage: true
                 }
             }
         }
