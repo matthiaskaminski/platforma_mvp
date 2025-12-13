@@ -142,6 +142,9 @@ model Project {
   designer    Profile  @relation(fields: [designerId], references: [id], onDelete: Cascade)
   
   name        String
+  description String?
+  icon        String?  // e.g. "Home", "Office" (Lucide icon name)
+  color       String?  // e.g. "#FF0000"
   address     String?
   status      ProjectStatus @default(ACTIVE)
   

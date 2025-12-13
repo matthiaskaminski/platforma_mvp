@@ -1,82 +1,142 @@
 'use client'
-
-import { useState } from 'react'
+import { Button } from '@/components/ui/Button'
+import { Check, Plus, FolderPlus } from 'lucide-react'
 import ProfileStep from './steps/ProfileStep'
-import PlanStep from './steps/PlanStep'
-import ThemeStep from './steps/ThemeStep'
 import SuccessStep from './steps/SuccessStep'
-import { Check } from 'lucide-react'
-
-const STEPS = [
-    { id: 0, title: 'Uzupełnij dane' },
-    { id: 1, title: 'Wybierz plan' },
-    { id: 2, title: 'Dostosuj platformę' },
-    { id: 3, title: 'Utwórz pierwszy projekt' },
-]
+import ProjectBasicStep from './steps/ProjectBasicStep'
+import ClientStep from './steps/ClientStep'
+import ProjectDetailsStep from './steps/ProjectDetailsStep'
+import ProjectDatesStep from './steps/ProjectDatesStep'
+import DocumentsStep from './steps/DocumentsStep'
+import { createFirstProject } from './actions'
+import { useRouter } from 'next/navigation'
 
 export default function OnboardingWizard({ initialProfile }: { initialProfile: any }) {
+    const router = useRouter()
     const [currentStep, setCurrentStep] = useState(0)
+    const [isSubmitting, setIsSubmitting] = useState(false)
 
-    const nextStep = () => setCurrentStep(prev => Math.min(prev + 1, STEPS.length - 1))
+    // State to hold data from all steps before final submission
+    const [wizardData, setWizardData] = useState({
+        // Profile data is handled in step 1 directly to DB
+        projectBasic: {},
+        client: {},
+        projectDetails: {},
+        projectDates: {},
+        documents: []
+    })
+
+    const nextStep = () => setCurrentStep(prev => prev + 1)
+
+    const updateWizardData = (key: string, data: any) => {
+        setWizardData(prev => {
+            const newData = { ...prev, [key]: data }
+            return newData
+        })
+        nextStep()
+    }
+
+    const handleFinalSubmit = async (documents: any) => {
+        // We get documents from the last step, need to combine with existing state
+        const finalData = { ...wizardData, documents }
+        setIsSubmitting(true)
+        try {
+            await createFirstProject(finalData)
+            nextStep() // Move to Final Success Step
+        } catch (error) {
+            console.error(error)
+            // Handle error (toast or alert)
+        } finally {
+            setIsSubmitting(false)
+        }
+    }
 
     return (
         <div className="min-h-screen bg-[#0A0A0A] text-white flex">
-            {/* Sidebar */}
-            <div className="w-64 border-r border-white/5 p-8 hidden md:flex flex-col justify-between">
-                <div>
-                    <div className="mb-12">
-                        {/* Logo Placeholder */}
-                        <div className="text-xl font-bold tracking-tighter">Liru.app</div>
-                    </div>
-
-                    <div className="space-y-6">
-                        {STEPS.map((step, index) => (
-                            <div key={step.id} className="flex items-center gap-3">
-                                <div className={`w-4 h-4 rounded-full flex items-center justify-center border ${index === currentStep ? 'border-white bg-white text-black' :
-                                        index < currentStep ? 'border-white bg-white text-black' :
-                                            'border-white/20 bg-transparent'
-                                    }`}>
-                                    {index < currentStep && <Check className="w-3 h-3" />}
-                                    {index === currentStep && <div className="w-2 h-2 bg-black rounded-full" />}
-                                </div>
-                                <span className={`text-sm ${index === currentStep ? 'text-white font-medium' :
-                                        index < currentStep ? 'text-gray-400' :
-                                            'text-gray-600'
-                                    }`}>
-                                    {step.title}
-                                </span>
-                            </div>
-                        ))}
-                    </div>
+            {/* Left Side - Content */}
+            <div className="w-full lg:w-1/2 flex flex-col p-8 lg:p-12 xl:p-24 overflow-y-auto">
+                <div className="mb-12">
+                    {/* Logo */}
+                    <div className="text-xl font-bold tracking-tighter">Liru.app</div>
                 </div>
 
-                <div className="text-xs text-gray-600">
+                <div className="flex-1 flex flex-col justify-center max-w-lg mx-auto w-full">
+
+                    {currentStep === 0 && (
+                        <ProfileStep
+                            onNext={nextStep}
+                            initialData={initialProfile}
+                        />
+                    )}
+
+                    {currentStep === 1 && (
+                        <SuccessStep
+                            title="Twoje konto zostało utworzone"
+                            description="Możesz teraz utworzyć swój pierwszy projekt."
+                            buttonText="Utwórz projekt"
+                            icon={<Check className="w-8 h-8" />}
+                            onNext={nextStep}
+                        />
+                    )}
+
+                    {currentStep === 2 && (
+                        <ProjectBasicStep
+                            onNext={(data) => updateWizardData('projectBasic', data)}
+                        />
+                    )}
+
+                    {currentStep === 3 && (
+                        <ClientStep
+                            onNext={(data) => updateWizardData('client', data)}
+                        />
+                    )}
+
+                    {currentStep === 4 && (
+                        <ProjectDetailsStep
+                            onNext={(data) => updateWizardData('projectDetails', data)}
+                        />
+                    )}
+
+                    {currentStep === 5 && (
+                        <ProjectDatesStep
+                            onNext={(data) => updateWizardData('projectDates', data)}
+                        />
+                    )}
+
+                    {currentStep === 6 && (
+                        <DocumentsStep
+                            onNext={handleFinalSubmit}
+                        />
+                    )}
+
+                    {currentStep === 7 && (
+                        <SuccessStep
+                            title="Projekt został utworzony!"
+                            description="Wszystko gotowe. Przejdź do dashboardu aby zarządzać projektem."
+                            buttonText="Przejdź do Dashboardu"
+                            icon={<FolderPlus className="w-8 h-8" />}
+                            onComplete={async () => router.push('/')}
+                        />
+                    )}
+
+                </div>
+
+                <div className="mt-12 text-xs text-gray-600">
                     © 2024 Liru App
                 </div>
             </div>
 
-            {/* Main Content */}
-            <div className="flex-1 flex flex-col">
-                <div className="flex-1 flex items-center justify-center p-8 overflow-y-auto">
-                    {currentStep === 0 && <ProfileStep onNext={nextStep} initialData={initialProfile} />}
-                    {currentStep === 1 && <PlanStep onNext={nextStep} />}
-                    {currentStep === 2 && <ThemeStep onNext={nextStep} />}
-                    {currentStep === 3 && <SuccessStep />}
-                </div>
-
-                {currentStep < 3 && (
-                    <div className="p-8 flex justify-end md:hidden">
-                        <div className="text-xs text-gray-500">Krok {currentStep + 1} z 4</div>
-                    </div>
-                )}
+            {/* Right Side - Image */}
+            <div className="hidden lg:block w-1/2 relative bg-[#151515]">
+                <img
+                    src="https://fiofzeriduyhoarihrzt.supabase.co/storage/v1/object/sign/Pliki%20do%20MVP/app%20background.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9lOWYwOGU5YS1lZDM4LTRmZWYtODg5Zi0yMjM3ZDY1ZjdhZjAiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJQbGlraSBkbyBNVlAvYXBwIGJhY2tncm91bmQucG5nIiwiaWF0IjoxNzY1NjM2MDk1LCJleHAiOjE3OTcxNzIwOTV9.wqUeJFCdaDTtjDKoA8FMroM2dNfzut30K7ZOXqVVr-I"
+                    alt="Liru App Background"
+                    className="absolute inset-0 w-full h-full object-cover opacity-80"
+                />
+                {/* Overlay Gradient */}
+                <div className="absolute inset-0 bg-gradient-to-l from-transparent to-[#0A0A0A] opacity-50" />
             </div>
-
-            {/* Background Gradient/Mesh (Right side abstract art from screenshot) */}
-            {currentStep !== 3 && (
-                <div className="hidden lg:block w-1/3 h-screen fixed right-0 top-0 bottom-0 -z-10 opacity-20 pointer-events-none">
-                    <div className="absolute inset-0 bg-gradient-to-l from-[#ff8c00] via-purple-900 to-[#0A0A0A] mix-blend-screen opacity-30 blur-3xl" />
-                </div>
-            )}
         </div>
     )
 }
+
