@@ -91,22 +91,74 @@ export default function DashboardClient({ user, project, stats, recentProducts =
     ];
 
     // Update tiles with real data if project exists
+    // Update tiles with real data if project exists
     React.useEffect(() => {
         if (project && stats) {
             setStatsTiles(tiles => tiles.map(tile => {
                 const counts = stats.counts || { products: 0, doneTasks: 0, floors: 0, rooms: 0 };
+
+                // Helper to map icon to Polish label
+                const getBuildingLabel = (icon: string) => {
+                    const map: Record<string, string> = {
+                        'Home': 'Dom',
+                        'Building': 'Mieszkanie',
+                        'Building2': 'Biuro',
+                        'Warehouse': 'Lokal'
+                    };
+                    return map[icon] || project.name || 'Dom';
+                };
+
                 switch (tile.id) {
-                    case 'tile-1': return { ...tile, value: project.name }
-                    case 'tile-2': return { ...tile, value: `${project.totalArea || 0}m²` }
-                    case 'tile-3': return { ...tile, value: String(counts.floors || 0) }
-                    case 'tile-4': return { ...tile, value: String(counts.rooms || 0) }
-                    case 'tile-5': return { ...tile, value: String(counts.products || 0) }
-                    case 'tile-6': return { ...tile, value: String(counts.doneTasks || 0) }
+                    case 'tile-1': return { ...tile, label: getBuildingLabel(project.icon || 'Home') }
+                    case 'tile-2': return { ...tile, label: `${project.totalArea || 0}m²` }
+                    case 'tile-3': return { ...tile, label: String(project.floorsCount || 0) }
+                    case 'tile-4': return { ...tile, label: String(project.roomsCount || 0) }
+                    case 'tile-5': return { ...tile, label: String(counts.products || 0) }
+                    case 'tile-6': return { ...tile, label: String(counts.doneTasks || 0) }
                     default: return tile
                 }
             }))
         }
     }, [project, stats])
+
+    // Calendar Helper Logic
+    const today = new Date();
+    const [currentDate, setCurrentDate] = useState(today);
+
+    const getDaysInMonth = (date: Date) => {
+        const year = date.getFullYear();
+        const month = date.getMonth();
+        const firstDay = new Date(year, month, 1);
+        const lastDay = new Date(year, month + 1, 0);
+        const daysInMonth = lastDay.getDate();
+        const startingDay = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1; // 0=Sun, 1=Mon... make Mon=0
+
+        const days = [];
+        // Previous month filler
+        const prevMonthLastDay = new Date(year, month, 0).getDate();
+        for (let i = 0; i < startingDay; i++) {
+            days.push({ day: prevMonthLastDay - startingDay + 1 + i, type: 'prev' });
+        }
+        // Current month
+        for (let i = 1; i <= daysInMonth; i++) {
+            days.push({ day: i, type: 'current' });
+        }
+        // Next month filler (to 42 grid or just 35)
+        const remaining = 35 - days.length; // 5 rows
+        for (let i = 1; i <= remaining; i++) {
+            days.push({ day: i, type: 'next' });
+        }
+        // If 35 isn't enough (e.g. starts Sat/Sun + 31 days), add row
+        if (days.length < daysInMonth + startingDay) {
+            const extra = 42 - days.length;
+            for (let i = 1; i <= extra; i++) days.push({ day: (remaining > 0 ? remaining : 0) + i, type: 'next' });
+        }
+
+        return days;
+    };
+
+    const calendarDays = getDaysInMonth(currentDate);
+    const monthNames = ["Styczeń", "Luty", "Marzec", "Kwiecień", "Maj", "Czerwiec", "Lipiec", "Sierpień", "Wrzesień", "Październik", "Listopad", "Grudzień"];
 
     // Helpers for formatting
     const formatMoney = (amount: number) => new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN', maximumFractionDigits: 0 }).format(amount).replace('zł', ' zł')
@@ -222,42 +274,45 @@ export default function DashboardClient({ user, project, stats, recentProducts =
                     {/* Calendar */}
                     <Card className="flex flex-col justify-center shrink-0 min-h-0">
                         <div className="flex justify-between items-center mb-4">
-                            <h3 className="font-medium text-[20px]">Październik</h3>
+                            <h3 className="font-medium text-[20px] capitalize">{monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}</h3>
                             <div className="flex gap-2">
-                                <Button variant="ghost" size="icon" className="w-6 h-6 p-0 hover:text-white text-muted-foreground"><ChevronLeft className="w-4 h-4" /></Button>
-                                <Button variant="ghost" size="icon" className="w-6 h-6 p-0 hover:text-white text-muted-foreground"><ChevronRight className="w-4 h-4" /></Button>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="w-6 h-6 p-0 hover:text-white text-muted-foreground"
+                                    onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))}
+                                >
+                                    <ChevronLeft className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="w-6 h-6 p-0 hover:text-white text-muted-foreground"
+                                    onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))}
+                                >
+                                    <ChevronRight className="w-4 h-4" />
+                                </Button>
                             </div>
                         </div>
                         <div className="grid grid-cols-7 gap-2 text-center text-sm text-muted-foreground font-medium mb-1">
                             {['Po', 'Wt', 'Śr', 'Cz', 'Pi', 'So', 'Nd'].map(d => <span key={d}>{d}</span>)}
                         </div>
                         <div className="grid grid-cols-7 gap-2 flex-1 min-h-0 content-center">
-                            {[29, 30].map((day) => (
-                                <div key={`prev-${day}`} className="aspect-square flex items-center justify-center rounded-lg text-sm bg-[#1B1B1B] text-muted-foreground/50">
-                                    {day}
-                                </div>
-                            ))}
-                            {Array.from({ length: 31 }).map((_, i) => {
-                                const day = i + 1;
-                                const isToday = day === 10;
+                            {calendarDays.map((d, index) => {
+                                const isToday = d.type === 'current' && d.day === today.getDate() && currentDate.getMonth() === today.getMonth() && currentDate.getFullYear() === today.getFullYear();
                                 return (
                                     <div
-                                        key={day}
-                                        className={`aspect-square flex items-center justify-center rounded-lg text-sm transition-all cursor-pointer border border-transparent
-                      ${isToday
-                                                ? 'bg-[#F3F3F3] text-black font-bold'
-                                                : 'bg-[#232323] text-muted-foreground hover:bg-[#2F2F2F] hover:text-white'
-                                            }`}
+                                        key={index}
+                                        className={`aspect-square flex items-center justify-center rounded-lg text-sm transition-all cursor-default border border-transparent
+                                            ${d.type === 'current' ? 'text-muted-foreground hover:bg-[#2F2F2F] hover:text-white cursor-pointer' : 'opacity-20 text-muted-foreground'}
+                                            ${isToday ? 'bg-[#F3F3F3] text-black font-bold hover:bg-[#F3F3F3] hover:text-black' : 'bg-[#232323]'}
+                                            ${d.type !== 'current' ? 'bg-[#1B1B1B]' : ''}
+                                        `}
                                     >
-                                        {day}
+                                        {d.day}
                                     </div>
                                 )
                             })}
-                            {[1, 2].map((day) => (
-                                <div key={`next-${day}`} className="aspect-square flex items-center justify-center rounded-lg text-sm bg-[#1B1B1B] text-muted-foreground/50">
-                                    {day}
-                                </div>
-                            ))}
                         </div>
                     </Card>
                 </div>
@@ -382,8 +437,8 @@ export default function DashboardClient({ user, project, stats, recentProducts =
                     {/* Split Row: Tasks & Interactions */}
                     <div className="grid grid-cols-2 gap-3 flex-[1.4] min-h-0">
                         {/* Tasks */}
-                        <Card className="flex flex-col h-full min-h-0">
-                            <div className="flex items-center justify-between mb-4">
+                        <Card className="flex flex-col h-full min-h-0 relative">
+                            <div className="flex items-center justify-between mb-4 shrink-0">
                                 <div className="flex items-center gap-2">
                                     <h3 className="text-[20px] font-medium text-[#E5E5E5]">Lista zadań</h3>
                                     <span className="w-5 h-5 bg-[#E5E5E5] text-black text-xs font-bold rounded-full flex items-center justify-center">{stats.activeTasks}</span>
@@ -391,15 +446,11 @@ export default function DashboardClient({ user, project, stats, recentProducts =
                                 <Button variant="secondary" size="sm" className="rounded-full h-auto py-1 px-3 border border-white/5 bg-[#232323] hover:bg-[#2a2a2a]">Zarządzaj</Button>
                             </div>
 
-                            <Button variant="ghost" className="w-full py-3 border border-dashed border-white/10 rounded-lg text-muted-foreground hover:text-white hover:border-white/20 hover:bg-white/5 transition-all text-sm font-medium mb-4 justify-center">
-                                + Dodaj nowe zadanie
-                            </Button>
-
-                            <div className="space-y-3 flex-1 flex flex-col overflow-y-auto pr-1 min-h-0 no-scrollbar">
+                            <div className="space-y-3 flex-1 flex flex-col overflow-y-auto pr-1 min-h-0 no-scrollbar pb-14">
                                 {recentTasks.length > 0 ? (
                                     recentTasks.map((task, i) => (
-                                        <div key={i} className="flex-1 flex flex-col justify-between p-3 bg-secondary/30 hover:bg-[#232323] transition-colors cursor-pointer rounded-xl">
-                                            <h4 className="text-[16px] font-medium mb-1">{task.title}</h4>
+                                        <div key={i} className="flex-1 flex flex-col justify-between p-3 bg-secondary/30 hover:bg-[#232323] transition-colors cursor-pointer rounded-xl shrink-0 h-[80px]">
+                                            <h4 className="text-[16px] font-medium mb-1 truncate">{task.title}</h4>
                                             <div className="flex justify-between items-center text-sm">
                                                 <span className="text-[#F1F1F1] flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-[#E8B491] shadow-[0_0_8px_rgba(232,180,145,0.4)]"></span> W trakcie</span>
                                                 <span className="text-muted-foreground">{task.room?.name || "Ogólne"}</span>
@@ -411,10 +462,17 @@ export default function DashboardClient({ user, project, stats, recentProducts =
                                         </div>
                                     ))
                                 ) : (
-                                    <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
-                                        Wszystkie zadania zrobione! 🎉
+                                    <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground text-sm h-full pb-10">
+                                        Nie masz obecnie żadnych zadań
                                     </div>
                                 )}
+                            </div>
+
+                            {/* Add Task Button - Pinned to bottom */}
+                            <div className="absolute bottom-4 left-4 right-4">
+                                <Button variant="ghost" className="w-full py-6 border border-dashed border-white/10 rounded-lg text-muted-foreground hover:text-white hover:border-white/20 hover:bg-white/5 transition-all text-base font-medium justify-center">
+                                    + Dodaj nowe zadanie
+                                </Button>
                             </div>
                         </Card>
 
@@ -503,8 +561,8 @@ export default function DashboardClient({ user, project, stats, recentProducts =
                             ) : (
                                 // 4-icon placeholder state
                                 Array.from({ length: 4 }).map((_, i) => (
-                                    <div key={i} className="flex items-center justify-center bg-[#1B1B1B] rounded-lg border border-white/5">
-                                        <ImageIcon className="w-6 h-6 text-white/10" />
+                                    <div key={i} className="flex items-center justify-center bg-[#1B1B1B] rounded-lg">
+                                        <ImageIcon className="w-10 h-10 text-white/5 opacity-50" strokeWidth={1.5} />
                                     </div>
                                 ))
                             )}
