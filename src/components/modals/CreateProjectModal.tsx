@@ -60,9 +60,9 @@ export function CreateProjectModal({ isOpen, onClose }: CreateProjectModalProps)
             />
 
             {/* Modal */}
-            <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-[#151515] rounded-2xl shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-200 border border-white/10">
+            <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-[#151515] rounded-2xl shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-200 border border-white/10 max-h-[90vh] overflow-y-auto">
                 {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b border-white/10">
+                <div className="flex items-center justify-between p-6 border-b border-white/10 sticky top-0 bg-[#151515] z-10">
                     <h2 className="text-xl font-semibold">Nowy projekt</h2>
                     <button
                         onClick={onClose}
@@ -73,7 +73,7 @@ export function CreateProjectModal({ isOpen, onClose }: CreateProjectModalProps)
                 </div>
 
                 {/* Form */}
-                <form onSubmit={handleSubmit} className="p-6 space-y-5">
+                <form onSubmit={handleSubmit} className="p-6 space-y-6">
                     {/* Name */}
                     <div>
                         <label className="block text-sm font-medium mb-2">
@@ -113,13 +113,13 @@ export function CreateProjectModal({ isOpen, onClose }: CreateProjectModalProps)
                                     key={name}
                                     type="button"
                                     onClick={() => setSelectedIcon(name)}
-                                    className={`p-3 rounded-lg border-2 transition-all hover:bg-white/5 ${
+                                    className={`flex flex-col items-center justify-center p-3 rounded-lg transition-all min-h-[60px] ${
                                         selectedIcon === name
-                                            ? 'border-primary bg-white/5'
-                                            : 'border-white/10'
+                                            ? 'bg-white text-black'
+                                            : 'bg-[#232323] text-muted-foreground hover:bg-[#2a2a2a]'
                                     }`}
                                 >
-                                    <Icon className="w-6 h-6 mx-auto" />
+                                    <Icon className="w-6 h-6" />
                                 </button>
                             ))}
                         </div>
@@ -136,10 +136,10 @@ export function CreateProjectModal({ isOpen, onClose }: CreateProjectModalProps)
                                     key={color}
                                     type="button"
                                     onClick={() => setSelectedColor(color)}
-                                    className={`w-10 h-10 rounded-lg transition-all hover:scale-110 ${
+                                    className={`w-10 h-10 rounded-lg transition-all ${
                                         selectedColor === color
-                                            ? 'ring-2 ring-white ring-offset-2 ring-offset-[#151515]'
-                                            : ''
+                                            ? 'ring-2 ring-white ring-offset-2 ring-offset-[#151515] scale-110'
+                                            : 'hover:scale-105 opacity-70 hover:opacity-100'
                                     }`}
                                     style={{ backgroundColor: color }}
                                 />
