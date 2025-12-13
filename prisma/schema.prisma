@@ -90,6 +90,9 @@ model Profile {
   logoUrl     String?  @map("logo_url")
   userType    UserType @default(FREELANCER) @map("user_type")
   
+  onboardingCompleted Boolean @default(false) @map("onboarding_completed")
+  preferences         Json?
+  
   // Relations
   clients     Client[]
   projects    Project[]

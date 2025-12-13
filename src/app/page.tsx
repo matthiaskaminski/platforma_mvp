@@ -17,6 +17,11 @@ export default async function DashboardPage() {
     where: { email: user.email }
   })
 
+  // Redirect to Onboarding if not completed
+  if (!profile?.onboardingCompleted) {
+    redirect('/onboarding')
+  }
+
   // If no profile exists yet (should be created on registration, but fallback for now)
   // Ideally, we'd redirect to an onboarding flow. For MVP, we skip or show empty.
 

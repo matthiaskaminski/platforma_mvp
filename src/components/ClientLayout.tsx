@@ -51,6 +51,11 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
 
     const [isSidebarOpen, setIsSidebarOpen] = React.useState(true);
 
+    // Full screen layout for auth and onboarding
+    if (pathname === '/login' || pathname.startsWith('/onboarding')) {
+        return <div className="min-h-screen bg-background">{children}</div>;
+    }
+
     return (
         <div className="flex w-full h-screen bg-[var(--color-sidebar)] text-foreground overflow-hidden">
             <Sidebar
