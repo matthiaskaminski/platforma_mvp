@@ -68,7 +68,9 @@ export default function RoomsClient({ rooms: initialRooms, projectId }: RoomsCli
                 name: "Nowe Pomieszczenie",
                 type: "living",
                 area: 0,
-                budgetAllocated: 0
+                budgetAllocated: 0,
+                status: "not_started",
+                coverImage: undefined
             });
             // In a perfect world we revalidate path, so we don't need to manually update state strictly,
             // but optimistic update is nice.
