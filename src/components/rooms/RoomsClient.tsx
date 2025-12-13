@@ -146,7 +146,7 @@ export default function RoomsClient({ rooms: initialRooms, projectId }: RoomsCli
                                 <div className="flex items-center gap-2 text-sm font-medium">
                                     <span className="text-muted-foreground/60">Status:</span>
                                     {/* Using Badge Component */}
-                                    <Badge status={configKey === 'not_started' ? 'default' : configKey} dot className="bg-transparent px-0 font-semibold gap-2">
+                                    <Badge status={configKey} dot className="bg-transparent px-0 font-semibold gap-2">
                                         {status.label}
                                     </Badge>
                                 </div>
