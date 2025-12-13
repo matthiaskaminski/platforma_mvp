@@ -20,8 +20,7 @@ export async function createRoom(projectId: string, data: {
                 name: data.name,
                 type: data.type as any, // Enum casting if necessary
                 area: data.area,
-                budgetAllocated: data.budgetAllocated,
-                status: "not_started" // Default status
+                budgetAllocated: data.budgetAllocated
             }
         });
 
