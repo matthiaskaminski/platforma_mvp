@@ -1,0 +1,374 @@
+"use client";
+
+import React, { useState } from "react";
+import { Clock, Flame, Check, Calendar, FileText, CheckSquare, Search, Plus, ChevronDown, Armchair, BedDouble, Bath, Utensils, DoorOpen, Baby, Layers, ListTodo } from "lucide-react";
+import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
+import { Input } from "@/components/ui/Input";
+import { CreateSprintModal } from "@/components/modals/CreateSprintModal";
+import { CreateTaskModal } from "@/components/modals/CreateTaskModal";
+
+interface Project {
+    id: string;
+    name: string;
+    rooms: {
+        id: string;
+        name: string;
+        type: string;
+    }[];
+}
+
+interface Sprint {
+    id: string;
+    name: string;
+    goal: string | null;
+    status: string;
+    startDate: Date | null;
+    endDate: Date | null;
+    tasks: Task[];
+    _count: {
+        tasks: number;
+    };
+}
+
+interface Task {
+    id: string;
+    title: string;
+    description: string | null;
+    status: 'TODO' | 'IN_PROGRESS' | 'DONE';
+    dueDate: Date | null;
+    createdAt: Date;
+    room: {
+        id: string;
+        name: string;
+        type: string;
+    } | null;
+    sprint: {
+        id: string;
+        name: string;
+        status: string;
+    } | null;
+}
+
+interface TasksClientProps {
+    project: Project;
+    sprints: Sprint[];
+    tasks: Task[];
+}
+
+const statusMap: Record<string, "overdue" | "in_progress" | "not_started" | "completed"> = {
+    "TODO": "not_started",
+    "IN_PROGRESS": "in_progress",
+    "DONE": "completed"
+};
+
+const statusLabels: Record<string, string> = {
+    "TODO": "Do zrobienia",
+    "IN_PROGRESS": "W trakcie",
+    "DONE": "ZakoDczone"
+};
+
+const iconMap: Record<string, any> = {
+    general: Layers,
+    bathroom: Bath,
+    BATHROOM: Bath,
+    living: Armchair,
+    LIVING: Armchair,
+    kitchen: Utensils,
+    KITCHEN: Utensils,
+    bedroom: BedDouble,
+    BEDROOM: BedDouble,
+    kids: Baby,
+    KIDS: Baby,
+    hall: DoorOpen,
+    HALL: DoorOpen,
+    office: Layers,
+    OFFICE: Layers,
+    other: Layers,
+    OTHER: Layers
+};
+
+export default function TasksClient({ project, sprints, tasks }: TasksClientProps) {
+    const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
+    const [collapsedSprints, setCollapsedSprints] = useState<Record<string, boolean>>({});
+    const [isSprintModalOpen, setIsSprintModalOpen] = useState(false);
+    const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+
+    const toggleGroup = (id: string) => {
+        setCollapsedGroups(prev => ({ ...prev, [id]: !prev[id] }));
+    };
+
+    const toggleSprint = (id: string) => {
+        setCollapsedSprints(prev => ({ ...prev, [id]: !prev[id] }));
+    };
+
+    // Format date helper
+    const formatDate = (date: Date | null) => {
+        if (!date) return '-';
+        const d = new Date(date);
+        return d.toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    };
+
+    // Check if task is overdue
+    const isOverdue = (task: Task) => {
+        if (!task.dueDate || task.status === 'DONE') return false;
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const dueDate = new Date(task.dueDate);
+        dueDate.setHours(0, 0, 0, 0);
+        return dueDate < today;
+    };
+
+    // Group tasks by room and sprint
+    const tasksGrouped = React.useMemo(() => {
+        const groups: any[] = [];
+
+        // Group 1: General tasks (no room assigned)
+        const generalTasks = tasks.filter(t => !t.room);
+        if (generalTasks.length > 0 || sprints.some(s => s.tasks.every(t => !t.room))) {
+            groups.push({
+                id: 'general',
+                name: 'Zadania og�lne',
+                type: 'general',
+                sprints: sprints.filter(s => s.tasks.some(t => !t.room) || s.tasks.length === 0).map(sprint => ({
+                    ...sprint,
+                    tasks: sprint.tasks.filter(t => !t.room)
+                }))
+            });
+        }
+
+        // Group by rooms
+        project.rooms.forEach(room => {
+            const roomTasks = tasks.filter(t => t.room?.id === room.id);
+            const roomSprints = sprints.filter(s => s.tasks.some(t => t.room?.id === room.id));
+
+            if (roomTasks.length > 0 || roomSprints.length > 0) {
+                groups.push({
+                    id: room.id,
+                    name: room.name,
+                    type: room.type,
+                    sprints: roomSprints.map(sprint => ({
+                        ...sprint,
+                        tasks: sprint.tasks.filter(t => t.room?.id === room.id)
+                    }))
+                });
+            }
+        });
+
+        return groups;
+    }, [tasks, sprints, project.rooms]);
+
+    return (
+        <div className="flex flex-col h-full animate-in fade-in duration-500 pb-0 overflow-hidden w-full">
+            {/* Toolbar - Matches Rooms Page Styling */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-stretch gap-3 shrink-0 mb-3">
+                {/* Left Side: Search & Filter */}
+                <Card className="flex-1 p-4 flex gap-4 items-center w-full md:w-auto overflow-x-auto no-scrollbar min-h-[80px]">
+                    <span className="text-[16px] font-medium text-[#DBDAD9] whitespace-nowrap px-2">Opcje wyszukiwania i sortowania</span>
+
+                    <div className="flex gap-2 ml-auto items-center">
+                        <div className="relative w-full md:w-[300px]">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                            <Input
+                                placeholder="Szukaj zadania..."
+                                className="pl-9 bg-[#1B1B1B] border-white/5 h-[48px] placeholder:text-muted-foreground"
+                            />
+                        </div>
+                        <Button variant="secondary" className="flex items-center gap-2 bg-[#1B1B1B] hover:bg-[#252525] text-sm px-4 py-2 rounded-lg transition-colors text-muted-foreground min-w-[110px] justify-between h-[48px]">
+                            Status
+                            <ChevronDown className="w-4 h-4 opacity-50" />
+                        </Button>
+                        <Button variant="secondary" className="flex items-center gap-2 bg-[#1B1B1B] hover:bg-[#252525] text-sm px-4 py-2 rounded-lg transition-colors text-muted-foreground min-w-[110px] justify-between h-[48px]">
+                            Sortuj
+                            <ChevronDown className="w-4 h-4 opacity-50" />
+                        </Button>
+                    </div>
+                </Card>
+
+                {/* Right Side: Add Buttons */}
+                <div className="flex gap-3">
+                    <Button
+                        onClick={() => setIsSprintModalOpen(true)}
+                        className="h-[80px] bg-[#151515] hover:bg-[#252525] text-white px-6 rounded-2xl text-sm font-medium transition-colors whitespace-nowrap flex items-center gap-2 shadow-sm"
+                    >
+                        <Plus className="w-5 h-5" />
+                        Dodaj sprint
+                    </Button>
+                    <Button
+                        onClick={() => setIsTaskModalOpen(true)}
+                        className="h-[80px] bg-[#232323] hover:bg-[#2a2a2a] text-white px-6 rounded-2xl text-sm font-medium transition-colors whitespace-nowrap flex items-center gap-2 shadow-sm"
+                    >
+                        <Plus className="w-5 h-5" />
+                        Dodaj zadanie
+                    </Button>
+                </div>
+            </div>
+
+            {/* Content Container */}
+            <div className="flex-1 min-h-0 flex flex-col p-0 overflow-hidden">
+                <div className="flex-1 overflow-y-auto no-scrollbar pb-10">
+                    {/* Sticky Table Header */}
+                    <div className="sticky top-0 bg-[#0E0E0E] z-10">
+                        <div className="grid grid-cols-[40px_minmax(250px,2fr)_150px_150px_minmax(300px,3fr)_40px] gap-4 px-6 py-3 text-sm font-medium text-muted-foreground items-center">
+                            <div className="text-center"></div>
+                            <div className="flex items-center gap-2"><CheckSquare className="w-4 h-4" /> Zadania</div>
+                            <div className="flex items-center gap-2"><Flame className="w-4 h-4" /> Status</div>
+                            <div className="flex items-center gap-2"><Clock className="w-4 h-4" /> Termin</div>
+                            <div className="flex items-center gap-2"><FileText className="w-4 h-4" /> Opis</div>
+                            <div></div>
+                        </div>
+                        <div className="mx-6 border-b border-white/5"></div>
+                    </div>
+
+                    <div className="px-6 py-6 space-y-8">
+                        {tasksGrouped.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center py-20 text-center">
+                                <ListTodo className="w-16 h-16 text-muted-foreground mb-4" />
+                                <h3 className="text-xl font-medium text-white mb-2">Brak zadań</h3>
+                                <p className="text-muted-foreground mb-6">Zacznij od utworzenia pierwszego sprintu i dodaj zadania do projektu.</p>
+                                <div className="flex gap-3">
+                                    <Button
+                                        onClick={() => setIsSprintModalOpen(true)}
+                                        className="bg-[#232323] hover:bg-[#2a2a2a] text-white px-6 py-3 rounded-lg"
+                                    >
+                                        <Plus className="w-5 h-5 mr-2" />
+                                        Dodaj sprint
+                                    </Button>
+                                </div>
+                            </div>
+                        ) : (
+                            tasksGrouped.map((group) => {
+                                const Icon = iconMap[group.type] || Layers;
+                                return (
+                                    <div key={group.id} className="pb-2 last:border-0">
+                                        {/* Group Header (Room Name) */}
+                                        <button
+                                            onClick={() => toggleGroup(group.id)}
+                                            className="flex items-center gap-3 mb-4 text-lg font-bold text-white hover:text-[#E5E5E5] transition-colors w-full group py-2"
+                                        >
+                                            <div className={`transition-transform duration-200 ${collapsedGroups[group.id] ? '-rotate-90' : ''}`}>
+                                                <ChevronDown className="w-5 h-5 text-muted-foreground group-hover:text-white" />
+                                            </div>
+
+                                            {/* Icon Container */}
+                                            <div className="p-2 bg-[#1B1B1B] rounded-lg text-white/70">
+                                                <Icon className="w-5 h-5" />
+                                            </div>
+
+                                            <span>{group.name}</span>
+                                        </button>
+
+                                        {/* Sprints and Tasks */}
+                                        {!collapsedGroups[group.id] && (
+                                            <div className="space-y-6 ml-4">
+                                                {group.sprints.length === 0 ? (
+                                                    <div className="text-muted-foreground text-sm py-4">
+                                                        Brak sprint�w dla tego pomieszczenia
+                                                    </div>
+                                                ) : (
+                                                    group.sprints.map((sprint: Sprint) => (
+                                                        <div key={sprint.id} className="border-b border-white/5 pb-2 last:border-0">
+                                                            {/* Sprint Header */}
+                                                            <button
+                                                                onClick={() => toggleSprint(sprint.id)}
+                                                                className="flex items-center gap-2 mb-2 text-sm font-medium text-white/80 hover:text-white transition-colors w-full group py-2"
+                                                            >
+                                                                <Clock className="w-4 h-4 text-muted-foreground group-hover:text-white transition-colors" />
+                                                                <span>{sprint.name}</span>
+                                                                {sprint.startDate && sprint.endDate && (
+                                                                    <span className="text-[14px] text-muted-foreground/60 font-normal">
+                                                                        {formatDate(sprint.startDate)} - {formatDate(sprint.endDate)}
+                                                                    </span>
+                                                                )}
+                                                                <ChevronDown className={`w-3 h-3 text-muted-foreground transition-transform duration-200 ${collapsedSprints[sprint.id] ? '-rotate-90' : ''}`} />
+                                                            </button>
+
+                                                            {/* Tasks Rows */}
+                                                            {!collapsedSprints[sprint.id] && (
+                                                                <div className="space-y-0">
+                                                                    {sprint.tasks.length === 0 ? (
+                                                                        <div className="text-muted-foreground text-sm py-4 ml-6">
+                                                                            Brak zadaD w tym sprincie
+                                                                        </div>
+                                                                    ) : (
+                                                                        sprint.tasks.map((task: Task) => {
+                                                                            const overdue = isOverdue(task);
+                                                                            const taskStatus = overdue ? 'overdue' : statusMap[task.status];
+                                                                            const taskLabel = overdue ? 'Przeterminowane' : statusLabels[task.status];
+
+                                                                            return (
+                                                                                <div
+                                                                                    key={task.id}
+                                                                                    className="grid grid-cols-[40px_minmax(250px,2fr)_150px_150px_minmax(300px,3fr)_40px] gap-4 py-4 items-center hover:bg-[#151515] transition-colors border-b border-white/5 last:border-transparent text-[14px] group/row rounded-none"
+                                                                                >
+                                                                                    {/* Checkbox */}
+                                                                                    <div className="flex justify-center">
+                                                                                        <button className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${task.status === 'DONE' ? 'bg-white border-white text-black' : 'border-white/20 hover:border-white/40'}`}>
+                                                                                            {task.status === 'DONE' && <Check className="w-3.5 h-3.5" />}
+                                                                                        </button>
+                                                                                    </div>
+
+                                                                                    {/* Name */}
+                                                                                    <div className={`font-medium ${task.status === 'DONE' ? 'text-muted-foreground line-through' : 'text-white'}`}>
+                                                                                        {task.title}
+                                                                                    </div>
+
+                                                                                    {/* Status */}
+                                                                                    <div className="flex items-center gap-2">
+                                                                                        <Badge status={taskStatus} dot className="bg-transparent px-0 font-normal gap-2 rounded-none hover:bg-transparent text-[#EDEDED]">
+                                                                                            {taskLabel}
+                                                                                        </Badge>
+                                                                                    </div>
+
+                                                                                    {/* Due Date */}
+                                                                                    <div className="text-muted-foreground">
+                                                                                        {formatDate(task.dueDate)}
+                                                                                    </div>
+
+                                                                                    {/* Description */}
+                                                                                    <div className="text-muted-foreground line-clamp-2 pr-4 text-sm">
+                                                                                        {task.description || '-'}
+                                                                                    </div>
+
+                                                                                    {/* Menu */}
+                                                                                    <div className="flex justify-center opacity-0 group-hover/row:opacity-100 transition-opacity cursor-pointer">
+                                                                                        <div className="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center">
+                                                                                            <div className="w-1 h-1 bg-muted-foreground rounded-full shadow-[0_4px_0_currentColor,0_-4px_0_currentColor]"></div>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </div>
+                                                                            );
+                                                                        })
+                                                                    )}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    ))
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            {/* Modals */}
+            <CreateSprintModal
+                isOpen={isSprintModalOpen}
+                onClose={() => setIsSprintModalOpen(false)}
+                projectId={project.id}
+            />
+            <CreateTaskModal
+                isOpen={isTaskModalOpen}
+                onClose={() => setIsTaskModalOpen(false)}
+                projectId={project.id}
+                sprints={sprints}
+                rooms={project.rooms}
+            />
+        </div>
+    );
+}

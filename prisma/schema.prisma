@@ -28,6 +28,13 @@ enum TaskStatus {
   DONE
 }
 
+enum SprintStatus {
+  PLANNED
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
 enum RoomType {
   LIVING   @map("living")
   KITCHEN  @map("kitchen")
@@ -126,6 +133,7 @@ model Project {
   conversations Conversation[]
   surveys     Survey[]
   moodboards  Moodboard[]
+  sprints     Sprint[]    @relation("ProjectSprints")
   tasks       Task[]      @relation("ProjectTasks")
   documents   Document[]  @relation("ProjectDocuments")
   calendarEvents CalendarEvent[]
@@ -205,15 +213,41 @@ model ProductItem {
   @@map("product_items")
 }
 
+model Sprint {
+  id          String   @id @default(uuid()) @db.Uuid
+  projectId   String   @map("project_id") @db.Uuid
+  project     Project  @relation("ProjectSprints", fields: [projectId], references: [id], onDelete: Cascade)
+
+  name        String
+  goal        String?
+  status      SprintStatus @default(PLANNED)
+
+  startDate   DateTime? @map("start_date")
+  endDate     DateTime? @map("end_date")
+
+  // Relations
+  tasks       Task[]
+
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([projectId])
+  @@map("sprints")
+}
+
 model Task {
   id          String   @id @default(uuid()) @db.Uuid
   projectId   String   @map("project_id") @db.Uuid
   project     Project  @relation("ProjectTasks", fields: [projectId], references: [id], onDelete: Cascade)
 
+  sprintId    String?  @map("sprint_id") @db.Uuid
+  sprint      Sprint?  @relation(fields: [sprintId], references: [id], onDelete: SetNull)
+
   roomId      String?  @map("room_id") @db.Uuid
   room        Room?    @relation("RoomTasks", fields: [roomId], references: [id], onDelete: SetNull)
 
   title       String
+  description String?
   status      TaskStatus @default(TODO)
 
   // AssignedTo typically refers to a Profile or user ID, which should be UUID too if users are in Profile
@@ -224,6 +258,7 @@ model Task {
   updatedAt   DateTime @updatedAt @map("updated_at")
 
   @@index([projectId])
+  @@index([sprintId])
   @@index([roomId])
   @@map("tasks")
 }
