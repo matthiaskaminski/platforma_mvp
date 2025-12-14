@@ -327,10 +327,10 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
                                 </div>
                             </div>
                         ) : (
-                            tasksGrouped.map((group) => {
+                            tasksGrouped.map((group, index) => {
                                 const Icon = iconMap[group.type] || Layers;
                                 return (
-                                    <div key={group.id} className="pb-2 last:border-0">
+                                    <div key={group.id} className={`pb-8 ${index > 0 ? 'pt-8 border-t border-white/10' : ''}`}>
                                         {/* Group Header (Room Name) */}
                                         <button
                                             onClick={() => toggleGroup(group.id)}
