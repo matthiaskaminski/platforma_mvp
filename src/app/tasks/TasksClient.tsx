@@ -111,6 +111,7 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
     const [selectedTasks, setSelectedTasks] = useState<Set<string>>(new Set());
     const [selectedTaskDetails, setSelectedTaskDetails] = useState<Task | TaskInSprint | null>(null);
     const [selectedSprintDetails, setSelectedSprintDetails] = useState<Sprint | null>(null);
+    const [sidebarClosing, setSidebarClosing] = useState(false);
 
     const toggleGroup = (id: string) => {
         setCollapsedGroups(prev => ({ ...prev, [id]: !prev[id] }));
@@ -152,8 +153,12 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
     };
 
     const closeSidebar = () => {
-        setSelectedTaskDetails(null);
-        setSelectedSprintDetails(null);
+        setSidebarClosing(true);
+        setTimeout(() => {
+            setSelectedTaskDetails(null);
+            setSelectedSprintDetails(null);
+            setSidebarClosing(false);
+        }, 200);
     };
 
     // Format date helper
@@ -250,7 +255,7 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
                     </Button>
                     <Button
                         onClick={() => setIsTaskModalOpen(true)}
-                        className="h-[80px] bg-[#232323] hover:bg-[#2a2a2a] text-white px-6 rounded-2xl text-sm font-medium transition-colors whitespace-nowrap flex items-center gap-2 shadow-sm"
+                        className="h-[80px] bg-[#151515] hover:bg-[#252525] text-white px-6 rounded-2xl text-sm font-medium transition-colors whitespace-nowrap flex items-center gap-2 shadow-sm"
                     >
                         <Plus className="w-5 h-5" />
                         Dodaj zadanie
@@ -325,23 +330,26 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
                                                             {/* Sprint Header */}
                                                             <div className="flex items-center gap-2 mb-2 text-sm font-medium text-white/80 hover:text-white transition-colors w-full group py-2">
                                                                 <button
-                                                                    onClick={() => toggleSprint(sprint.id)}
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        toggleSprint(sprint.id);
+                                                                    }}
                                                                     className="flex items-center gap-2"
                                                                 >
                                                                     <ChevronDown className={`w-3 h-3 text-muted-foreground transition-transform duration-200 ${collapsedSprints[sprint.id] ? '-rotate-90' : ''}`} />
-                                                                    <Clock className="w-4 h-4 text-muted-foreground group-hover:text-white transition-colors" />
                                                                 </button>
-                                                                <span
+                                                                <div
                                                                     onClick={() => openSprintDetails(sprint)}
-                                                                    className="cursor-pointer hover:underline"
+                                                                    className="cursor-pointer hover:underline flex items-center gap-2"
                                                                 >
-                                                                    {sprint.name}
-                                                                </span>
-                                                                {sprint.startDate && sprint.endDate && (
-                                                                    <span className="text-[14px] text-muted-foreground/60 font-normal ml-2">
-                                                                        {formatDate(sprint.startDate)} - {formatDate(sprint.endDate)}
-                                                                    </span>
-                                                                )}
+                                                                    <Clock className="w-4 h-4 text-muted-foreground group-hover:text-white transition-colors" />
+                                                                    <span>{sprint.name}</span>
+                                                                    {sprint.startDate && sprint.endDate && (
+                                                                        <span className="text-[14px] text-muted-foreground/60 font-normal ml-2">
+                                                                            {formatDate(sprint.startDate)} - {formatDate(sprint.endDate)}
+                                                                        </span>
+                                                                    )}
+                                                                </div>
                                                             </div>
 
                                                             {/* Tasks Rows */}
@@ -396,7 +404,7 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
                                                                                     </div>
 
                                                                                     {/* Description */}
-                                                                                    <div className="text-muted-foreground line-clamp-2 pr-4 text-sm col-span-2">
+                                                                                    <div className="text-muted-foreground line-clamp-2 pr-4 text-sm">
                                                                                         {task.description || '-'}
                                                                                     </div>
                                                                                 </div>
@@ -472,7 +480,7 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
 
             {/* Right Sidebar - Task Details */}
             {selectedTaskDetails && (
-                <div className="fixed right-0 top-0 bottom-0 w-[500px] bg-[#0A0A0A] border-l border-white/10 z-50 overflow-y-auto animate-in slide-in-from-right duration-200">
+                <div className={`fixed right-0 top-0 bottom-0 w-[500px] bg-[#0A0A0A] border-l border-white/10 z-50 overflow-y-auto transition-transform duration-200 ${sidebarClosing ? 'translate-x-full' : 'translate-x-0'}`}>
                     <div className="p-6">
                         {/* Header */}
                         <div className="flex items-start justify-between mb-6">
@@ -533,7 +541,7 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
 
             {/* Right Sidebar - Sprint Details */}
             {selectedSprintDetails && (
-                <div className="fixed right-0 top-0 bottom-0 w-[500px] bg-[#0A0A0A] border-l border-white/10 z-50 overflow-y-auto animate-in slide-in-from-right duration-200">
+                <div className={`fixed right-0 top-0 bottom-0 w-[500px] bg-[#0A0A0A] border-l border-white/10 z-50 overflow-y-auto transition-transform duration-200 ${sidebarClosing ? 'translate-x-full' : 'translate-x-0'}`}>
                     <div className="p-6">
                         {/* Header */}
                         <div className="flex items-start justify-between mb-6">

@@ -115,14 +115,15 @@ export function CreateSprintModal({ isOpen, onClose, projectId }: CreateSprintMo
                             <label className="block text-sm font-medium mb-2">
                                 Data rozpoczecia
                             </label>
-                            <div className="relative">
+                            <div className="relative cursor-pointer" onClick={() => (document.getElementById('start-date-input') as HTMLInputElement)?.showPicker?.()}>
                                 <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none z-10" />
                                 <Input
+                                    id="start-date-input"
                                     type="date"
                                     value={startDate}
                                     onChange={(e) => setStartDate(e.target.value)}
                                     disabled={isSubmitting}
-                                    className="pl-10"
+                                    className="pl-10 cursor-pointer"
                                 />
                             </div>
                         </div>
@@ -131,14 +132,15 @@ export function CreateSprintModal({ isOpen, onClose, projectId }: CreateSprintMo
                             <label className="block text-sm font-medium mb-2">
                                 Data zakonczenia
                             </label>
-                            <div className="relative">
+                            <div className="relative cursor-pointer" onClick={() => (document.getElementById('end-date-input') as HTMLInputElement)?.showPicker?.()}>
                                 <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none z-10" />
                                 <Input
+                                    id="end-date-input"
                                     type="date"
                                     value={endDate}
                                     onChange={(e) => setEndDate(e.target.value)}
                                     disabled={isSubmitting}
-                                    className="pl-10"
+                                    className="pl-10 cursor-pointer"
                                 />
                             </div>
                         </div>
