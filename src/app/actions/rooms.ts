@@ -511,7 +511,7 @@ export async function getProjectHistory(projectId: string) {
     }
 
     // Gather recent activities from different sources
-    const [tasks, products, documents, notes, rooms] = await Promise.all([
+    const [tasks, products, documents, notes] = await Promise.all([
         // Recent tasks (created or updated)
         prisma.task.findMany({
             where: { projectId: projectId },
@@ -566,18 +566,6 @@ export async function getProjectHistory(projectId: string) {
                 content: true,
                 createdAt: true
             }
-        }),
-        // Room status changes (using updatedAt as proxy)
-        prisma.room.findMany({
-            where: { projectId: projectId },
-            orderBy: { updatedAt: 'desc' },
-            take: 20,
-            select: {
-                id: true,
-                name: true,
-                status: true,
-                updatedAt: true
-            }
         })
     ])
 
@@ -630,23 +618,6 @@ export async function getProjectHistory(projectId: string) {
             target: noteTitle,
             timestamp: note.createdAt,
             icon: 'StickyNote'
-        })
-    })
-
-    // Add room updates
-    rooms.forEach(room => {
-        const statusMap: Record<string, string> = {
-            'NOT_STARTED': 'Nierozpoczęte',
-            'IN_PROGRESS': 'W trakcie',
-            'FINISHED': 'Zakończone'
-        }
-        historyItems.push({
-            id: `room-${room.id}`,
-            type: 'room',
-            action: 'zmieniono status pokoju',
-            target: `${room.name} - ${statusMap[room.status] || room.status}`,
-            timestamp: room.updatedAt,
-            icon: 'Home'
         })
     })
 
