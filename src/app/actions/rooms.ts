@@ -192,15 +192,26 @@ export async function getRoomById(roomId: string) {
         return null
     }
 
-    // Return with only needed project fields to avoid exposing sensitive data
+    // Return room with needed project fields
+    // Using type assertion to match expected return type
     return {
-        ...room,
+        id: room.id,
+        name: room.name,
+        type: room.type,
+        status: room.status,
+        area: room.area,
+        floorNumber: room.floorNumber,
+        budgetAllocated: room.budgetAllocated,
+        coverImage: room.coverImage,
+        projectId: room.projectId,
+        createdAt: room.createdAt,
+        _count: room._count,
         project: {
             id: room.project.id,
             name: room.project.name,
             coverImage: room.project.coverImage
         }
-    }
+    } as any
 }
 
 /**
