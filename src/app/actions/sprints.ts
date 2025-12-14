@@ -83,7 +83,8 @@ export async function getProjectSprints(projectId: string) {
                         room: {
                             select: {
                                 id: true,
-                                name: true
+                                name: true,
+                                type: true
                             }
                         }
                     }
