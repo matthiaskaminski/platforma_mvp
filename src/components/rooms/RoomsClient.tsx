@@ -132,7 +132,7 @@ export default function RoomsClient({ rooms: initialRooms, projectId }: RoomsCli
                             {/* Header Row */}
                             <div className="flex items-start justify-between">
                                 <div className="flex items-center gap-4">
-                                    <div className="p-3 bg-[#1B1B1B] rounded-xl text-white/70">
+                                    <div className="p-3 bg-[#1B1B1B] rounded-xl text-white">
                                         <Icon className="w-6 h-6" />
                                     </div>
                                     <div>
@@ -159,11 +159,11 @@ export default function RoomsClient({ rooms: initialRooms, projectId }: RoomsCli
                                     {room.img ? (
                                         <div className="absolute inset-0 bg-neutral-800 group-hover:scale-105 transition-transform duration-700">
                                             {/* eslint-disable-next-line @next/next/no-img-element */}
-                                            <img src={room.img} alt={room.name} className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity" />
+                                            <img src={room.img} alt={room.name} className="w-full h-full object-cover transition-opacity" />
                                         </div>
                                     ) : (
                                         <div className="absolute inset-0 flex items-center justify-center bg-[#232323]">
-                                            <Icon className="w-6 h-6 text-[#6E6E6E]" />
+                                            <Icon className="w-6 h-6 text-white" />
                                         </div>
                                     )}
                                 </div>

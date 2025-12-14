@@ -252,15 +252,25 @@ export async function uploadProjectCoverImage(projectId: string, formData: FormD
         throw new Error('No file provided')
     }
 
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+        throw new Error('File must be an image')
+    }
+
     // Generate unique filename
     const fileExt = file.name.split('.').pop()
     const fileName = `${projectId}-${Date.now()}.${fileExt}`
     const filePath = `projects/${fileName}`
 
+    // Convert File to ArrayBuffer for Supabase upload
+    const arrayBuffer = await file.arrayBuffer()
+    const buffer = new Uint8Array(arrayBuffer)
+
     // Upload to Supabase Storage
     const { data: uploadData, error: uploadError } = await supabase.storage
         .from('Liru')
-        .upload(filePath, file, {
+        .upload(filePath, buffer, {
+            contentType: file.type,
             cacheControl: '3600',
             upsert: false
         })

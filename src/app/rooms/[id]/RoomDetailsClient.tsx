@@ -185,7 +185,7 @@ export default function RoomDetailsClient({ roomData, products, tasks, budgetIte
                 <RoomStatsDnD roomData={roomData} />
 
                 {/* 2. Big Image Tile - Room Cover Image - Fills remaining height */}
-                <Card className="flex-1 min-h-[300px] rounded-2xl overflow-hidden relative group">
+                <Card className="flex-1 min-h-[300px] rounded-2xl overflow-hidden relative group p-0">
                     <input
                         ref={fileInputRef}
                         type="file"
