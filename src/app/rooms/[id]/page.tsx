@@ -2,6 +2,9 @@ import { getRoomById, getRoomProducts, getRoomTasks, getRoomBudget, getRoomGalle
 import { redirect } from 'next/navigation';
 import RoomDetailsClient from './RoomDetailsClient';
 
+// Force dynamic rendering - no caching
+export const dynamic = 'force-dynamic';
+
 export default async function RoomDetailsPage({ params }: { params: { id: string } }) {
     // First get room to extract projectId
     const room = await getRoomById(params.id);
@@ -43,5 +46,5 @@ export default async function RoomDetailsPage({ params }: { params: { id: string
         projectCoverImage: room.project.coverImage,
     };
 
-    return <RoomDetailsClient roomData={roomData} products={products} tasks={tasks} budgetItems={budgetItems} galleryImages={galleryImages} notes={notes} documents={documents} history={history} projectSummary={projectSummary} />;
+    return <RoomDetailsClient key={room.id} roomData={roomData} products={products} tasks={tasks} budgetItems={budgetItems} galleryImages={galleryImages} notes={notes} documents={documents} history={history} projectSummary={projectSummary} />;
 }
