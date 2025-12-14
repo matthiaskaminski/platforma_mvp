@@ -214,7 +214,7 @@ export function SummaryAccordion({ projectSummary }: SummaryAccordionProps) {
                                                 { label: "Materiały", val: budget.materials, color: "bg-[#6E6E6E]" },
                                                 { label: "Usługi", val: budget.services, color: "bg-[#2F2F2F]" },
                                                 { label: "Pozostało", val: budget.remaining, color: "bg-[#232323]" },
-                                            ].filter(item => item.val > 0).map((item) => (
+                                            ].filter(item => item.val && item.val > 0).map((item) => (
                                                 <div key={item.label} className="flex justify-between items-center text-sm">
                                                     <div className="flex items-center gap-2">
                                                         <div className={`w-3 h-2 rounded-full ${item.color}`}></div>
