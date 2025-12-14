@@ -226,21 +226,20 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
     const tasksGrouped = React.useMemo(() => {
         const groups: any[] = [];
 
-        // Group 1: General tasks (no room assigned)
-        const generalTasks = tasks.filter(t => !t.room);
-        if (generalTasks.length > 0 || sprints.some(s => s.tasks.every(t => !t.room))) {
-            groups.push({
-                id: 'general',
-                name: 'Zadania ogolne',
-                type: 'general',
-                sprints: sprints.filter(s => s.tasks.some(t => !t.room) || s.tasks.length === 0).map(sprint => ({
-                    ...sprint,
-                    tasks: sprint.tasks.filter(t => !t.room)
-                }))
-            });
-        }
+        // Group 1: General tasks (no room assigned) - ALWAYS show this group
+        const generalSprints = sprints.filter(s => s.tasks.some(t => !t.room) || s.tasks.length === 0).map(sprint => ({
+            ...sprint,
+            tasks: sprint.tasks.filter(t => !t.room)
+        }));
 
-        // Group by rooms
+        groups.push({
+            id: 'general',
+            name: 'Zadania ogolne',
+            type: 'general',
+            sprints: generalSprints
+        });
+
+        // Group by rooms - only if rooms exist
         project.rooms.forEach(room => {
             const roomTasks = tasks.filter(t => t.room?.id === room.id);
             const roomSprints = sprints.filter(s => s.tasks.some(t => t.room?.id === room.id));
@@ -352,28 +351,32 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
                                         {!collapsedGroups[group.id] && (
                                             <div className="space-y-6 ml-4">
                                                 {group.sprints.length === 0 ? (
-                                                    <div className="text-muted-foreground text-sm py-4">
-                                                        Brak sprintow dla tego pomieszczenia
+                                                    <div className="flex flex-col items-center justify-center py-8">
+                                                        <Clock className="w-8 h-8 mb-3 text-muted-foreground" />
+                                                        <p className="text-base text-muted-foreground">Brak sprintów. Dodaj pierwszy!</p>
                                                     </div>
                                                 ) : (
                                                     group.sprints.map((sprint: Sprint) => (
                                                         <div key={sprint.id} className="border-b border-white/5 pb-2 last:border-0">
                                                             {/* Sprint Header */}
-                                                            <div className="flex items-center gap-2 mb-2 text-sm font-medium text-white/80 hover:text-white transition-colors w-full group py-2">
+                                                            <div className="flex items-center gap-2 mb-2 text-sm font-medium text-white/80 hover:text-white transition-colors w-full py-2">
                                                                 <button
                                                                     onClick={(e) => {
                                                                         e.stopPropagation();
+                                                                        e.preventDefault();
                                                                         toggleSprint(sprint.id);
                                                                     }}
-                                                                    className="flex items-center gap-2"
+                                                                    type="button"
+                                                                    className="flex items-center gap-2 p-1 hover:bg-white/5 rounded transition-colors"
+                                                                    aria-label={`Toggle ${sprint.name}`}
                                                                 >
                                                                     <ChevronDown className={`w-3 h-3 text-muted-foreground transition-transform duration-200 ${collapsedSprints[sprint.id] ? '-rotate-90' : ''}`} />
                                                                 </button>
                                                                 <div
                                                                     onClick={() => openSprintDetails(sprint)}
-                                                                    className="cursor-pointer flex items-center gap-2"
+                                                                    className="cursor-pointer flex items-center gap-2 flex-1"
                                                                 >
-                                                                    <Clock className="w-4 h-4 text-muted-foreground group-hover:text-white transition-colors" />
+                                                                    <Clock className="w-4 h-4 text-muted-foreground" />
                                                                     <span>{sprint.name}</span>
                                                                     {sprint.startDate && sprint.endDate && (
                                                                         <span className="text-[14px] text-muted-foreground/60 font-normal ml-2">
