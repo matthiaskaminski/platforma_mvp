@@ -746,26 +746,25 @@ export async function uploadRoomCoverImage(roomId: string, formData: FormData) {
 
         // Generate unique filename
         const fileExt = file.name.split('.').pop()
-        const fileName = `room-${roomId}-${Date.now()}.${fileExt}`
-        const filePath = `rooms/${fileName}`
+        const fileName = `${user.id}/${Date.now()}-room-${roomId}.${fileExt}`
 
         // Upload to Supabase Storage - using File directly
         const { data: uploadData, error: uploadError } = await supabase.storage
-            .from('Liru')
-            .upload(filePath, file, {
-                contentType: file.type,
+            .from('room-images')
+            .upload(fileName, file, {
                 cacheControl: '3600',
                 upsert: false
             })
 
         if (uploadError) {
+            console.error('Upload error:', uploadError)
             throw new Error(`Upload failed: ${uploadError.message}`)
         }
 
         // Get public URL
         const { data: { publicUrl } } = supabase.storage
-            .from('Liru')
-            .getPublicUrl(filePath)
+            .from('room-images')
+            .getPublicUrl(fileName)
 
         // Update room with cover image URL
         await prisma.room.update({
