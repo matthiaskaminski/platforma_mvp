@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
-import { ChevronDown, ListTodo } from "lucide-react";
+import { ChevronDown, ListTodo, Plus } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -169,8 +169,8 @@ export function SummaryAccordion({ projectSummary }: SummaryAccordionProps) {
                                         <div className="bg-[#1B1B1B] p-6 rounded-xl flex flex-col items-center justify-center text-center flex-1">
                                             <ListTodo className="w-8 h-8 mb-3 text-muted-foreground" />
                                             <p className="text-sm text-muted-foreground mb-3">Brak zadań do wykonania</p>
-                                            <Button size="sm" variant="ghost">
-                                                Dodaj zadanie
+                                            <Button variant="ghost" className="border border-dashed border-white/10 hover:border-white/20 hover:bg-white/5 text-muted-foreground hover:text-white px-4 py-2 rounded-lg text-sm font-medium transition-all">
+                                                <Plus className="w-4 h-4 mr-2" /> Dodaj zadanie
                                             </Button>
                                         </div>
                                     ) : (
