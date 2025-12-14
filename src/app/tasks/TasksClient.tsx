@@ -310,19 +310,6 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
             {/* Content Container */}
             <div className="flex-1 min-h-0 flex flex-col p-0 overflow-hidden">
                 <div className="flex-1 overflow-y-auto no-scrollbar pb-10">
-                    {/* Sticky Table Header */}
-                    <div className="sticky top-0 bg-[#0E0E0E] z-10">
-                        <div className="grid grid-cols-[40px_minmax(250px,2fr)_150px_150px_minmax(300px,3fr)_40px] gap-4 px-6 py-3 text-sm font-medium text-muted-foreground items-center">
-                            <div className="text-center"></div>
-                            <div className="flex items-center gap-2"><CheckSquare className="w-4 h-4" /> Zadania</div>
-                            <div className="flex items-center gap-2"><Flame className="w-4 h-4" /> Status</div>
-                            <div className="flex items-center gap-2"><Clock className="w-4 h-4" /> Termin</div>
-                            <div className="flex items-center gap-2"><FileText className="w-4 h-4" /> Opis</div>
-                            <div></div>
-                        </div>
-                        <div className="mx-6 border-b border-white/5"></div>
-                    </div>
-
                     <div className="px-6 py-6 space-y-8">
                         {tasksGrouped.length === 0 ? (
                             <div className="flex flex-col items-center justify-center py-20 text-center">
@@ -396,11 +383,35 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
                                                                 </div>
                                                             </div>
 
-                                                            {/* Tasks Rows */}
+                                                            {/* Column Headers for Sprint */}
                                                             {!collapsedSprints[sprint.id] && (
-                                                                <div className="space-y-0">
+                                                                <div className="ml-6">
+                                                                    <div className="grid grid-cols-[40px_minmax(250px,2fr)_150px_150px_150px_minmax(300px,3fr)] gap-4 py-2 text-xs font-medium text-muted-foreground/60 border-b border-white/5">
+                                                                        <div></div>
+                                                                        <div className="flex items-center gap-2">
+                                                                            <CheckSquare className="w-3 h-3" />
+                                                                            Zadania
+                                                                        </div>
+                                                                        <div className="flex items-center gap-2">
+                                                                            <Flame className="w-3 h-3" />
+                                                                            Status
+                                                                        </div>
+                                                                        <div className="flex items-center gap-2">
+                                                                            <Calendar className="w-3 h-3" />
+                                                                            Data rozpoczęcia
+                                                                        </div>
+                                                                        <div className="flex items-center gap-2">
+                                                                            <Calendar className="w-3 h-3" />
+                                                                            Data zakończenia
+                                                                        </div>
+                                                                        <div className="flex items-center gap-2">
+                                                                            <FileText className="w-3 h-3" />
+                                                                            Notatka
+                                                                        </div>
+                                                                    </div>
+
                                                                     {sprint.tasks.length === 0 ? (
-                                                                        <div className="text-muted-foreground text-sm py-4 ml-6">
+                                                                        <div className="text-muted-foreground text-sm py-4">
                                                                             Brak zadan w tym sprincie
                                                                         </div>
                                                                     ) : (
@@ -412,7 +423,7 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
                                                                             return (
                                                                                 <div
                                                                                     key={task.id}
-                                                                                    className={`grid grid-cols-[40px_minmax(250px,2fr)_150px_150px_minmax(300px,3fr)] gap-4 py-4 items-center hover:bg-[#151515] transition-colors border-b border-white/5 last:border-transparent text-[14px] group/row rounded-none ${selectedTasks.has(task.id) ? 'bg-[#1a1a1a]' : ''}`}
+                                                                                    className={`grid grid-cols-[40px_minmax(250px,2fr)_150px_150px_150px_minmax(300px,3fr)] gap-4 py-4 items-center hover:bg-[#151515] transition-colors border-b border-white/5 last:border-transparent text-[14px] group/row rounded-none ${selectedTasks.has(task.id) ? 'bg-[#1a1a1a]' : ''}`}
                                                                                 >
                                                                                     {/* Checkbox */}
                                                                                     <div className="flex justify-center">
@@ -442,12 +453,17 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
                                                                                         </Badge>
                                                                                     </div>
 
-                                                                                    {/* Due Date */}
-                                                                                    <div className="text-muted-foreground">
+                                                                                    {/* Start Date */}
+                                                                                    <div className="text-muted-foreground text-sm">
+                                                                                        {formatDate(task.createdAt)}
+                                                                                    </div>
+
+                                                                                    {/* Due Date / End Date */}
+                                                                                    <div className="text-muted-foreground text-sm">
                                                                                         {formatDate(task.dueDate)}
                                                                                     </div>
 
-                                                                                    {/* Description */}
+                                                                                    {/* Description / Note */}
                                                                                     <div className="text-muted-foreground line-clamp-2 pr-4 text-sm">
                                                                                         {task.description || '-'}
                                                                                     </div>
