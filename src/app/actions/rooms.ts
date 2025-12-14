@@ -204,7 +204,6 @@ export async function getRoomById(roomId: string) {
         budgetAllocated: room.budgetAllocated,
         coverImage: room.coverImage,
         projectId: room.projectId,
-        createdAt: room.createdAt,
         _count: room._count,
         project: {
             id: room.project.id,
