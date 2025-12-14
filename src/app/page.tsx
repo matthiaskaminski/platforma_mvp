@@ -5,8 +5,6 @@ import prisma from '@/lib/prisma'
 import { redirect } from 'next/navigation'
 import { getActiveProjectId } from './actions/projects'
 
-import { resetOnboarding } from './onboarding/actions'
-
 export default async function DashboardPage() {
   const supabase = await createClient()
 
@@ -235,18 +233,6 @@ export default async function DashboardPage() {
 
   return (
     <div className="h-full flex flex-col animate-in fade-in duration-500">
-      {/* Temporary Debug Button */}
-      <div className="absolute top-4 right-4 z-50">
-        <form action={async () => {
-          'use server'
-          await resetOnboarding()
-        }}>
-          <button type="submit" className="bg-red-500 text-white px-3 py-1 text-xs rounded hover:bg-red-600">
-            Reset Onboarding (Debug)
-          </button>
-        </form>
-      </div>
-
       {/* Header Section */}
       <DashboardClient
         user={profile}
