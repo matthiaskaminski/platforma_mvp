@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/Badge";
 import { Input } from "@/components/ui/Input";
 import { CreateSprintModal } from "@/components/modals/CreateSprintModal";
 import { CreateTaskModal } from "@/components/modals/CreateTaskModal";
+import { deleteSprint, deleteTask, updateTask } from "@/app/actions/sprints";
+import { useRouter } from "next/navigation";
 
 interface Project {
     id: string;
@@ -104,6 +106,7 @@ const iconMap: Record<string, any> = {
 };
 
 export default function TasksClient({ project, sprints, tasks }: TasksClientProps) {
+    const router = useRouter();
     const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
     const [collapsedSprints, setCollapsedSprints] = useState<Record<string, boolean>>({});
     const [isSprintModalOpen, setIsSprintModalOpen] = useState(false);
@@ -159,6 +162,47 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
             setSelectedSprintDetails(null);
             setSidebarClosing(false);
         }, 200);
+    };
+
+    // Delete handlers
+    const handleDeleteTask = async (taskId: string) => {
+        if (!confirm('Czy na pewno chcesz usunąć to zadanie?')) return;
+
+        const result = await deleteTask(taskId);
+        if (result.success) {
+            closeSidebar();
+            router.refresh();
+        } else {
+            alert('Błąd podczas usuwania zadania');
+        }
+    };
+
+    const handleDeleteSprint = async (sprintId: string) => {
+        if (!confirm('Czy na pewno chcesz usunąć ten sprint? Zadania w sprincie nie zostaną usunięte.')) return;
+
+        const result = await deleteSprint(sprintId);
+        if (result.success) {
+            closeSidebar();
+            router.refresh();
+        } else {
+            alert('Błąd podczas usuwania sprintu');
+        }
+    };
+
+    const handleDeleteSelectedTasks = async () => {
+        if (selectedTasks.size === 0) return;
+        if (!confirm(`Czy na pewno chcesz usunąć zaznaczone zadania (${selectedTasks.size})?`)) return;
+
+        const deletePromises = Array.from(selectedTasks).map(taskId => deleteTask(taskId));
+        const results = await Promise.all(deletePromises);
+
+        const allSuccessful = results.every(r => r.success);
+        if (allSuccessful) {
+            setSelectedTasks(new Set());
+            router.refresh();
+        } else {
+            alert('Błąd podczas usuwania niektórych zadań');
+        }
     };
 
     // Format date helper
@@ -340,7 +384,7 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
                                                                 </button>
                                                                 <div
                                                                     onClick={() => openSprintDetails(sprint)}
-                                                                    className="cursor-pointer hover:underline flex items-center gap-2"
+                                                                    className="cursor-pointer flex items-center gap-2"
                                                                 >
                                                                     <Clock className="w-4 h-4 text-muted-foreground group-hover:text-white transition-colors" />
                                                                     <span>{sprint.name}</span>
@@ -444,7 +488,7 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
                     <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => {}}
+                        onClick={() => alert('Funkcja w przygotowaniu')}
                         className="h-8"
                     >
                         Zmien pola
@@ -452,7 +496,7 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
                     <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => {}}
+                        onClick={() => alert('Funkcja w przygotowaniu')}
                         className="h-8"
                     >
                         Zmien status
@@ -460,7 +504,7 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
                     <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => {}}
+                        onClick={handleDeleteSelectedTasks}
                         className="h-8 text-red-400 hover:text-red-300"
                     >
                         <Trash2 className="w-4 h-4 mr-2" />
@@ -525,11 +569,22 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
                             )}
 
                             <div className="pt-4 border-t border-white/10">
-                                <Button variant="secondary" className="w-full mb-2">
+                                <Button
+                                    variant="secondary"
+                                    className="w-full mb-2"
+                                    onClick={() => {
+                                        // TODO: Implement edit task modal
+                                        alert('Funkcja edycji w przygotowaniu');
+                                    }}
+                                >
                                     <Edit className="w-4 h-4 mr-2" />
                                     Edytuj zadanie
                                 </Button>
-                                <Button variant="ghost" className="w-full text-red-400 hover:text-red-300">
+                                <Button
+                                    variant="ghost"
+                                    className="w-full text-red-400 hover:text-red-300"
+                                    onClick={() => handleDeleteTask(selectedTaskDetails.id)}
+                                >
                                     <Trash2 className="w-4 h-4 mr-2" />
                                     Usun zadanie
                                 </Button>
@@ -624,11 +679,22 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
                             </div>
 
                             <div className="pt-4 border-t border-white/10">
-                                <Button variant="secondary" className="w-full mb-2">
+                                <Button
+                                    variant="secondary"
+                                    className="w-full mb-2"
+                                    onClick={() => {
+                                        // TODO: Implement edit sprint modal
+                                        alert('Funkcja edycji w przygotowaniu');
+                                    }}
+                                >
                                     <Edit className="w-4 h-4 mr-2" />
                                     Edytuj sprint
                                 </Button>
-                                <Button variant="ghost" className="w-full text-red-400 hover:text-red-300">
+                                <Button
+                                    variant="ghost"
+                                    className="w-full text-red-400 hover:text-red-300"
+                                    onClick={() => handleDeleteSprint(selectedSprintDetails.id)}
+                                >
                                     <Trash2 className="w-4 h-4 mr-2" />
                                     Usun sprint
                                 </Button>
