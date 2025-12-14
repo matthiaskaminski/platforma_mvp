@@ -97,7 +97,7 @@ export function SummaryAccordion({ projectSummary }: SummaryAccordionProps) {
         { name: "Materiały", value: budget.materials, color: "#6E6E6E" },
         { name: "Usługi", value: budget.services, color: "#2F2F2F" },
         { name: "Pozostało", value: budget.remaining, color: "#232323" },
-    ].filter(item => item.value > 0); // Only show categories with values
+    ].filter(item => item.value && item.value > 0); // Only show categories with values
 
     // Format currency
     const formatCurrency = (value: number) => {
