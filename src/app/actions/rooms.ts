@@ -749,14 +749,10 @@ export async function uploadRoomCoverImage(roomId: string, formData: FormData) {
         const fileName = `room-${roomId}-${Date.now()}.${fileExt}`
         const filePath = `rooms/${fileName}`
 
-        // Convert File to ArrayBuffer for Supabase upload
-        const arrayBuffer = await file.arrayBuffer()
-        const buffer = new Uint8Array(arrayBuffer)
-
-        // Upload to Supabase Storage
+        // Upload to Supabase Storage - using File directly
         const { data: uploadData, error: uploadError } = await supabase.storage
             .from('Liru')
-            .upload(filePath, buffer, {
+            .upload(filePath, file, {
                 contentType: file.type,
                 cacheControl: '3600',
                 upsert: false

@@ -132,7 +132,7 @@ export default function RoomsClient({ rooms: initialRooms, projectId }: RoomsCli
                             {/* Header Row */}
                             <div className="flex items-start justify-between">
                                 <div className="flex items-center gap-4">
-                                    <div className="p-3 bg-[#1B1B1B] rounded-xl text-white">
+                                    <div className="p-3 bg-[#1B1B1B] rounded-xl text-[#6E6E6E]">
                                         <Icon className="w-6 h-6" />
                                     </div>
                                     <div>
@@ -163,7 +163,7 @@ export default function RoomsClient({ rooms: initialRooms, projectId }: RoomsCli
                                         </div>
                                     ) : (
                                         <div className="absolute inset-0 flex items-center justify-center bg-[#232323]">
-                                            <Icon className="w-6 h-6 text-white" />
+                                            <Icon className="w-6 h-6 text-[#6E6E6E]" />
                                         </div>
                                     )}
                                 </div>
