@@ -480,6 +480,184 @@ export async function getProjectDocuments(projectId: string) {
 }
 
 /**
+ * Get project history (activity log compiled from various sources)
+ */
+export async function getProjectHistory(projectId: string) {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user?.email) {
+        return []
+    }
+
+    const profile = await prisma.profile.findUnique({
+        where: { email: user.email }
+    })
+
+    if (!profile) {
+        return []
+    }
+
+    // Verify project ownership
+    const project = await prisma.project.findFirst({
+        where: {
+            id: projectId,
+            designerId: profile.id
+        }
+    })
+
+    if (!project) {
+        return []
+    }
+
+    // Gather recent activities from different sources
+    const [tasks, products, documents, notes, rooms] = await Promise.all([
+        // Recent tasks (created or updated)
+        prisma.task.findMany({
+            where: { projectId: projectId },
+            orderBy: { updatedAt: 'desc' },
+            take: 20,
+            select: {
+                id: true,
+                title: true,
+                status: true,
+                createdAt: true,
+                updatedAt: true
+            }
+        }),
+        // Recent products
+        prisma.productItem.findMany({
+            where: {
+                room: {
+                    projectId: projectId
+                }
+            },
+            orderBy: { createdAt: 'desc' },
+            take: 20,
+            select: {
+                id: true,
+                name: true,
+                createdAt: true,
+                status: true
+            }
+        }),
+        // Recent documents
+        prisma.document.findMany({
+            where: { projectId: projectId },
+            orderBy: { uploadedAt: 'desc' },
+            take: 20,
+            select: {
+                id: true,
+                name: true,
+                uploadedAt: true
+            }
+        }),
+        // Recent notes
+        prisma.note.findMany({
+            where: {
+                room: {
+                    projectId: projectId
+                }
+            },
+            orderBy: { createdAt: 'desc' },
+            take: 20,
+            select: {
+                id: true,
+                content: true,
+                createdAt: true
+            }
+        }),
+        // Room status changes (using updatedAt as proxy)
+        prisma.room.findMany({
+            where: { projectId: projectId },
+            orderBy: { updatedAt: 'desc' },
+            take: 20,
+            select: {
+                id: true,
+                name: true,
+                status: true,
+                updatedAt: true
+            }
+        })
+    ])
+
+    // Compile into unified history format
+    const historyItems: any[] = []
+
+    // Add tasks
+    tasks.forEach(task => {
+        historyItems.push({
+            id: `task-${task.id}`,
+            type: 'task',
+            action: task.status === 'DONE' ? 'ukończono zadanie' : 'zaktualizowano zadanie',
+            target: task.title,
+            timestamp: task.updatedAt,
+            icon: 'CheckCircle2'
+        })
+    })
+
+    // Add products
+    products.forEach(product => {
+        historyItems.push({
+            id: `product-${product.id}`,
+            type: 'product',
+            action: 'dodano produkt',
+            target: product.name,
+            timestamp: product.createdAt,
+            icon: 'Package'
+        })
+    })
+
+    // Add documents
+    documents.forEach(doc => {
+        historyItems.push({
+            id: `document-${doc.id}`,
+            type: 'document',
+            action: 'dodano plik',
+            target: doc.name,
+            timestamp: doc.uploadedAt,
+            icon: 'FileText'
+        })
+    })
+
+    // Add notes
+    notes.forEach(note => {
+        const noteTitle = note.content.split('\n')[0].substring(0, 50) || 'Notatka'
+        historyItems.push({
+            id: `note-${note.id}`,
+            type: 'note',
+            action: 'dodano notatkę',
+            target: noteTitle,
+            timestamp: note.createdAt,
+            icon: 'StickyNote'
+        })
+    })
+
+    // Add room updates
+    rooms.forEach(room => {
+        const statusMap: Record<string, string> = {
+            'NOT_STARTED': 'Nierozpoczęte',
+            'IN_PROGRESS': 'W trakcie',
+            'FINISHED': 'Zakończone'
+        }
+        historyItems.push({
+            id: `room-${room.id}`,
+            type: 'room',
+            action: 'zmieniono status pokoju',
+            target: `${room.name} - ${statusMap[room.status] || room.status}`,
+            timestamp: room.updatedAt,
+            icon: 'Home'
+        })
+    })
+
+    // Sort by timestamp descending
+    historyItems.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+
+    // Take top 50 items
+    return historyItems.slice(0, 50)
+}
+
+/**
  * Get project summary for room details page
  */
 export async function getProjectSummary(projectId: string) {

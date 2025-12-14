@@ -79,6 +79,15 @@ interface Document {
     uploadedAt: Date;
 }
 
+interface HistoryItem {
+    id: string;
+    type: string;
+    action: string;
+    target: string;
+    timestamp: Date;
+    icon: string;
+}
+
 interface ProjectSummary {
     budgetGoal: any;
     rooms: {
@@ -117,10 +126,11 @@ interface RoomDetailsClientProps {
     galleryImages: GalleryImage[];
     notes: Note[];
     documents: Document[];
+    history: HistoryItem[];
     projectSummary: ProjectSummary | null;
 }
 
-export default function RoomDetailsClient({ roomData, products, tasks, budgetItems, galleryImages, notes, documents, projectSummary }: RoomDetailsClientProps) {
+export default function RoomDetailsClient({ roomData, products, tasks, budgetItems, galleryImages, notes, documents, history, projectSummary }: RoomDetailsClientProps) {
     const [activeTab, setActiveTab] = useState("Produkty");
     const [isUploading, setIsUploading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -353,7 +363,7 @@ export default function RoomDetailsClient({ roomData, products, tasks, budgetIte
                     ) : activeTab === "Notatki" ? (
                         <NotesList notes={notes} />
                     ) : activeTab === "Historia" ? (
-                        <HistoryList />
+                        <HistoryList history={history} />
                     ) : (
                         <div className="flex-1 flex items-center justify-center text-muted-foreground">
                             <div className="text-center">
