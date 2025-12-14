@@ -183,14 +183,7 @@ export async function getRoomById(roomId: string) {
                     galleryImages: true
                 }
             },
-            project: {
-                select: {
-                    id: true,
-                    name: true,
-                    coverImage: true,
-                    designerId: true
-                }
-            }
+            project: true
         }
     })
 
@@ -199,7 +192,15 @@ export async function getRoomById(roomId: string) {
         return null
     }
 
-    return room
+    // Return with only needed project fields to avoid exposing sensitive data
+    return {
+        ...room,
+        project: {
+            id: room.project.id,
+            name: room.project.name,
+            coverImage: room.project.coverImage
+        }
+    }
 }
 
 /**
