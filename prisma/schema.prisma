@@ -60,17 +60,18 @@ model Profile {
   avatarUrl   String?  @map("avatar_url")
   phoneNumber String?  @map("phone_number")
   role        UserRole @default(DESIGNER)
-  
+
   // New onboarding fields
   studioName  String?  @map("studio_name")
   nip         String?
-  
+
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
   projects    Project[]
   wishlists   Wishlist[]
-  
+
+  @@index([email])
   @@map("profiles")
 }
 
@@ -80,13 +81,14 @@ model Client {
   fullName    String?  @map("full_name")
   phoneNumber String?  @map("phone_number")
   nip         String?
-  
+
   projectId   String   @map("project_id") @db.Uuid
   project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
+  @@index([projectId])
   @@map("clients")
 }
 
@@ -94,11 +96,11 @@ model Project {
   id          String   @id @default(uuid()) @db.Uuid
   designerId  String   @map("designer_id") @db.Uuid
   designer    Profile  @relation(fields: [designerId], references: [id], onDelete: Cascade)
-  
+
   name        String
   description String?
   status      ProjectStatus @default(DRAFT)
-  
+
   // New visual fields
   icon        String?
   color       String?
@@ -108,12 +110,12 @@ model Project {
   address     String?
   city        String?
   postalCode  String?  @map("postal_code")
-  
+
   totalArea   Float?   @map("total_area")
   floorsCount Int?     @map("floors_count")
   roomsCount  Int?     @map("rooms_count")
   budgetGoal  Decimal? @map("budget_goal") @db.Decimal(12, 2)
-  
+
   startDate   DateTime? @map("start_date")
   deadline    DateTime?
 
@@ -131,6 +133,7 @@ model Project {
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
+  @@index([designerId])
   @@map("projects")
 }
 
@@ -138,7 +141,7 @@ model Room {
   id          String   @id @default(uuid()) @db.Uuid
   projectId   String   @map("project_id") @db.Uuid
   project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  
+
   name        String
   type        RoomType @default(OTHER)
   status      RoomStatus @default(NOT_STARTED)
@@ -153,6 +156,7 @@ model Room {
   tasks       Task[]      @relation("RoomTasks")
   notes       Note[]
 
+  @@index([projectId])
   @@map("rooms")
 }
 
@@ -167,12 +171,13 @@ model Wishlist {
 
   createdAt   DateTime @default(now()) @map("created_at")
 
+  @@index([designerId])
   @@map("wishlists")
 }
 
 model ProductItem {
   id          String   @id @default(uuid()) @db.Uuid
-  
+
   wishlistId  String?  @map("wishlist_id") @db.Uuid
   wishlist    Wishlist? @relation(fields: [wishlistId], references: [id], onDelete: SetNull)
 
@@ -184,17 +189,19 @@ model ProductItem {
   supplier    String?
   url         String?
   imageUrl    String?  @map("image_url")
-  
+
   price       Decimal  @default(0) @db.Decimal(12, 2)
   quantity    Int      @default(1)
   paidAmount  Decimal  @default(0) @map("paid_amount") @db.Decimal(12, 2)
-  
+
   isInCart    Boolean  @default(false) @map("is_in_cart")
   status      ProductStatus @default(TO_ORDER)
 
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
+  @@index([wishlistId])
+  @@index([roomId])
   @@map("product_items")
 }
 
@@ -202,20 +209,22 @@ model Task {
   id          String   @id @default(uuid()) @db.Uuid
   projectId   String   @map("project_id") @db.Uuid
   project     Project  @relation("ProjectTasks", fields: [projectId], references: [id], onDelete: Cascade)
-  
+
   roomId      String?  @map("room_id") @db.Uuid
   room        Room?    @relation("RoomTasks", fields: [roomId], references: [id], onDelete: SetNull)
 
   title       String
   status      TaskStatus @default(TODO)
-  
+
   // AssignedTo typically refers to a Profile or user ID, which should be UUID too if users are in Profile
   assignedTo  String?  @map("assigned_to") @db.Uuid
   dueDate     DateTime? @map("due_date")
-  
+
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
+  @@index([projectId])
+  @@index([roomId])
   @@map("tasks")
 }
 
@@ -228,6 +237,7 @@ model Contact {
   role      String?
   email     String?
   phone     String?
+  @@index([projectId])
   @@map("contacts")
 }
 
@@ -239,6 +249,7 @@ model Conversation {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
   messages  Message[]
+  @@index([projectId])
   @@map("conversations")
 }
 
@@ -249,7 +260,8 @@ model Message {
   content        String
   senderId       String       @map("sender_id") @db.Uuid // Profile ID
   createdAt      DateTime     @default(now()) @map("created_at")
-  
+
+  @@index([conversationId])
   @@map("messages")
 }
 
@@ -259,6 +271,7 @@ model Survey {
   project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   title     String
   status    String   @default("DRAFT")
+  @@index([projectId])
   @@map("surveys")
 }
 
@@ -268,6 +281,7 @@ model Moodboard {
   project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   name      String
   images    Json?
+  @@index([projectId])
   @@map("moodboards")
 }
 
@@ -280,6 +294,7 @@ model Document {
   type      String?
   size      Int?
   uploadedAt DateTime @default(now()) @map("uploaded_at")
+  @@index([projectId])
   @@map("documents")
 }
 
@@ -290,6 +305,7 @@ model Note {
   content   String
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
+  @@index([roomId])
   @@map("notes")
 }
 
@@ -301,6 +317,7 @@ model CalendarEvent {
   date        DateTime
   description String?
   type        String   @default("MEETING") // MEETING, DEADLINE, PAYMENT, INSTALLATION
+  @@index([projectId])
   @@map("calendar_events")
 }
 
@@ -311,5 +328,6 @@ model GalleryImage {
   url       String
   caption   String?
   createdAt DateTime @default(now()) @map("created_at")
+  @@index([roomId])
   @@map("gallery_images")
 }

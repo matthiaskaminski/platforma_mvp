@@ -21,7 +21,7 @@ interface BudgetListProps {
     budgetItems: BudgetItem[];
 }
 
-export function BudgetList({ budgetItems }: BudgetListProps) {
+export const BudgetList = React.memo(function BudgetList({ budgetItems }: BudgetListProps) {
     // Calculate totals
     const totalCost = budgetItems.reduce((acc, item) => {
         const price = Number(item.price) || 0;
@@ -166,4 +166,4 @@ export function BudgetList({ budgetItems }: BudgetListProps) {
             </div>
         </div>
     );
-}
+});

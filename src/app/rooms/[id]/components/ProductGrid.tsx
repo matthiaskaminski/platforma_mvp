@@ -33,7 +33,7 @@ const statusConfig: Record<string, { label: string; dotColor: string }> = {
     'RETURNED': { label: "Zwrócone", dotColor: "bg-zinc-500 shadow-[0_0_8px_rgba(113,113,122,0.3)]" }
 };
 
-export function ProductGrid({ products }: ProductGridProps) {
+export const ProductGrid = React.memo(function ProductGrid({ products }: ProductGridProps) {
     if (products.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center h-full p-6">
@@ -106,4 +106,4 @@ export function ProductGrid({ products }: ProductGridProps) {
             })}
         </div>
     );
-}
+});

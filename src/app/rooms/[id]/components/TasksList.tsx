@@ -25,7 +25,7 @@ const statusConfig: Record<string, { label: string; badgeStatus: "overdue" | "in
     'DONE': { label: "Zakończone", badgeStatus: "completed" }
 };
 
-export function TasksList({ tasks }: TasksListProps) {
+export const TasksList = React.memo(function TasksList({ tasks }: TasksListProps) {
     const [checkedTasks, setCheckedTasks] = useState<Set<string>>(new Set());
 
     const toggleTask = (taskId: string) => {
@@ -149,4 +149,4 @@ export function TasksList({ tasks }: TasksListProps) {
             </div>
         </div>
     );
-}
+});

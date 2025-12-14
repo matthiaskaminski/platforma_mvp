@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useMemo } from "react";
 import { User, Package, FileText, CheckCircle2, Clock, MoreVertical, Home, StickyNote, History as HistoryIcon } from "lucide-react";
 
 interface HistoryItem {
@@ -89,7 +89,8 @@ const formatTime = (date: Date) => {
 };
 
 export function HistoryList({ history }: HistoryListProps) {
-    const groupedHistory = groupHistoryByPeriod(history);
+    // Memoize grouped history to avoid recalculation on every render
+    const groupedHistory = useMemo(() => groupHistoryByPeriod(history), [history]);
 
     // Default: "Dziś" is expanded, others collapsed
     const [collapsedPeriods, setCollapsedPeriods] = React.useState<Record<string, boolean>>({

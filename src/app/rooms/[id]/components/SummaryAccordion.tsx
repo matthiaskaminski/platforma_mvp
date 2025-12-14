@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { ChevronDown, ListTodo } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -38,8 +38,8 @@ const statusConfig: Record<string, { label: string; badgeStatus: "overdue" | "in
 export function SummaryAccordion({ projectSummary }: SummaryAccordionProps) {
     const [isOpen, setIsOpen] = useState(true);
 
-    // Calculate budget data from project summary
-    const calculateBudget = () => {
+    // Calculate budget data from project summary - memoized to avoid recalculation on every render
+    const budget = useMemo(() => {
         if (!projectSummary) {
             return {
                 products: 0,
@@ -87,9 +87,7 @@ export function SummaryAccordion({ projectSummary }: SummaryAccordionProps) {
             budgetGoal,
             percentage
         };
-    };
-
-    const budget = calculateBudget();
+    }, [projectSummary]);
 
     // Prepare chart data
     const budgetData = [
