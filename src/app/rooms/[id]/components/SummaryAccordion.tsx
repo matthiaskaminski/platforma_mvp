@@ -220,7 +220,7 @@ export function SummaryAccordion({ projectSummary }: SummaryAccordionProps) {
                                                         <div className={`w-3 h-2 rounded-full ${item.color}`}></div>
                                                         <span className="text-muted-foreground">{item.label}</span>
                                                     </div>
-                                                    <span className="font-medium text-white">{formatCurrency(item.val)}</span>
+                                                    <span className="font-medium text-white">{formatCurrency(item.val!)}</span>
                                                 </div>
                                             ))}
                                             <div className="pt-2 mt-2 border-t border-white/5 flex justify-between text-sm">
