@@ -703,3 +703,71 @@ export async function getProjectSummary(projectId: string) {
 
     return project
 }
+
+/**
+ * Upload room cover image
+ */
+export async function uploadRoomCoverImage(roomId: string, formData: FormData) {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user?.email) {
+        throw new Error('Unauthorized')
+    }
+
+    const profile = await prisma.profile.findUnique({
+        where: { email: user.email }
+    })
+
+    if (!profile) {
+        throw new Error('Profile not found')
+    }
+
+    // Verify room ownership through project
+    const room = await prisma.room.findUnique({
+        where: { id: roomId },
+        include: { project: true }
+    })
+
+    if (!room || room.project.designerId !== profile.id) {
+        throw new Error('Room not found or unauthorized')
+    }
+
+    const file = formData.get('file') as File
+    if (!file) {
+        throw new Error('No file provided')
+    }
+
+    // Generate unique filename
+    const fileExt = file.name.split('.').pop()
+    const fileName = `room-${roomId}-${Date.now()}.${fileExt}`
+    const filePath = `rooms/${fileName}`
+
+    // Upload to Supabase Storage
+    const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('Liru')
+        .upload(filePath, file, {
+            cacheControl: '3600',
+            upsert: false
+        })
+
+    if (uploadError) {
+        throw new Error(`Upload failed: ${uploadError.message}`)
+    }
+
+    // Get public URL
+    const { data: { publicUrl } } = supabase.storage
+        .from('Liru')
+        .getPublicUrl(filePath)
+
+    // Update room with cover image URL
+    await prisma.room.update({
+        where: { id: roomId },
+        data: { coverImage: publicUrl }
+    })
+
+    revalidatePath('/rooms')
+    revalidatePath(`/rooms/${roomId}`)
+
+    return { url: publicUrl }
+}

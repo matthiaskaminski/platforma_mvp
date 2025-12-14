@@ -15,7 +15,7 @@ import { NotesList } from "./components/NotesList";
 import { HistoryList } from "./components/HistoryList";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { uploadProjectCoverImage } from "@/app/actions/projects";
+import { uploadRoomCoverImage } from "@/app/actions/rooms";
 import { useRouter } from "next/navigation";
 
 const ROOM_IMG_PLACEHOLDER = "https://zotnacipqsjewlzofpga.supabase.co/storage/v1/object/public/Liru/526853319_1355299613265765_6668356102677043657_n.jpg";
@@ -158,7 +158,7 @@ export default function RoomDetailsClient({ roomData, products, tasks, budgetIte
             const formData = new FormData();
             formData.append('file', file);
 
-            await uploadProjectCoverImage(roomData.projectId, formData);
+            await uploadRoomCoverImage(roomData.id, formData);
             router.refresh();
         } catch (error) {
             console.error('Upload error:', error);
@@ -184,7 +184,7 @@ export default function RoomDetailsClient({ roomData, products, tasks, budgetIte
                 {/* 1. Drag & Drop Stats Grid */}
                 <RoomStatsDnD roomData={roomData} />
 
-                {/* 2. Big Image Tile - Project Cover Image - Fills remaining height */}
+                {/* 2. Big Image Tile - Room Cover Image - Fills remaining height */}
                 <Card className="flex-1 min-h-[300px] rounded-2xl overflow-hidden relative group">
                     <input
                         ref={fileInputRef}
@@ -193,7 +193,7 @@ export default function RoomDetailsClient({ roomData, products, tasks, budgetIte
                         onChange={handleImageUpload}
                         className="hidden"
                     />
-                    {roomData.projectCoverImage ? (
+                    {roomData.coverImage ? (
                         <>
                             <div className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
                                 <Button
@@ -208,9 +208,9 @@ export default function RoomDetailsClient({ roomData, products, tasks, budgetIte
                             </div>
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
-                                src={roomData.projectCoverImage}
+                                src={roomData.coverImage}
                                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                                alt="Project Visualization"
+                                alt="Room Visualization"
                             />
                         </>
                     ) : (
@@ -227,10 +227,10 @@ export default function RoomDetailsClient({ roomData, products, tasks, budgetIte
                                 )}
                             </div>
                             <p className="text-white font-medium mb-2">
-                                {isUploading ? 'Przesyłanie...' : 'Dodaj zdjęcie projektu'}
+                                {isUploading ? 'Przesyłanie...' : 'Dodaj zdjęcie pomieszczenia'}
                             </p>
                             <p className="text-sm text-muted-foreground text-center max-w-xs">
-                                Kliknij aby dodać zdjęcie wizualizacji dla całego projektu
+                                Kliknij aby dodać zdjęcie wizualizacji dla tego pomieszczenia
                             </p>
                         </button>
                     )}
