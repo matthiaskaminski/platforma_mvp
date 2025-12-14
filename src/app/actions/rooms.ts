@@ -169,12 +169,9 @@ export async function getRoomById(roomId: string) {
         return null
     }
 
-    const room = await prisma.room.findFirst({
+    const room = await prisma.room.findUnique({
         where: {
-            id: roomId,
-            project: {
-                designerId: profile.id
-            }
+            id: roomId
         },
         include: {
             // Only fetch counts for better performance
@@ -190,11 +187,17 @@ export async function getRoomById(roomId: string) {
                 select: {
                     id: true,
                     name: true,
-                    coverImage: true
+                    coverImage: true,
+                    designerId: true
                 }
             }
         }
     })
+
+    // Verify ownership after fetch
+    if (!room || room.project.designerId !== profile.id) {
+        return null
+    }
 
     return room
 }
