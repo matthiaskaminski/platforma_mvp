@@ -111,8 +111,8 @@ export default function DashboardClient({ user, project, stats, recentProducts =
                 switch (tile.id) {
                     case 'tile-1': return { ...tile, label: getBuildingLabel(project.icon || 'Home') }
                     case 'tile-2': return { ...tile, label: `${project.totalArea || 0}m²` }
-                    case 'tile-3': return { ...tile, label: String(project.floorsCount || 0) }
-                    case 'tile-4': return { ...tile, label: String(project.roomsCount || 0) }
+                    case 'tile-3': return { ...tile, label: String(counts.floors || 0) }
+                    case 'tile-4': return { ...tile, label: String(counts.rooms || 0) }
                     case 'tile-5': return { ...tile, label: String(counts.products || 0) }
                     case 'tile-6': return { ...tile, label: String(counts.doneTasks || 0) }
                     default: return tile
