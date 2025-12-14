@@ -5,9 +5,12 @@ import RoomDetailsClient from './RoomDetailsClient';
 // Force dynamic rendering - no caching
 export const dynamic = 'force-dynamic';
 
-export default async function RoomDetailsPage({ params }: { params: { id: string } }) {
+export default async function RoomDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+    // Await params in Next.js 15+
+    const { id } = await params;
+
     // First get room to extract projectId
-    const room = await getRoomById(params.id);
+    const room = await getRoomById(id);
 
     if (!room) {
         redirect('/rooms');
@@ -15,11 +18,11 @@ export default async function RoomDetailsPage({ params }: { params: { id: string
 
     // Then fetch all other data in parallel
     const [products, tasks, budgetItems, galleryImages, notes, documents, history, projectSummary] = await Promise.all([
-        getRoomProducts(params.id),
-        getRoomTasks(params.id),
-        getRoomBudget(params.id),
-        getRoomGallery(params.id),
-        getRoomNotes(params.id),
+        getRoomProducts(id),
+        getRoomTasks(id),
+        getRoomBudget(id),
+        getRoomGallery(id),
+        getRoomNotes(id),
         getProjectDocuments(room.project.id),
         getProjectHistory(room.project.id),
         getProjectSummary(room.project.id)
