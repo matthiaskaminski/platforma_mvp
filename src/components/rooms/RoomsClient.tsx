@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Plus, Trash2, MoreHorizontal, Armchair, BedDouble, Bath, Utensils, DoorOpen, Baby, User, Edit3, ChevronDown, PlusCircle } from "lucide-react";
+import { Plus, Trash2, MoreHorizontal, Armchair, BedDouble, Bath, Utensils, DoorOpen, Baby, User, Edit3, ChevronDown, PlusCircle, Briefcase, Home } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -22,12 +22,14 @@ const statusConfig = {
 };
 
 const iconMap: Record<string, any> = {
-    bathroom: Bath,
-    living: Armchair,
-    kitchen: Utensils,
-    bedroom: BedDouble,
-    kids: Baby,
-    hall: DoorOpen
+    BATHROOM: Bath,
+    LIVING: Armchair,
+    KITCHEN: Utensils,
+    BEDROOM: BedDouble,
+    KIDS: Baby,
+    HALL: DoorOpen,
+    OFFICE: Briefcase,
+    OTHER: Home
 }
 
 interface RoomData {

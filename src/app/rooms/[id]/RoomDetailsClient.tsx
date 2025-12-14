@@ -209,8 +209,9 @@ export default function RoomDetailsClient({ roomData, products, tasks, budgetIte
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                                 src={roomData.coverImage}
-                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105"
                                 alt="Room Visualization"
+                                style={{ objectFit: 'cover' }}
                             />
                         </>
                     ) : (
