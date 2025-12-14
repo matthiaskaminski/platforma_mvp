@@ -19,6 +19,20 @@ interface Project {
     }[];
 }
 
+interface TaskInSprint {
+    id: string;
+    title: string;
+    description: string | null;
+    status: 'TODO' | 'IN_PROGRESS' | 'DONE';
+    dueDate: Date | null;
+    createdAt: Date;
+    room: {
+        id: string;
+        name: string;
+        type: string;
+    } | null;
+}
+
 interface Sprint {
     id: string;
     name: string;
@@ -26,7 +40,7 @@ interface Sprint {
     status: string;
     startDate: Date | null;
     endDate: Date | null;
-    tasks: Task[];
+    tasks: TaskInSprint[];
     _count: {
         tasks: number;
     };
@@ -111,7 +125,7 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
     };
 
     // Check if task is overdue
-    const isOverdue = (task: Task) => {
+    const isOverdue = (task: Task | TaskInSprint) => {
         if (!task.dueDate || task.status === 'DONE') return false;
         const today = new Date();
         today.setHours(0, 0, 0, 0);
@@ -292,7 +306,7 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
                                                                             Brak zadaD w tym sprincie
                                                                         </div>
                                                                     ) : (
-                                                                        sprint.tasks.map((task: Task) => {
+                                                                        sprint.tasks.map((task: TaskInSprint) => {
                                                                             const overdue = isOverdue(task);
                                                                             const taskStatus = overdue ? 'overdue' : statusMap[task.status];
                                                                             const taskLabel = overdue ? 'Przeterminowane' : statusLabels[task.status];
