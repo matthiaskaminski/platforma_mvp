@@ -326,19 +326,19 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
                                                             <div className="flex items-center gap-2 mb-2 text-sm font-medium text-white/80 hover:text-white transition-colors w-full group py-2">
                                                                 <button
                                                                     onClick={() => toggleSprint(sprint.id)}
-                                                                    className="flex items-center gap-2 flex-1"
+                                                                    className="flex items-center gap-2"
                                                                 >
                                                                     <ChevronDown className={`w-3 h-3 text-muted-foreground transition-transform duration-200 ${collapsedSprints[sprint.id] ? '-rotate-90' : ''}`} />
                                                                     <Clock className="w-4 h-4 text-muted-foreground group-hover:text-white transition-colors" />
                                                                 </button>
                                                                 <span
                                                                     onClick={() => openSprintDetails(sprint)}
-                                                                    className="cursor-pointer hover:underline flex-1"
+                                                                    className="cursor-pointer hover:underline"
                                                                 >
                                                                     {sprint.name}
                                                                 </span>
                                                                 {sprint.startDate && sprint.endDate && (
-                                                                    <span className="text-[14px] text-muted-foreground/60 font-normal">
+                                                                    <span className="text-[14px] text-muted-foreground/60 font-normal ml-2">
                                                                         {formatDate(sprint.startDate)} - {formatDate(sprint.endDate)}
                                                                     </span>
                                                                 )}
@@ -360,7 +360,7 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
                                                                             return (
                                                                                 <div
                                                                                     key={task.id}
-                                                                                    className={`grid grid-cols-[40px_minmax(250px,2fr)_150px_150px_minmax(300px,3fr)_40px] gap-4 py-4 items-center hover:bg-[#151515] transition-colors border-b border-white/5 last:border-transparent text-[14px] group/row rounded-none ${selectedTasks.has(task.id) ? 'bg-[#1a1a1a]' : ''}`}
+                                                                                    className={`grid grid-cols-[40px_minmax(250px,2fr)_150px_150px_minmax(300px,3fr)] gap-4 py-4 items-center hover:bg-[#151515] transition-colors border-b border-white/5 last:border-transparent text-[14px] group/row rounded-none ${selectedTasks.has(task.id) ? 'bg-[#1a1a1a]' : ''}`}
                                                                                 >
                                                                                     {/* Checkbox */}
                                                                                     <div className="flex justify-center">
@@ -396,15 +396,8 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
                                                                                     </div>
 
                                                                                     {/* Description */}
-                                                                                    <div className="text-muted-foreground line-clamp-2 pr-4 text-sm">
+                                                                                    <div className="text-muted-foreground line-clamp-2 pr-4 text-sm col-span-2">
                                                                                         {task.description || '-'}
-                                                                                    </div>
-
-                                                                                    {/* Menu */}
-                                                                                    <div className="flex justify-center opacity-0 group-hover/row:opacity-100 transition-opacity cursor-pointer">
-                                                                                        <div className="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center">
-                                                                                            <div className="w-1 h-1 bg-muted-foreground rounded-full shadow-[0_4px_0_currentColor,0_-4px_0_currentColor]"></div>
-                                                                                        </div>
                                                                                     </div>
                                                                                 </div>
                                                                             );
@@ -479,7 +472,7 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
 
             {/* Right Sidebar - Task Details */}
             {selectedTaskDetails && (
-                <div className="fixed right-0 top-0 bottom-0 w-[500px] bg-[#0A0A0A] border-l border-white/10 z-50 overflow-y-auto">
+                <div className="fixed right-0 top-0 bottom-0 w-[500px] bg-[#0A0A0A] border-l border-white/10 z-50 overflow-y-auto animate-in slide-in-from-right duration-200">
                     <div className="p-6">
                         {/* Header */}
                         <div className="flex items-start justify-between mb-6">
@@ -540,7 +533,7 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
 
             {/* Right Sidebar - Sprint Details */}
             {selectedSprintDetails && (
-                <div className="fixed right-0 top-0 bottom-0 w-[500px] bg-[#0A0A0A] border-l border-white/10 z-50 overflow-y-auto">
+                <div className="fixed right-0 top-0 bottom-0 w-[500px] bg-[#0A0A0A] border-l border-white/10 z-50 overflow-y-auto animate-in slide-in-from-right duration-200">
                     <div className="p-6">
                         {/* Header */}
                         <div className="flex items-start justify-between mb-6">
@@ -562,8 +555,27 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
                         <div className="space-y-6">
                             <div>
                                 <label className="text-sm font-medium text-muted-foreground block mb-2">Status</label>
-                                <Badge status="in_progress">
-                                    {selectedSprintDetails.status}
+                                <Badge status={
+                                    (() => {
+                                        const now = new Date();
+                                        const start = selectedSprintDetails.startDate ? new Date(selectedSprintDetails.startDate) : null;
+                                        const end = selectedSprintDetails.endDate ? new Date(selectedSprintDetails.endDate) : null;
+
+                                        if (selectedSprintDetails.status === 'COMPLETED') return 'completed';
+                                        if (!start || start > now) return 'not_started';
+                                        if (end && end < now) return 'overdue';
+                                        return 'in_progress';
+                                    })()
+                                } dot>
+                                    {(() => {
+                                        const now = new Date();
+                                        const start = selectedSprintDetails.startDate ? new Date(selectedSprintDetails.startDate) : null;
+                                        const end = selectedSprintDetails.endDate ? new Date(selectedSprintDetails.endDate) : null;
+
+                                        if (selectedSprintDetails.status === 'COMPLETED') return 'Zakończony';
+                                        if (!start || start > now) return 'Planowany';
+                                        return 'W trakcie';
+                                    })()}
                                 </Badge>
                             </div>
 
@@ -583,6 +595,25 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
                                     </p>
                                 </div>
                             )}
+
+                            <div>
+                                <label className="text-sm font-medium text-muted-foreground block mb-2">Zadania w sprincie</label>
+                                <div className="space-y-2">
+                                    {selectedSprintDetails.tasks.map((task) => (
+                                        <div key={task.id} className="flex items-center justify-between p-3 bg-[#151515] rounded-lg">
+                                            <div className="flex-1">
+                                                <p className="text-white text-sm">{task.title}</p>
+                                                <Badge status={statusMap[task.status]} dot className="mt-1">
+                                                    {statusLabels[task.status]}
+                                                </Badge>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {selectedSprintDetails.tasks.length === 0 && (
+                                        <p className="text-muted-foreground text-sm">Brak zadan w tym sprincie</p>
+                                    )}
+                                </div>
+                            </div>
 
                             <div className="pt-4 border-t border-white/10">
                                 <Button variant="secondary" className="w-full mb-2">

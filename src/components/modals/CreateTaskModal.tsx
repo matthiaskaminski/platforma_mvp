@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { X, Clock, Armchair } from "lucide-react";
+import { X, Clock, Armchair, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { createTask } from "@/app/actions/sprints";
@@ -182,12 +182,16 @@ export function CreateTaskModal({ isOpen, onClose, projectId, sprints, rooms }: 
                         <label className="block text-sm font-medium mb-2">
                             Termin wykonania (opcjonalnie)
                         </label>
-                        <Input
-                            type="date"
-                            value={dueDate}
-                            onChange={(e) => setDueDate(e.target.value)}
-                            disabled={isSubmitting}
-                        />
+                        <div className="relative">
+                            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none z-10" />
+                            <Input
+                                type="date"
+                                value={dueDate}
+                                onChange={(e) => setDueDate(e.target.value)}
+                                disabled={isSubmitting}
+                                className="pl-10"
+                            />
+                        </div>
                     </div>
 
                     <div className="flex justify-end gap-3">

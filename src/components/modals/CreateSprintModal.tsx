@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { X } from "lucide-react";
+import { X, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { createSprint } from "@/app/actions/sprints";
@@ -115,24 +115,32 @@ export function CreateSprintModal({ isOpen, onClose, projectId }: CreateSprintMo
                             <label className="block text-sm font-medium mb-2">
                                 Data rozpoczecia
                             </label>
-                            <Input
-                                type="date"
-                                value={startDate}
-                                onChange={(e) => setStartDate(e.target.value)}
-                                disabled={isSubmitting}
-                            />
+                            <div className="relative">
+                                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none z-10" />
+                                <Input
+                                    type="date"
+                                    value={startDate}
+                                    onChange={(e) => setStartDate(e.target.value)}
+                                    disabled={isSubmitting}
+                                    className="pl-10"
+                                />
+                            </div>
                         </div>
 
                         <div>
                             <label className="block text-sm font-medium mb-2">
                                 Data zakonczenia
                             </label>
-                            <Input
-                                type="date"
-                                value={endDate}
-                                onChange={(e) => setEndDate(e.target.value)}
-                                disabled={isSubmitting}
-                            />
+                            <div className="relative">
+                                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none z-10" />
+                                <Input
+                                    type="date"
+                                    value={endDate}
+                                    onChange={(e) => setEndDate(e.target.value)}
+                                    disabled={isSubmitting}
+                                    className="pl-10"
+                                />
+                            </div>
                         </div>
                     </div>
 
