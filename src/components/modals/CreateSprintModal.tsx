@@ -35,18 +35,17 @@ export function CreateSprintModal({ isOpen, onClose, projectId }: CreateSprintMo
             });
 
             if (result.success) {
-                // Reset form
                 setName('');
                 setGoal('');
                 setStartDate('');
                 setEndDate('');
                 onClose();
             } else {
-                alert('BBd podczas tworzenia sprintu');
+                alert('Blad podczas tworzenia sprintu');
             }
         } catch (error) {
             console.error('Error creating sprint:', error);
-            alert('BBd podczas tworzenia sprintu');
+            alert('Blad podczas tworzenia sprintu');
         } finally {
             setIsSubmitting(false);
         }
@@ -65,7 +64,6 @@ export function CreateSprintModal({ isOpen, onClose, projectId }: CreateSprintMo
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
             <div className="bg-[#151515] rounded-2xl w-full max-w-2xl mx-4 shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
-                {/* Header */}
                 <div className="flex justify-between items-center p-6 border-b border-white/10">
                     <h2 className="text-2xl font-bold text-white">Nowy sprint</h2>
                     <button
@@ -77,9 +75,7 @@ export function CreateSprintModal({ isOpen, onClose, projectId }: CreateSprintMo
                     </button>
                 </div>
 
-                {/* Form */}
                 <form onSubmit={handleSubmit} className="p-6 space-y-6">
-                    {/* Sprint Name */}
                     <div className="space-y-2">
                         <label className="text-sm font-medium text-white">
                             Nazwa sprintu
@@ -93,7 +89,6 @@ export function CreateSprintModal({ isOpen, onClose, projectId }: CreateSprintMo
                         />
                     </div>
 
-                    {/* Sprint Goal */}
                     <div className="space-y-2">
                         <label className="text-sm font-medium text-white">
                             Cel sprintu <span className="text-muted-foreground font-normal">(opcjonalnie)</span>
@@ -107,11 +102,10 @@ export function CreateSprintModal({ isOpen, onClose, projectId }: CreateSprintMo
                         />
                     </div>
 
-                    {/* Dates */}
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <label className="text-sm font-medium text-white">
-                                Data rozpoczcia
+                                Data rozpoczecia
                             </label>
                             <div className="relative">
                                 <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
@@ -127,7 +121,7 @@ export function CreateSprintModal({ isOpen, onClose, projectId }: CreateSprintMo
 
                         <div className="space-y-2">
                             <label className="text-sm font-medium text-white">
-                                Data zakoDczenia
+                                Data zakonczenia
                             </label>
                             <div className="relative">
                                 <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
@@ -142,7 +136,6 @@ export function CreateSprintModal({ isOpen, onClose, projectId }: CreateSprintMo
                         </div>
                     </div>
 
-                    {/* Actions */}
                     <div className="flex justify-end gap-3 pt-4">
                         <Button
                             type="button"
@@ -158,7 +151,7 @@ export function CreateSprintModal({ isOpen, onClose, projectId }: CreateSprintMo
                             disabled={isSubmitting}
                             className="px-6 bg-[#232323] hover:bg-[#2a2a2a]"
                         >
-                            {isSubmitting ? 'Tworzenie...' : 'Utwórz sprint'}
+                            {isSubmitting ? 'Tworzenie...' : 'Utworz sprint'}
                         </Button>
                     </div>
                 </form>

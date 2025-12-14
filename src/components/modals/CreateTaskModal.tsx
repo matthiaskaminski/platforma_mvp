@@ -40,7 +40,7 @@ export function CreateTaskModal({ isOpen, onClose, projectId, sprints, rooms }: 
         e.preventDefault();
 
         if (!title.trim()) {
-            alert('Podaj nazw zadania');
+            alert('Podaj nazwe zadania');
             return;
         }
 
@@ -57,7 +57,6 @@ export function CreateTaskModal({ isOpen, onClose, projectId, sprints, rooms }: 
             });
 
             if (result.success) {
-                // Reset form
                 setTitle('');
                 setDescription('');
                 setSprintId('');
@@ -65,11 +64,11 @@ export function CreateTaskModal({ isOpen, onClose, projectId, sprints, rooms }: 
                 setDueDate('');
                 onClose();
             } else {
-                alert('BBd podczas tworzenia zadania');
+                alert('Blad podczas tworzenia zadania');
             }
         } catch (error) {
             console.error('Error creating task:', error);
-            alert('BBd podczas tworzenia zadania');
+            alert('Blad podczas tworzenia zadania');
         } finally {
             setIsSubmitting(false);
         }
@@ -89,7 +88,6 @@ export function CreateTaskModal({ isOpen, onClose, projectId, sprints, rooms }: 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
             <div className="bg-[#151515] rounded-2xl w-full max-w-2xl mx-4 shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
-                {/* Header */}
                 <div className="flex justify-between items-center p-6 border-b border-white/10">
                     <h2 className="text-2xl font-bold text-white">Nowe zadanie</h2>
                     <button
@@ -101,9 +99,7 @@ export function CreateTaskModal({ isOpen, onClose, projectId, sprints, rooms }: 
                     </button>
                 </div>
 
-                {/* Form */}
                 <form onSubmit={handleSubmit} className="p-6 space-y-6">
-                    {/* Task Title */}
                     <div className="space-y-2">
                         <label className="text-sm font-medium text-white">
                             Nazwa zadania <span className="text-red-500">*</span>
@@ -111,14 +107,13 @@ export function CreateTaskModal({ isOpen, onClose, projectId, sprints, rooms }: 
                         <Input
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
-                            placeholder="np. Spotkanie z klientem, Zakup materiaBów..."
+                            placeholder="np. Spotkanie z klientem, Zakup materialow..."
                             className="bg-[#1B1B1B] border-white/10 text-white placeholder:text-muted-foreground h-[48px]"
                             disabled={isSubmitting}
                             required
                         />
                     </div>
 
-                    {/* Task Description */}
                     <div className="space-y-2">
                         <label className="text-sm font-medium text-white">
                             Opis <span className="text-muted-foreground font-normal">(opcjonalnie)</span>
@@ -126,13 +121,12 @@ export function CreateTaskModal({ isOpen, onClose, projectId, sprints, rooms }: 
                         <textarea
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
-                            placeholder="Dodaj szczegóBy zadania..."
+                            placeholder="Dodaj szczegoly zadania..."
                             className="w-full bg-[#1B1B1B] border border-white/10 rounded-lg px-4 py-3 text-white placeholder:text-muted-foreground min-h-[100px] resize-none focus:outline-none focus:ring-2 focus:ring-white/20"
                             disabled={isSubmitting}
                         />
                     </div>
 
-                    {/* Sprint Selection */}
                     <div className="space-y-2">
                         <label className="text-sm font-medium text-white">
                             Sprint <span className="text-muted-foreground font-normal">(opcjonalnie)</span>
@@ -145,7 +139,7 @@ export function CreateTaskModal({ isOpen, onClose, projectId, sprints, rooms }: 
                                 className="w-full bg-[#1B1B1B] border border-white/10 rounded-lg pl-10 pr-4 py-3 text-white h-[48px] focus:outline-none focus:ring-2 focus:ring-white/20 appearance-none cursor-pointer"
                                 disabled={isSubmitting}
                             >
-                                <option value="">Brak sprintu (zadanie ogólne)</option>
+                                <option value="">Brak sprintu (zadanie ogolne)</option>
                                 {sprints.map(sprint => (
                                     <option key={sprint.id} value={sprint.id}>
                                         {sprint.name}
@@ -155,7 +149,6 @@ export function CreateTaskModal({ isOpen, onClose, projectId, sprints, rooms }: 
                         </div>
                     </div>
 
-                    {/* Room Selection */}
                     <div className="space-y-2">
                         <label className="text-sm font-medium text-white">
                             Pomieszczenie <span className="text-muted-foreground font-normal">(opcjonalnie)</span>
@@ -178,7 +171,6 @@ export function CreateTaskModal({ isOpen, onClose, projectId, sprints, rooms }: 
                         </div>
                     </div>
 
-                    {/* Due Date */}
                     <div className="space-y-2">
                         <label className="text-sm font-medium text-white">
                             Termin wykonania <span className="text-muted-foreground font-normal">(opcjonalnie)</span>
@@ -195,7 +187,6 @@ export function CreateTaskModal({ isOpen, onClose, projectId, sprints, rooms }: 
                         </div>
                     </div>
 
-                    {/* Actions */}
                     <div className="flex justify-end gap-3 pt-4">
                         <Button
                             type="button"
@@ -211,7 +202,7 @@ export function CreateTaskModal({ isOpen, onClose, projectId, sprints, rooms }: 
                             disabled={isSubmitting}
                             className="px-6 bg-[#232323] hover:bg-[#2a2a2a]"
                         >
-                            {isSubmitting ? 'Tworzenie...' : 'Utwórz zadanie'}
+                            {isSubmitting ? 'Tworzenie...' : 'Utworz zadanie'}
                         </Button>
                     </div>
                 </form>
