@@ -143,7 +143,7 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
         if (generalTasks.length > 0 || sprints.some(s => s.tasks.every(t => !t.room))) {
             groups.push({
                 id: 'general',
-                name: 'Zadania og�lne',
+                name: 'Zadania ogolne',
                 type: 'general',
                 sprints: sprints.filter(s => s.tasks.some(t => !t.room) || s.tasks.length === 0).map(sprint => ({
                     ...sprint,
@@ -278,7 +278,7 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
                                             <div className="space-y-6 ml-4">
                                                 {group.sprints.length === 0 ? (
                                                     <div className="text-muted-foreground text-sm py-4">
-                                                        Brak sprint�w dla tego pomieszczenia
+                                                        Brak sprintow dla tego pomieszczenia
                                                     </div>
                                                 ) : (
                                                     group.sprints.map((sprint: Sprint) => (
@@ -303,7 +303,7 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
                                                                 <div className="space-y-0">
                                                                     {sprint.tasks.length === 0 ? (
                                                                         <div className="text-muted-foreground text-sm py-4 ml-6">
-                                                                            Brak zadaD w tym sprincie
+                                                                            Brak zadan w tym sprincie
                                                                         </div>
                                                                     ) : (
                                                                         sprint.tasks.map((task: TaskInSprint) => {

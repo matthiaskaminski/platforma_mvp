@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { X, Calendar, Clock, Armchair } from "lucide-react";
+import { X, Clock, Armchair } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { createTask } from "@/app/actions/sprints";
@@ -86,37 +86,44 @@ export function CreateTaskModal({ isOpen, onClose, projectId, sprints, rooms }: 
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="bg-[#151515] rounded-2xl w-full max-w-2xl mx-4 shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
-                <div className="flex justify-between items-center p-6 border-b border-white/10">
-                    <h2 className="text-2xl font-bold text-white">Nowe zadanie</h2>
+        <>
+            {/* Overlay */}
+            <div
+                className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 animate-in fade-in duration-200"
+                onClick={handleClose}
+            />
+
+            {/* Modal */}
+            <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl bg-[#151515] rounded-2xl shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-200 border border-white/10 max-h-[90vh] overflow-y-auto">
+                {/* Header */}
+                <div className="flex items-center justify-between p-6 border-b border-white/10 sticky top-0 bg-[#151515] z-10">
+                    <h2 className="text-xl font-semibold">Nowe zadanie</h2>
                     <button
                         onClick={handleClose}
-                        disabled={isSubmitting}
-                        className="p-2 hover:bg-white/10 rounded-lg transition-colors text-muted-foreground hover:text-white disabled:opacity-50"
+                        className="p-2 hover:bg-white/5 rounded-lg transition-colors"
                     >
                         <X className="w-5 h-5" />
                     </button>
                 </div>
 
+                {/* Form */}
                 <form onSubmit={handleSubmit} className="p-6 space-y-6">
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium text-white">
+                    <div>
+                        <label className="block text-sm font-medium mb-2">
                             Nazwa zadania <span className="text-red-500">*</span>
                         </label>
                         <Input
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
                             placeholder="np. Spotkanie z klientem, Zakup materialow..."
-                            className="bg-[#1B1B1B] border-white/10 text-white placeholder:text-muted-foreground h-[48px]"
                             disabled={isSubmitting}
                             required
                         />
                     </div>
 
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium text-white">
-                            Opis <span className="text-muted-foreground font-normal">(opcjonalnie)</span>
+                    <div>
+                        <label className="block text-sm font-medium mb-2">
+                            Opis (opcjonalnie)
                         </label>
                         <textarea
                             value={description}
@@ -127,16 +134,16 @@ export function CreateTaskModal({ isOpen, onClose, projectId, sprints, rooms }: 
                         />
                     </div>
 
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium text-white">
-                            Sprint <span className="text-muted-foreground font-normal">(opcjonalnie)</span>
+                    <div>
+                        <label className="block text-sm font-medium mb-2">
+                            Sprint (opcjonalnie)
                         </label>
                         <div className="relative">
                             <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
                             <select
                                 value={sprintId}
                                 onChange={(e) => setSprintId(e.target.value)}
-                                className="w-full bg-[#1B1B1B] border border-white/10 rounded-lg pl-10 pr-4 py-3 text-white h-[48px] focus:outline-none focus:ring-2 focus:ring-white/20 appearance-none cursor-pointer"
+                                className="w-full bg-[#1B1B1B] border border-white/10 rounded-lg pl-10 pr-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-white/20 appearance-none cursor-pointer"
                                 disabled={isSubmitting}
                             >
                                 <option value="">Brak sprintu (zadanie ogolne)</option>
@@ -149,16 +156,16 @@ export function CreateTaskModal({ isOpen, onClose, projectId, sprints, rooms }: 
                         </div>
                     </div>
 
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium text-white">
-                            Pomieszczenie <span className="text-muted-foreground font-normal">(opcjonalnie)</span>
+                    <div>
+                        <label className="block text-sm font-medium mb-2">
+                            Pomieszczenie (opcjonalnie)
                         </label>
                         <div className="relative">
                             <Armchair className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
                             <select
                                 value={roomId}
                                 onChange={(e) => setRoomId(e.target.value)}
-                                className="w-full bg-[#1B1B1B] border border-white/10 rounded-lg pl-10 pr-4 py-3 text-white h-[48px] focus:outline-none focus:ring-2 focus:ring-white/20 appearance-none cursor-pointer"
+                                className="w-full bg-[#1B1B1B] border border-white/10 rounded-lg pl-10 pr-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-white/20 appearance-none cursor-pointer"
                                 disabled={isSubmitting}
                             >
                                 <option value="">Brak pomieszczenia</option>
@@ -171,42 +178,36 @@ export function CreateTaskModal({ isOpen, onClose, projectId, sprints, rooms }: 
                         </div>
                     </div>
 
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium text-white">
-                            Termin wykonania <span className="text-muted-foreground font-normal">(opcjonalnie)</span>
+                    <div>
+                        <label className="block text-sm font-medium mb-2">
+                            Termin wykonania (opcjonalnie)
                         </label>
-                        <div className="relative">
-                            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-                            <Input
-                                type="date"
-                                value={dueDate}
-                                onChange={(e) => setDueDate(e.target.value)}
-                                className="bg-[#1B1B1B] border-white/10 text-white pl-10 h-[48px]"
-                                disabled={isSubmitting}
-                            />
-                        </div>
+                        <Input
+                            type="date"
+                            value={dueDate}
+                            onChange={(e) => setDueDate(e.target.value)}
+                            disabled={isSubmitting}
+                        />
                     </div>
 
-                    <div className="flex justify-end gap-3 pt-4">
+                    <div className="flex justify-end gap-3">
                         <Button
                             type="button"
                             variant="secondary"
                             onClick={handleClose}
                             disabled={isSubmitting}
-                            className="px-6"
                         >
                             Anuluj
                         </Button>
                         <Button
                             type="submit"
                             disabled={isSubmitting}
-                            className="px-6 bg-[#232323] hover:bg-[#2a2a2a]"
                         >
                             {isSubmitting ? 'Tworzenie...' : 'Utworz zadanie'}
                         </Button>
                     </div>
                 </form>
             </div>
-        </div>
+        </>
     );
 }
