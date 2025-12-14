@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Clock, Flame, Check, Calendar, FileText, CheckSquare, Search, Plus, ChevronDown, Armchair, BedDouble, Bath, Utensils, DoorOpen, Baby, Layers, ListTodo } from "lucide-react";
+import { Clock, Flame, Check, Calendar, FileText, CheckSquare, Search, Plus, ChevronDown, Armchair, BedDouble, Bath, Utensils, DoorOpen, Baby, Layers, ListTodo, X, Trash2, Edit, MoreHorizontal } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -108,6 +108,9 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
     const [collapsedSprints, setCollapsedSprints] = useState<Record<string, boolean>>({});
     const [isSprintModalOpen, setIsSprintModalOpen] = useState(false);
     const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+    const [selectedTasks, setSelectedTasks] = useState<Set<string>>(new Set());
+    const [selectedTaskDetails, setSelectedTaskDetails] = useState<Task | TaskInSprint | null>(null);
+    const [selectedSprintDetails, setSelectedSprintDetails] = useState<Sprint | null>(null);
 
     const toggleGroup = (id: string) => {
         setCollapsedGroups(prev => ({ ...prev, [id]: !prev[id] }));
@@ -115,6 +118,42 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
 
     const toggleSprint = (id: string) => {
         setCollapsedSprints(prev => ({ ...prev, [id]: !prev[id] }));
+    };
+
+    const toggleTaskSelection = (taskId: string) => {
+        setSelectedTasks(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(taskId)) {
+                newSet.delete(taskId);
+            } else {
+                newSet.add(taskId);
+            }
+            return newSet;
+        });
+    };
+
+    const selectAllTasks = () => {
+        const allTaskIds = tasks.map(t => t.id);
+        setSelectedTasks(new Set(allTaskIds));
+    };
+
+    const deselectAllTasks = () => {
+        setSelectedTasks(new Set());
+    };
+
+    const openTaskDetails = (task: Task | TaskInSprint) => {
+        setSelectedTaskDetails(task);
+        setSelectedSprintDetails(null);
+    };
+
+    const openSprintDetails = (sprint: Sprint) => {
+        setSelectedSprintDetails(sprint);
+        setSelectedTaskDetails(null);
+    };
+
+    const closeSidebar = () => {
+        setSelectedTaskDetails(null);
+        setSelectedSprintDetails(null);
     };
 
     // Format date helper
@@ -284,19 +323,26 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
                                                     group.sprints.map((sprint: Sprint) => (
                                                         <div key={sprint.id} className="border-b border-white/5 pb-2 last:border-0">
                                                             {/* Sprint Header */}
-                                                            <button
-                                                                onClick={() => toggleSprint(sprint.id)}
-                                                                className="flex items-center gap-2 mb-2 text-sm font-medium text-white/80 hover:text-white transition-colors w-full group py-2"
-                                                            >
-                                                                <Clock className="w-4 h-4 text-muted-foreground group-hover:text-white transition-colors" />
-                                                                <span>{sprint.name}</span>
+                                                            <div className="flex items-center gap-2 mb-2 text-sm font-medium text-white/80 hover:text-white transition-colors w-full group py-2">
+                                                                <button
+                                                                    onClick={() => toggleSprint(sprint.id)}
+                                                                    className="flex items-center gap-2 flex-1"
+                                                                >
+                                                                    <ChevronDown className={`w-3 h-3 text-muted-foreground transition-transform duration-200 ${collapsedSprints[sprint.id] ? '-rotate-90' : ''}`} />
+                                                                    <Clock className="w-4 h-4 text-muted-foreground group-hover:text-white transition-colors" />
+                                                                </button>
+                                                                <span
+                                                                    onClick={() => openSprintDetails(sprint)}
+                                                                    className="cursor-pointer hover:underline flex-1"
+                                                                >
+                                                                    {sprint.name}
+                                                                </span>
                                                                 {sprint.startDate && sprint.endDate && (
                                                                     <span className="text-[14px] text-muted-foreground/60 font-normal">
                                                                         {formatDate(sprint.startDate)} - {formatDate(sprint.endDate)}
                                                                     </span>
                                                                 )}
-                                                                <ChevronDown className={`w-3 h-3 text-muted-foreground transition-transform duration-200 ${collapsedSprints[sprint.id] ? '-rotate-90' : ''}`} />
-                                                            </button>
+                                                            </div>
 
                                                             {/* Tasks Rows */}
                                                             {!collapsedSprints[sprint.id] && (
@@ -314,17 +360,26 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
                                                                             return (
                                                                                 <div
                                                                                     key={task.id}
-                                                                                    className="grid grid-cols-[40px_minmax(250px,2fr)_150px_150px_minmax(300px,3fr)_40px] gap-4 py-4 items-center hover:bg-[#151515] transition-colors border-b border-white/5 last:border-transparent text-[14px] group/row rounded-none"
+                                                                                    className={`grid grid-cols-[40px_minmax(250px,2fr)_150px_150px_minmax(300px,3fr)_40px] gap-4 py-4 items-center hover:bg-[#151515] transition-colors border-b border-white/5 last:border-transparent text-[14px] group/row rounded-none ${selectedTasks.has(task.id) ? 'bg-[#1a1a1a]' : ''}`}
                                                                                 >
                                                                                     {/* Checkbox */}
                                                                                     <div className="flex justify-center">
-                                                                                        <button className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${task.status === 'DONE' ? 'bg-white border-white text-black' : 'border-white/20 hover:border-white/40'}`}>
-                                                                                            {task.status === 'DONE' && <Check className="w-3.5 h-3.5" />}
+                                                                                        <button
+                                                                                            onClick={(e) => {
+                                                                                                e.stopPropagation();
+                                                                                                toggleTaskSelection(task.id);
+                                                                                            }}
+                                                                                            className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${selectedTasks.has(task.id) ? 'bg-blue-500 border-blue-500 text-white' : 'border-white/20 hover:border-white/40'}`}
+                                                                                        >
+                                                                                            {selectedTasks.has(task.id) && <Check className="w-3.5 h-3.5" />}
                                                                                         </button>
                                                                                     </div>
 
                                                                                     {/* Name */}
-                                                                                    <div className={`font-medium ${task.status === 'DONE' ? 'text-muted-foreground line-through' : 'text-white'}`}>
+                                                                                    <div
+                                                                                        className={`font-medium cursor-pointer ${task.status === 'DONE' ? 'text-muted-foreground line-through' : 'text-white'}`}
+                                                                                        onClick={() => openTaskDetails(task)}
+                                                                                    >
                                                                                         {task.title}
                                                                                     </div>
 
@@ -369,6 +424,180 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
                     </div>
                 </div>
             </div>
+
+            {/* Bottom Toolbar for Selected Tasks */}
+            {selectedTasks.size > 0 && (
+                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-[#1B1B1B] border border-white/10 rounded-xl shadow-2xl px-6 py-4 flex items-center gap-4">
+                    <span className="text-sm text-white">
+                        Zaznaczono: <span className="font-semibold">{selectedTasks.size}</span>
+                    </span>
+                    <div className="h-6 w-px bg-white/10" />
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={selectAllTasks}
+                        className="h-8"
+                    >
+                        Zaznacz wszystko
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {}}
+                        className="h-8"
+                    >
+                        Zmien pola
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {}}
+                        className="h-8"
+                    >
+                        Zmien status
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {}}
+                        className="h-8 text-red-400 hover:text-red-300"
+                    >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Usun
+                    </Button>
+                    <div className="h-6 w-px bg-white/10" />
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={deselectAllTasks}
+                        className="h-8"
+                    >
+                        <X className="w-4 h-4" />
+                    </Button>
+                </div>
+            )}
+
+            {/* Right Sidebar - Task Details */}
+            {selectedTaskDetails && (
+                <div className="fixed right-0 top-0 bottom-0 w-[500px] bg-[#0A0A0A] border-l border-white/10 z-50 overflow-y-auto">
+                    <div className="p-6">
+                        {/* Header */}
+                        <div className="flex items-start justify-between mb-6">
+                            <div className="flex-1">
+                                <h2 className="text-2xl font-semibold text-white mb-2">{selectedTaskDetails.title}</h2>
+                                <p className="text-sm text-muted-foreground">
+                                    {'room' in selectedTaskDetails && selectedTaskDetails.room ? selectedTaskDetails.room.name : 'Zadanie ogolne'}
+                                </p>
+                            </div>
+                            <button
+                                onClick={closeSidebar}
+                                className="p-2 hover:bg-white/5 rounded-lg transition-colors"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        {/* Details */}
+                        <div className="space-y-6">
+                            <div>
+                                <label className="text-sm font-medium text-muted-foreground block mb-2">Status</label>
+                                <Badge status={statusMap[selectedTaskDetails.status]} dot>
+                                    {statusLabels[selectedTaskDetails.status]}
+                                </Badge>
+                            </div>
+
+                            {selectedTaskDetails.description && (
+                                <div>
+                                    <label className="text-sm font-medium text-muted-foreground block mb-2">Opis</label>
+                                    <p className="text-white">{selectedTaskDetails.description}</p>
+                                </div>
+                            )}
+
+                            {selectedTaskDetails.dueDate && (
+                                <div>
+                                    <label className="text-sm font-medium text-muted-foreground block mb-2">Termin</label>
+                                    <p className="text-white flex items-center gap-2">
+                                        <Calendar className="w-4 h-4" />
+                                        {formatDate(selectedTaskDetails.dueDate)}
+                                    </p>
+                                </div>
+                            )}
+
+                            <div className="pt-4 border-t border-white/10">
+                                <Button variant="secondary" className="w-full mb-2">
+                                    <Edit className="w-4 h-4 mr-2" />
+                                    Edytuj zadanie
+                                </Button>
+                                <Button variant="ghost" className="w-full text-red-400 hover:text-red-300">
+                                    <Trash2 className="w-4 h-4 mr-2" />
+                                    Usun zadanie
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Right Sidebar - Sprint Details */}
+            {selectedSprintDetails && (
+                <div className="fixed right-0 top-0 bottom-0 w-[500px] bg-[#0A0A0A] border-l border-white/10 z-50 overflow-y-auto">
+                    <div className="p-6">
+                        {/* Header */}
+                        <div className="flex items-start justify-between mb-6">
+                            <div className="flex-1">
+                                <h2 className="text-2xl font-semibold text-white mb-2">{selectedSprintDetails.name}</h2>
+                                <p className="text-sm text-muted-foreground">
+                                    {selectedSprintDetails._count.tasks} {selectedSprintDetails._count.tasks === 1 ? 'zadanie' : 'zadan'}
+                                </p>
+                            </div>
+                            <button
+                                onClick={closeSidebar}
+                                className="p-2 hover:bg-white/5 rounded-lg transition-colors"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        {/* Details */}
+                        <div className="space-y-6">
+                            <div>
+                                <label className="text-sm font-medium text-muted-foreground block mb-2">Status</label>
+                                <Badge status="in_progress">
+                                    {selectedSprintDetails.status}
+                                </Badge>
+                            </div>
+
+                            {selectedSprintDetails.goal && (
+                                <div>
+                                    <label className="text-sm font-medium text-muted-foreground block mb-2">Cel sprintu</label>
+                                    <p className="text-white">{selectedSprintDetails.goal}</p>
+                                </div>
+                            )}
+
+                            {selectedSprintDetails.startDate && selectedSprintDetails.endDate && (
+                                <div>
+                                    <label className="text-sm font-medium text-muted-foreground block mb-2">Czas trwania</label>
+                                    <p className="text-white flex items-center gap-2">
+                                        <Calendar className="w-4 h-4" />
+                                        {formatDate(selectedSprintDetails.startDate)} - {formatDate(selectedSprintDetails.endDate)}
+                                    </p>
+                                </div>
+                            )}
+
+                            <div className="pt-4 border-t border-white/10">
+                                <Button variant="secondary" className="w-full mb-2">
+                                    <Edit className="w-4 h-4 mr-2" />
+                                    Edytuj sprint
+                                </Button>
+                                <Button variant="ghost" className="w-full text-red-400 hover:text-red-300">
+                                    <Trash2 className="w-4 h-4 mr-2" />
+                                    Usun sprint
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Modals */}
             <CreateSprintModal
