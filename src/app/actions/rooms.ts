@@ -437,6 +437,49 @@ export async function getRoomNotes(roomId: string) {
 }
 
 /**
+ * Get documents for a project (displayed in room details page)
+ */
+export async function getProjectDocuments(projectId: string) {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user?.email) {
+        return []
+    }
+
+    const profile = await prisma.profile.findUnique({
+        where: { email: user.email }
+    })
+
+    if (!profile) {
+        return []
+    }
+
+    // Verify project ownership
+    const project = await prisma.project.findFirst({
+        where: {
+            id: projectId,
+            designerId: profile.id
+        }
+    })
+
+    if (!project) {
+        return []
+    }
+
+    const documents = await prisma.document.findMany({
+        where: {
+            projectId: projectId
+        },
+        orderBy: {
+            uploadedAt: 'desc'
+        }
+    })
+
+    return documents
+}
+
+/**
  * Get project summary for room details page
  */
 export async function getProjectSummary(projectId: string) {

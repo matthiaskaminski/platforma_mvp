@@ -70,6 +70,15 @@ interface Note {
     updatedAt: Date;
 }
 
+interface Document {
+    id: string;
+    name: string;
+    url: string;
+    type: string | null;
+    size: number | null;
+    uploadedAt: Date;
+}
+
 interface ProjectSummary {
     budgetGoal: any;
     rooms: {
@@ -107,10 +116,11 @@ interface RoomDetailsClientProps {
     budgetItems: BudgetItem[];
     galleryImages: GalleryImage[];
     notes: Note[];
+    documents: Document[];
     projectSummary: ProjectSummary | null;
 }
 
-export default function RoomDetailsClient({ roomData, products, tasks, budgetItems, galleryImages, notes, projectSummary }: RoomDetailsClientProps) {
+export default function RoomDetailsClient({ roomData, products, tasks, budgetItems, galleryImages, notes, documents, projectSummary }: RoomDetailsClientProps) {
     const [activeTab, setActiveTab] = useState("Produkty");
     const [isUploading, setIsUploading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -334,7 +344,7 @@ export default function RoomDetailsClient({ roomData, products, tasks, budgetIte
                         <TasksList tasks={tasks} />
                     ) : activeTab === "Dokumenty" ? (
                         <div className="flex-1 overflow-y-auto no-scrollbar">
-                            <DocumentsGrid />
+                            <DocumentsGrid documents={documents} />
                         </div>
                     ) : activeTab === "Budżet" ? (
                         <BudgetList budgetItems={budgetItems} />

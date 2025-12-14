@@ -1,4 +1,4 @@
-import { getRoomById, getRoomProducts, getRoomTasks, getRoomBudget, getRoomGallery, getRoomNotes, getProjectSummary } from '@/app/actions/rooms';
+import { getRoomById, getRoomProducts, getRoomTasks, getRoomBudget, getRoomGallery, getRoomNotes, getProjectSummary, getProjectDocuments } from '@/app/actions/rooms';
 import { redirect } from 'next/navigation';
 import RoomDetailsClient from './RoomDetailsClient';
 
@@ -11,12 +11,13 @@ export default async function RoomDetailsPage({ params }: { params: { id: string
     }
 
     // Then fetch all other data in parallel
-    const [products, tasks, budgetItems, galleryImages, notes, projectSummary] = await Promise.all([
+    const [products, tasks, budgetItems, galleryImages, notes, documents, projectSummary] = await Promise.all([
         getRoomProducts(params.id),
         getRoomTasks(params.id),
         getRoomBudget(params.id),
         getRoomGallery(params.id),
         getRoomNotes(params.id),
+        getProjectDocuments(room.project.id),
         getProjectSummary(room.project.id)
     ]);
 
@@ -41,5 +42,5 @@ export default async function RoomDetailsPage({ params }: { params: { id: string
         projectCoverImage: room.project.coverImage,
     };
 
-    return <RoomDetailsClient roomData={roomData} products={products} tasks={tasks} budgetItems={budgetItems} galleryImages={galleryImages} notes={notes} projectSummary={projectSummary} />;
+    return <RoomDetailsClient roomData={roomData} products={products} tasks={tasks} budgetItems={budgetItems} galleryImages={galleryImages} notes={notes} documents={documents} projectSummary={projectSummary} />;
 }
