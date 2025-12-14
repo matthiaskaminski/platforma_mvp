@@ -277,9 +277,18 @@ export default function RoomDetailsClient({ roomData, products, tasks, budgetIte
                         <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto no-scrollbar">
                             {activeTab === "Zadania" ? (
                                 <>
-                                    <Button variant="ghost" style={{ color: '#6E6E6E', borderColor: '#2A2A2A' }} className="flex items-center gap-2 border border-dashed hover:border-white/20 hover:bg-white/5 hover:text-white px-5 py-3 rounded-lg text-sm font-medium transition-all whitespace-nowrap min-h-[48px]">
+                                    <button
+                                        style={{
+                                            color: '#6E6E6E',
+                                            borderColor: '#2A2A2A',
+                                            borderWidth: '1px',
+                                            borderStyle: 'dashed',
+                                            backgroundColor: 'transparent'
+                                        }}
+                                        className="flex items-center gap-2 hover:border-white/20 hover:bg-white/5 hover:text-white px-5 py-3 rounded-lg text-sm font-medium transition-all whitespace-nowrap min-h-[48px]"
+                                    >
                                         <Plus className="w-5 h-5" style={{ color: '#6E6E6E' }} /> Dodaj nowe zadanie
-                                    </Button>
+                                    </button>
                                     <Button className="flex items-center gap-2 bg-[#1B1B1B] hover:bg-[#232323] text-muted-foreground hover:text-white px-5 py-3 rounded-lg text-sm font-medium transition-colors whitespace-nowrap min-h-[48px]">
                                         <LayoutGrid className="w-5 h-5" /> Widok
                                     </Button>
