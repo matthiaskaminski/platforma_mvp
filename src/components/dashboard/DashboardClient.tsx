@@ -411,7 +411,7 @@ export default function DashboardClient({ user, project, stats, recentProducts =
                                     <div className="w-2 h-2 rounded-full bg-[#E5E5E5]"></div>
                                     <span className="text-[14px] text-[#6E6E6E]">Wydano</span>
                                 </div>
-                                <span className="text-[16px] font-medium text-[#6E6E6E]">{formatMoney(stats.budget.spent)}</span>
+                                <span className="text-[16px] font-medium text-[#E5E5E5]">{formatMoney(stats.budget.spent)}</span>
                             </div>
                             <div className="flex flex-col border-l border-white/5 pl-2">
                                 <div className="flex items-center gap-2 mb-1">

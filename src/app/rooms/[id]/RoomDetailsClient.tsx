@@ -277,7 +277,7 @@ export default function RoomDetailsClient({ roomData, products, tasks, budgetIte
                         <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto no-scrollbar">
                             {activeTab === "Zadania" ? (
                                 <>
-                                    <Button className="flex items-center gap-2 bg-[#232323] hover:bg-[#2a2a2a] text-white px-5 py-3 rounded-lg text-sm font-medium transition-colors whitespace-nowrap shadow-sm min-h-[48px]">
+                                    <Button variant="ghost" className="flex items-center gap-2 border border-dashed border-white/10 hover:border-white/20 hover:bg-white/5 text-muted-foreground hover:text-white px-5 py-3 rounded-lg text-sm font-medium transition-all whitespace-nowrap min-h-[48px]">
                                         <Plus className="w-5 h-5" /> Dodaj nowe zadanie
                                     </Button>
                                     <Button className="flex items-center gap-2 bg-[#1B1B1B] hover:bg-[#232323] text-muted-foreground hover:text-white px-5 py-3 rounded-lg text-sm font-medium transition-colors whitespace-nowrap min-h-[48px]">
