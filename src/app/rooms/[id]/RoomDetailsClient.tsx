@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
-    Plus, LayoutGrid, MoreHorizontal, Trash2, Settings, ChevronDown, Printer, Download
+    Plus, LayoutGrid, MoreHorizontal, Trash2, Settings, ChevronDown, Printer, Download, Upload
 } from "lucide-react";
 import { RoomStatsDnD } from "./components/RoomStatsDnD";
 import { SummaryAccordion } from "./components/SummaryAccordion";
@@ -15,6 +15,8 @@ import { NotesList } from "./components/NotesList";
 import { HistoryList } from "./components/HistoryList";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { uploadProjectCoverImage } from "@/app/actions/projects";
+import { useRouter } from "next/navigation";
 
 const ROOM_IMG_PLACEHOLDER = "https://zotnacipqsjewlzofpga.supabase.co/storage/v1/object/public/Liru/526853319_1355299613265765_6668356102677043657_n.jpg";
 
@@ -110,6 +112,48 @@ interface RoomDetailsClientProps {
 
 export default function RoomDetailsClient({ roomData, products, tasks, budgetItems, galleryImages, notes, projectSummary }: RoomDetailsClientProps) {
     const [activeTab, setActiveTab] = useState("Produkty");
+    const [isUploading, setIsUploading] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const router = useRouter();
+
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            alert('Proszę wybrać plik graficzny');
+            return;
+        }
+
+        // Validate file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            alert('Plik jest zbyt duży. Maksymalny rozmiar to 5MB');
+            return;
+        }
+
+        setIsUploading(true);
+
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            await uploadProjectCoverImage(roomData.projectId, formData);
+            router.refresh();
+        } catch (error) {
+            console.error('Upload error:', error);
+            alert('Wystąpił błąd podczas przesyłania zdjęcia');
+        } finally {
+            setIsUploading(false);
+            if (fileInputRef.current) {
+                fileInputRef.current.value = '';
+            }
+        }
+    };
+
+    const handleUploadClick = () => {
+        fileInputRef.current?.click();
+    };
 
     return (
         <div className="flex flex-col lg:flex-row h-full gap-3 w-full overflow-hidden">
@@ -122,10 +166,23 @@ export default function RoomDetailsClient({ roomData, products, tasks, budgetIte
 
                 {/* 2. Big Image Tile - Project Cover Image - Fills remaining height */}
                 <Card className="flex-1 min-h-[300px] rounded-2xl overflow-hidden relative group">
+                    <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        className="hidden"
+                    />
                     {roomData.projectCoverImage ? (
                         <>
                             <div className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <Button size="icon" variant="ghost" className="p-2 rounded-full bg-black/50 text-white hover:bg-black/70 backdrop-blur-md w-auto h-auto">
+                                <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="p-2 rounded-full bg-black/50 text-white hover:bg-black/70 backdrop-blur-md w-auto h-auto"
+                                    onClick={handleUploadClick}
+                                    disabled={isUploading}
+                                >
                                     <Settings className="w-5 h-5" />
                                 </Button>
                             </div>
@@ -137,15 +194,25 @@ export default function RoomDetailsClient({ roomData, products, tasks, budgetIte
                             />
                         </>
                     ) : (
-                        <div className="w-full h-full flex flex-col items-center justify-center bg-[#151515] p-8">
+                        <button
+                            onClick={handleUploadClick}
+                            disabled={isUploading}
+                            className="w-full h-full flex flex-col items-center justify-center bg-[#151515] p-8 hover:bg-[#1B1B1B] transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+                        >
                             <div className="w-16 h-16 rounded-full bg-[#1B1B1B] flex items-center justify-center mb-4">
-                                <Plus className="w-8 h-8 text-muted-foreground" />
+                                {isUploading ? (
+                                    <Upload className="w-8 h-8 text-muted-foreground animate-pulse" />
+                                ) : (
+                                    <Plus className="w-8 h-8 text-muted-foreground" />
+                                )}
                             </div>
-                            <p className="text-white font-medium mb-2">Dodaj zdjęcie projektu</p>
+                            <p className="text-white font-medium mb-2">
+                                {isUploading ? 'Przesyłanie...' : 'Dodaj zdjęcie projektu'}
+                            </p>
                             <p className="text-sm text-muted-foreground text-center max-w-xs">
                                 Kliknij aby dodać zdjęcie wizualizacji dla całego projektu
                             </p>
-                        </div>
+                        </button>
                     )}
                 </Card>
             </div>

@@ -215,3 +215,72 @@ export async function createProject(data: {
     revalidatePath('/')
     redirect('/')
 }
+
+/**
+ * Upload project cover image
+ */
+export async function uploadProjectCoverImage(projectId: string, formData: FormData) {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user?.email) {
+        throw new Error('Unauthorized')
+    }
+
+    const profile = await prisma.profile.findUnique({
+        where: { email: user.email }
+    })
+
+    if (!profile) {
+        throw new Error('Profile not found')
+    }
+
+    // Verify ownership
+    const project = await prisma.project.findFirst({
+        where: {
+            id: projectId,
+            designerId: profile.id
+        }
+    })
+
+    if (!project) {
+        throw new Error('Project not found or unauthorized')
+    }
+
+    const file = formData.get('file') as File
+    if (!file) {
+        throw new Error('No file provided')
+    }
+
+    // Generate unique filename
+    const fileExt = file.name.split('.').pop()
+    const fileName = `${projectId}-${Date.now()}.${fileExt}`
+    const filePath = `projects/${fileName}`
+
+    // Upload to Supabase Storage
+    const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('Liru')
+        .upload(filePath, file, {
+            cacheControl: '3600',
+            upsert: false
+        })
+
+    if (uploadError) {
+        throw new Error(`Upload failed: ${uploadError.message}`)
+    }
+
+    // Get public URL
+    const { data: { publicUrl } } = supabase.storage
+        .from('Liru')
+        .getPublicUrl(filePath)
+
+    // Update project with cover image URL
+    await prisma.project.update({
+        where: { id: projectId },
+        data: { coverImage: publicUrl }
+    })
+
+    revalidatePath('/rooms/[id]', 'page')
+
+    return { url: publicUrl }
+}
