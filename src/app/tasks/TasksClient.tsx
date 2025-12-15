@@ -630,7 +630,7 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
             />
 
             {/* Right Sidebar - Task Details */}
-            <div className={`fixed right-0 top-0 bottom-0 w-[500px] bg-[#0A0A0A] border-l border-white/10 z-50 overflow-y-auto dark-scrollbar transition-transform duration-300 ease-out ${sidebarOpen && selectedTaskDetails ? 'translate-x-0' : 'translate-x-full'}`}>
+            <div className={`fixed right-0 top-0 bottom-0 w-[500px] bg-[#0E0E0E] border-l border-white/10 z-50 overflow-y-auto dark-scrollbar transition-transform duration-300 ease-out ${sidebarOpen && selectedTaskDetails ? 'translate-x-0' : 'translate-x-full'}`}>
                 {selectedTaskDetails && (
                     <div className="p-6">
                         {/* Header */}
@@ -687,7 +687,7 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
                                         <textarea
                                             value={editedDescription}
                                             onChange={(e) => setEditedDescription(e.target.value)}
-                                            className="w-full bg-[#1B1B1B] border border-white/20 rounded-lg px-4 py-3 text-white placeholder:text-muted-foreground min-h-[150px] resize-y focus:outline-none focus:ring-2 focus:ring-white/20 dark-scrollbar"
+                                            className="w-full bg-[#1B1B1B] border border-white/20 rounded-lg px-4 py-3 text-white placeholder:text-muted-foreground min-h-[120px] resize-none focus:outline-none focus:ring-2 focus:ring-white/20 dark-scrollbar"
                                             placeholder="Dodaj opis zadania..."
                                             autoFocus
                                             disabled={isSaving}
@@ -713,7 +713,7 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
                                 ) : (
                                     <div
                                         onClick={startEditingDescription}
-                                        className="min-h-[60px] p-3 bg-[#1B1B1B] rounded-lg cursor-pointer hover:bg-[#222] transition-colors border border-transparent hover:border-white/10"
+                                        className="min-h-[120px] p-3 bg-[#1B1B1B] rounded-lg cursor-pointer hover:bg-[#222] transition-colors border border-transparent hover:border-white/10"
                                     >
                                         {selectedTaskDetails.description ? (
                                             <p className="text-white whitespace-pre-wrap">{selectedTaskDetails.description}</p>
@@ -750,7 +750,7 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
             </div>
 
             {/* Right Sidebar - Sprint Details */}
-            <div className={`fixed right-0 top-0 bottom-0 w-[500px] bg-[#0A0A0A] border-l border-white/10 z-50 overflow-y-auto dark-scrollbar transition-transform duration-300 ease-out ${sidebarOpen && selectedSprintDetails ? 'translate-x-0' : 'translate-x-full'}`}>
+            <div className={`fixed right-0 top-0 bottom-0 w-[500px] bg-[#0E0E0E] border-l border-white/10 z-50 overflow-y-auto dark-scrollbar transition-transform duration-300 ease-out ${sidebarOpen && selectedSprintDetails ? 'translate-x-0' : 'translate-x-full'}`}>
                 {selectedSprintDetails && (
                     <div className="p-6">
                         {/* Header */}
@@ -826,7 +826,7 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
                                         <textarea
                                             value={editedDescription}
                                             onChange={(e) => setEditedDescription(e.target.value)}
-                                            className="w-full bg-[#1B1B1B] border border-white/20 rounded-lg px-4 py-3 text-white placeholder:text-muted-foreground min-h-[150px] resize-y focus:outline-none focus:ring-2 focus:ring-white/20 dark-scrollbar"
+                                            className="w-full bg-[#1B1B1B] border border-white/20 rounded-lg px-4 py-3 text-white placeholder:text-muted-foreground min-h-[120px] resize-none focus:outline-none focus:ring-2 focus:ring-white/20 dark-scrollbar"
                                             placeholder="Dodaj cel sprintu..."
                                             autoFocus
                                             disabled={isSaving}
@@ -852,7 +852,7 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
                                 ) : (
                                     <div
                                         onClick={startEditingDescription}
-                                        className="min-h-[60px] p-3 bg-[#1B1B1B] rounded-lg cursor-pointer hover:bg-[#222] transition-colors border border-transparent hover:border-white/10"
+                                        className="min-h-[120px] p-3 bg-[#1B1B1B] rounded-lg cursor-pointer hover:bg-[#222] transition-colors border border-transparent hover:border-white/10"
                                     >
                                         {selectedSprintDetails.goal ? (
                                             <p className="text-white whitespace-pre-wrap">{selectedSprintDetails.goal}</p>

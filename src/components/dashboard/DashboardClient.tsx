@@ -438,7 +438,7 @@ export default function DashboardClient({ user, project, stats, recentProducts =
                     <div className="grid grid-cols-2 gap-3 flex-[1.4] min-h-0">
                         {/* Tasks */}
                         <Card className="flex flex-col h-full min-h-0 relative">
-                            <div className="flex items-center justify-between mb-4 shrink-0">
+                            <div className="flex items-center justify-between mb-3 shrink-0">
                                 <div className="flex items-center gap-2">
                                     <h3 className="text-[20px] font-medium text-[#E5E5E5]">Lista zadań</h3>
                                     <span className="w-5 h-5 bg-[#E5E5E5] text-black text-xs font-bold rounded-full flex items-center justify-center">{stats.activeTasks}</span>
@@ -446,31 +446,37 @@ export default function DashboardClient({ user, project, stats, recentProducts =
                                 <Button variant="secondary" size="sm" className="rounded-full h-auto py-1 px-3 border border-white/5 bg-[#232323] hover:bg-[#2a2a2a]">Zarządzaj</Button>
                             </div>
 
-                            <div className="space-y-3 flex-1 flex flex-col overflow-y-auto pr-1 min-h-0 no-scrollbar pb-14">
-                                {recentTasks.length > 0 ? (
-                                    recentTasks.map((task, i) => (
-                                        <div key={i} className="flex-1 flex flex-col justify-between p-3 bg-secondary/30 hover:bg-[#232323] transition-colors cursor-pointer rounded-xl shrink-0 h-[80px]">
-                                            <h4 className="text-[16px] font-medium mb-1 truncate">{task.title}</h4>
-                                            <div className="flex justify-between items-center text-sm">
-                                                <span className="text-[#F1F1F1] flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-[#E8B491] shadow-[0_0_8px_rgba(232,180,145,0.4)]"></span> W trakcie</span>
-                                                <span className="text-muted-foreground">{task.room?.name || "Ogólne"}</span>
+                            <div className="flex flex-col gap-2 flex-1 min-h-0 mb-4">
+                                {/* Show max 3 tasks or placeholder slots */}
+                                {[0, 1, 2].map((index) => {
+                                    const task = recentTasks[index];
+                                    if (task) {
+                                        return (
+                                            <div key={task.id || index} className="flex flex-col justify-between p-2.5 bg-secondary/30 hover:bg-[#232323] transition-colors cursor-pointer rounded-lg">
+                                                <h4 className="text-[14px] font-medium mb-1 truncate">{task.title}</h4>
+                                                <div className="flex justify-between items-center text-xs">
+                                                    <span className="text-[#F1F1F1] flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-[#E8B491] shadow-[0_0_6px_rgba(232,180,145,0.4)]"></span> W trakcie</span>
+                                                    <span className="text-muted-foreground">{task.room?.name || "Ogólne"}</span>
+                                                </div>
+                                                <div className="mt-1 text-xs text-muted-foreground flex justify-between">
+                                                    <span>Termin</span>
+                                                    <span>{task.dueDate ? new Date(task.dueDate).toLocaleDateString('pl-PL') : 'Brak'}</span>
+                                                </div>
                                             </div>
-                                            <div className="mt-1 text-sm text-muted-foreground flex justify-between">
-                                                <span>Termin</span>
-                                                <span>{task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'Brak'}</span>
+                                        );
+                                    } else {
+                                        return (
+                                            <div key={`placeholder-${index}`} className="flex items-center justify-center p-2.5 bg-secondary/20 rounded-lg border border-dashed border-white/5 min-h-[60px]">
+                                                <span className="text-xs text-muted-foreground">Brak zadania</span>
                                             </div>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground text-sm h-full pb-10">
-                                        Nie masz obecnie żadnych zadań
-                                    </div>
-                                )}
+                                        );
+                                    }
+                                })}
                             </div>
 
                             {/* Add Task Button - Pinned to bottom */}
-                            <div className="absolute bottom-4 left-4 right-4">
-                                <Button variant="ghost" className="w-full py-6 border border-dashed border-white/10 rounded-lg text-muted-foreground hover:text-white hover:border-white/20 hover:bg-white/5 transition-all text-base font-medium justify-center">
+                            <div className="mt-auto">
+                                <Button variant="ghost" className="w-full py-4 border border-dashed border-white/10 rounded-lg text-muted-foreground hover:text-white hover:border-white/20 hover:bg-white/5 transition-all text-sm font-medium justify-center">
                                     + Dodaj nowe zadanie
                                 </Button>
                             </div>

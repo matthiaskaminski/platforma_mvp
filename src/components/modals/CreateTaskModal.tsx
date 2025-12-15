@@ -34,7 +34,12 @@ export function CreateTaskModal({ isOpen, onClose, projectId, sprints, defaultRo
         e.preventDefault();
 
         if (!title.trim()) {
-            alert('Podaj nazwe zadania');
+            alert('Podaj nazwę zadania');
+            return;
+        }
+
+        if (!sprintId) {
+            alert('Wybierz sprint dla zadania');
             return;
         }
 
@@ -132,7 +137,7 @@ export function CreateTaskModal({ isOpen, onClose, projectId, sprints, defaultRo
 
                     <div>
                         <label className="block text-sm font-medium mb-2">
-                            Sprint (opcjonalnie)
+                            Sprint <span className="text-red-500">*</span>
                         </label>
                         <div className="relative">
                             <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
@@ -141,8 +146,9 @@ export function CreateTaskModal({ isOpen, onClose, projectId, sprints, defaultRo
                                 onChange={(e) => setSprintId(e.target.value)}
                                 className="w-full bg-[#1B1B1B] border border-white/10 rounded-lg pl-10 pr-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-white/20 appearance-none cursor-pointer"
                                 disabled={isSubmitting}
+                                required
                             >
-                                <option value="">Brak sprintu (zadanie ogólne)</option>
+                                <option value="">Wybierz sprint...</option>
                                 {sprints.map(sprint => (
                                     <option key={sprint.id} value={sprint.id}>
                                         {sprint.name}
@@ -150,6 +156,11 @@ export function CreateTaskModal({ isOpen, onClose, projectId, sprints, defaultRo
                                 ))}
                             </select>
                         </div>
+                        {sprints.length === 0 && (
+                            <p className="text-xs text-muted-foreground mt-2">
+                                Nie masz jeszcze żadnych sprintów. Utwórz najpierw sprint, aby dodać zadanie.
+                            </p>
+                        )}
                     </div>
 
                     <div>
