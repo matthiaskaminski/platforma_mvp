@@ -19,6 +19,7 @@ import { uploadRoomCoverImage } from "@/app/actions/rooms";
 import { useRouter } from "next/navigation";
 import { CreateSprintModal } from "@/components/modals/CreateSprintModal";
 import { CreateTaskModal } from "@/components/modals/CreateTaskModal";
+import { AddProductModal } from "@/components/modals/AddProductModal";
 
 const ROOM_IMG_PLACEHOLDER = "https://zotnacipqsjewlzofpga.supabase.co/storage/v1/object/public/Liru/526853319_1355299613265765_6668356102677043657_n.jpg";
 
@@ -166,6 +167,7 @@ export default function RoomDetailsClient({ roomData, products, tasks, budgetIte
     const [isUploading, setIsUploading] = useState(false);
     const [isSprintModalOpen, setIsSprintModalOpen] = useState(false);
     const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+    const [isProductModalOpen, setIsProductModalOpen] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const router = useRouter();
 
@@ -363,23 +365,19 @@ export default function RoomDetailsClient({ roomData, products, tasks, budgetIte
                                 </Button>
                             ) : (
                                 <>
-                                    {products.length === 0 ? (
-                                        <Button className="flex items-center gap-2 bg-[#232323] hover:bg-[#2a2a2a] text-white px-5 py-3 rounded-lg text-sm font-medium transition-colors whitespace-nowrap shadow-sm min-h-[48px]">
-                                            <Plus className="w-5 h-5" /> Dodaj produkty
-                                        </Button>
-                                    ) : (
+                                    <Button
+                                        onClick={() => setIsProductModalOpen(true)}
+                                        className="flex items-center gap-2 bg-[#232323] hover:bg-[#2a2a2a] text-white px-5 py-3 rounded-lg text-sm font-medium transition-colors whitespace-nowrap shadow-sm min-h-[48px]"
+                                    >
+                                        <Plus className="w-5 h-5" /> Dodaj produkt
+                                    </Button>
+                                    {products.length > 0 && (
                                         <>
-                                            <Button className="flex items-center gap-2 bg-[#232323] hover:bg-[#2a2a2a] text-white px-5 py-3 rounded-lg text-sm font-medium transition-colors whitespace-nowrap shadow-sm min-h-[48px]">
-                                                <Plus className="w-5 h-5" /> Stwórz prezentację
-                                            </Button>
                                             <Button className="flex items-center gap-2 bg-[#1B1B1B] hover:bg-[#232323] text-muted-foreground hover:text-white px-5 py-3 rounded-lg text-sm font-medium transition-colors whitespace-nowrap min-h-[48px]">
-                                                <LayoutGrid className="w-5 h-5" /> Dodaj do koszyka
+                                                <LayoutGrid className="w-5 h-5" /> Widok
                                             </Button>
                                             <Button className="flex items-center gap-2 bg-[#1B1B1B] hover:bg-[#232323] text-muted-foreground hover:text-white px-5 py-3 rounded-lg text-sm font-medium transition-colors min-h-[48px]">
                                                 <MoreHorizontal className="w-5 h-5" /> Edytuj
-                                            </Button>
-                                            <Button className="flex items-center gap-2 bg-[#1B1B1B] hover:bg-[#232323] text-muted-foreground hover:text-white px-5 py-3 rounded-lg text-sm font-medium transition-colors min-h-[48px]">
-                                                <Trash2 className="w-5 h-5" /> Usuń
                                             </Button>
                                         </>
                                     )}
@@ -391,7 +389,7 @@ export default function RoomDetailsClient({ roomData, products, tasks, budgetIte
                     {/* Content Viewer */}
                     {activeTab === "Produkty" ? (
                         <div className="flex-1 overflow-y-auto no-scrollbar">
-                            <ProductGrid products={products} />
+                            <ProductGrid products={products} onAddProduct={() => setIsProductModalOpen(true)} />
                         </div>
                     ) : activeTab === "Zadania" ? (
                         <TasksList
@@ -445,6 +443,12 @@ export default function RoomDetailsClient({ roomData, products, tasks, budgetIte
                 projectId={roomData.projectId}
                 sprints={allProjectSprints.map(s => ({ ...s, roomId: s.roomId || null }))}
                 defaultRoomId={roomData.id}
+            />
+            <AddProductModal
+                isOpen={isProductModalOpen}
+                onClose={() => setIsProductModalOpen(false)}
+                roomId={roomData.id}
+                onSuccess={() => router.refresh()}
             />
         </div>
     );
