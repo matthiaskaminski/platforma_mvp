@@ -602,7 +602,7 @@ export const TasksList = React.memo(function TasksList({
                                             value={editedDescription}
                                             onChange={(e) => setEditedDescription(e.target.value)}
                                             style={{ height: `${descriptionHeight}px` }}
-                                            className="w-full bg-[#1B1B1B] border border-white/20 rounded-lg px-4 py-3 text-white placeholder:text-muted-foreground resize-none focus:outline-none focus:ring-2 focus:ring-white/20 dark-scrollbar"
+                                            className="w-full bg-[#1B1B1B] border border-white/10 rounded-lg px-4 py-3 text-white placeholder:text-muted-foreground resize-none focus:outline-none focus:ring-2 focus:ring-white/20 dark-scrollbar"
                                             placeholder="Dodaj opis zadania..."
                                             autoFocus
                                             disabled={isSaving}
@@ -743,7 +743,7 @@ export const TasksList = React.memo(function TasksList({
                                             value={editedDescription}
                                             onChange={(e) => setEditedDescription(e.target.value)}
                                             style={{ height: `${descriptionHeight}px` }}
-                                            className="w-full bg-[#1B1B1B] border border-white/20 rounded-lg px-4 py-3 text-white placeholder:text-muted-foreground resize-none focus:outline-none focus:ring-2 focus:ring-white/20 dark-scrollbar"
+                                            className="w-full bg-[#1B1B1B] border border-white/10 rounded-lg px-4 py-3 text-white placeholder:text-muted-foreground resize-none focus:outline-none focus:ring-2 focus:ring-white/20 dark-scrollbar"
                                             placeholder="Dodaj cel sprintu..."
                                             autoFocus
                                             disabled={isSaving}

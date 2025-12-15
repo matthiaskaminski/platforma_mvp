@@ -2,7 +2,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { ArrowUpRight, ChevronLeft, ChevronRight, ClipboardList, Palette, Image as ImageIcon } from "lucide-react";
+import { ArrowUpRight, ChevronLeft, ChevronRight, ClipboardList, Palette, Image as ImageIcon, X, Calendar, Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent, DragStartEvent, DragOverlay, defaultDropAnimationSideEffects, DropAnimation } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, rectSortingStrategy, useSortable } from '@dnd-kit/sortable';
@@ -80,8 +81,48 @@ interface DashboardClientProps {
 }
 
 export default function DashboardClient({ user, project, stats, recentProducts = [], visualizations = [], recentTasks = [], calendarEvents = [] }: DashboardClientProps) {
+    const router = useRouter();
     const [statsTiles, setStatsTiles] = useState(initialTiles);
     const [activeId, setActiveId] = useState<string | null>(null);
+    const [selectedTask, setSelectedTask] = useState<any | null>(null);
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+
+    const openTaskDetails = (task: any) => {
+        setSelectedTask(task);
+        setSidebarOpen(true);
+    };
+
+    const closeSidebar = () => {
+        setSidebarOpen(false);
+        setTimeout(() => setSelectedTask(null), 300);
+    };
+
+    const formatDate = (date: Date | string | null) => {
+        if (!date) return "-";
+        const taskDate = new Date(date);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const taskDay = new Date(taskDate);
+        taskDay.setHours(0, 0, 0, 0);
+
+        if (taskDay.getTime() === today.getTime()) {
+            return "Dziś";
+        }
+
+        return taskDate.toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    };
+
+    const statusMap: Record<string, "overdue" | "in_progress" | "not_started" | "completed"> = {
+        "TODO": "not_started",
+        "IN_PROGRESS": "in_progress",
+        "DONE": "completed"
+    };
+
+    const statusLabels: Record<string, string> = {
+        "TODO": "Do zrobienia",
+        "IN_PROGRESS": "W trakcie",
+        "DONE": "Zakończone"
+    };
 
     // Dynamic Budget Data
     const budgetData = [
@@ -443,7 +484,14 @@ export default function DashboardClient({ user, project, stats, recentProducts =
                                     <h3 className="text-[20px] font-medium text-[#E5E5E5]">Lista zadań</h3>
                                     <span className="w-5 h-5 bg-[#E5E5E5] text-black text-xs font-bold rounded-full flex items-center justify-center">{stats.activeTasks}</span>
                                 </div>
-                                <Button variant="secondary" size="sm" className="rounded-full h-auto py-1 px-3 border border-white/5 bg-[#232323] hover:bg-[#2a2a2a]">Zarządzaj</Button>
+                                <Button
+                                    variant="secondary"
+                                    size="sm"
+                                    className="rounded-full h-auto py-1 px-3 border border-white/5 bg-[#232323] hover:bg-[#2a2a2a]"
+                                    onClick={() => router.push('/tasks')}
+                                >
+                                    Zarządzaj
+                                </Button>
                             </div>
 
                             <div className="flex flex-col gap-2 flex-1 min-h-0">
@@ -452,7 +500,11 @@ export default function DashboardClient({ user, project, stats, recentProducts =
                                     const task = recentTasks[index];
                                     if (task) {
                                         return (
-                                            <div key={task.id || index} className="flex-1 flex flex-col justify-between p-3 bg-secondary/30 hover:bg-[#232323] transition-colors cursor-pointer rounded-lg">
+                                            <div
+                                                key={task.id || index}
+                                                className="flex-1 flex flex-col justify-between p-3 bg-secondary/30 hover:bg-[#232323] transition-colors cursor-pointer rounded-lg"
+                                                onClick={() => openTaskDetails(task)}
+                                            >
                                                 <h4 className="text-[14px] font-medium mb-2 truncate">{task.title}</h4>
                                                 <div className="flex justify-between items-center text-[14px] leading-relaxed">
                                                     <span className="text-[#F1F1F1] flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-[#E8B491] shadow-[0_0_6px_rgba(232,180,145,0.4)]"></span> W trakcie</span>
@@ -569,6 +621,87 @@ export default function DashboardClient({ user, project, stats, recentProducts =
                     </Card>
                 </div>
 
+            </div>
+
+            {/* Sidebar Overlay */}
+            <div
+                className={`fixed inset-0 bg-black/40 z-40 transition-opacity duration-300 ${sidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                onClick={closeSidebar}
+            />
+
+            {/* Right Sidebar - Task Details */}
+            <div className={`fixed right-0 top-0 bottom-0 w-[500px] bg-[#0E0E0E] border-l border-white/10 z-50 overflow-y-auto dark-scrollbar transition-transform duration-300 ease-out ${sidebarOpen && selectedTask ? 'translate-x-0' : 'translate-x-full'}`}>
+                {selectedTask && (
+                    <div className="p-6">
+                        {/* Header */}
+                        <div className="flex items-start justify-between mb-6">
+                            <div className="flex-1">
+                                <h2 className="text-2xl font-semibold text-white mb-2">
+                                    {selectedTask.title}
+                                </h2>
+                                <p className="text-sm text-muted-foreground">Zadanie</p>
+                            </div>
+                            <button
+                                onClick={closeSidebar}
+                                className="p-2 hover:bg-white/5 rounded-lg transition-colors"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        {/* Details */}
+                        <div className="space-y-6">
+                            <div>
+                                <label className="text-sm font-medium text-muted-foreground block mb-2">Status</label>
+                                <Badge status={statusMap[selectedTask.status] || 'not_started'} dot>
+                                    {statusLabels[selectedTask.status] || 'Do zrobienia'}
+                                </Badge>
+                            </div>
+
+                            {/* Description */}
+                            <div>
+                                <label className="text-sm font-medium text-muted-foreground block mb-2">Opis</label>
+                                <div className="min-h-[200px] p-3 bg-[#1B1B1B] rounded-lg border border-transparent">
+                                    {selectedTask.description ? (
+                                        <p className="text-white whitespace-pre-wrap">{selectedTask.description}</p>
+                                    ) : (
+                                        <p className="text-muted-foreground">Brak opisu</p>
+                                    )}
+                                </div>
+                            </div>
+
+                            {selectedTask.dueDate && (
+                                <div>
+                                    <label className="text-sm font-medium text-muted-foreground block mb-2">Termin</label>
+                                    <p className="text-white flex items-center gap-2">
+                                        <Calendar className="w-4 h-4" />
+                                        {formatDate(selectedTask.dueDate)}
+                                    </p>
+                                </div>
+                            )}
+
+                            {selectedTask.room && (
+                                <div>
+                                    <label className="text-sm font-medium text-muted-foreground block mb-2">Pomieszczenie</label>
+                                    <p className="text-white">{selectedTask.room.name}</p>
+                                </div>
+                            )}
+
+                            <div className="pt-4 border-t border-white/10">
+                                <Button
+                                    variant="secondary"
+                                    className="w-full"
+                                    onClick={() => {
+                                        closeSidebar();
+                                        router.push('/tasks');
+                                    }}
+                                >
+                                    Przejdź do listy zadań
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );
