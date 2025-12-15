@@ -14,12 +14,12 @@ interface CreateEventModalProps {
 }
 
 const eventTypeOptions = [
-    { value: 'MEETING', label: 'Spotkanie', color: '#9B6DD8' },
-    { value: 'DELIVERY', label: 'Dostawa', color: '#E8B491' },
-    { value: 'INSPECTION', label: 'Odbiór', color: '#91E8A8' },
-    { value: 'DEADLINE', label: 'Termin', color: '#E89191' },
-    { value: 'PAYMENT', label: 'Płatność', color: '#C8A853' },
-    { value: 'INSTALLATION', label: 'Instalacja', color: '#A891E8' },
+    { value: 'MEETING', label: 'Spotkanie', color: '#A2EAEF' },
+    { value: 'DELIVERY', label: 'Dostawa', color: '#EFC2A2' },
+    { value: 'INSPECTION', label: 'Odbiór', color: '#EFECA2' },
+    { value: 'DEADLINE', label: 'Termin', color: '#89B786' },
+    { value: 'PAYMENT', label: 'Płatność', color: '#DCA2EF' },
+    { value: 'INSTALLATION', label: 'Instalacja', color: '#A2EAEF' },
 ];
 
 export function CreateEventModal({ isOpen, onClose, projectId, defaultDate }: CreateEventModalProps) {

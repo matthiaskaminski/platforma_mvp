@@ -5,12 +5,12 @@ import { revalidatePath } from 'next/cache';
 
 // Event type colors mapping (internal use only)
 const EVENT_TYPE_COLORS: Record<string, string> = {
-    MEETING: '#9B6DD8',
-    DELIVERY: '#E8B491',
-    INSPECTION: '#91E8A8',
-    DEADLINE: '#E89191',
-    PAYMENT: '#C8A853',
-    INSTALLATION: '#A891E8',
+    MEETING: '#A2EAEF',
+    DELIVERY: '#EFC2A2',
+    INSPECTION: '#EFECA2',
+    DEADLINE: '#89B786',
+    PAYMENT: '#DCA2EF',
+    INSTALLATION: '#A2EAEF',
 };
 
 // Create calendar event
