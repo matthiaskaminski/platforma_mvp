@@ -123,6 +123,8 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
     const [editedTitle, setEditedTitle] = useState('');
     const [editedDescription, setEditedDescription] = useState('');
     const [isSaving, setIsSaving] = useState(false);
+    const [descriptionHeight, setDescriptionHeight] = useState<number>(200);
+    const descriptionDisplayRef = React.useRef<HTMLDivElement>(null);
 
     const toggleGroup = (id: string) => {
         setCollapsedGroups(prev => ({ ...prev, [id]: !prev[id] }));
@@ -187,6 +189,11 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
 
     // Start editing description
     const startEditingDescription = () => {
+        // Capture the height of the display element before switching to edit mode
+        if (descriptionDisplayRef.current) {
+            const height = descriptionDisplayRef.current.offsetHeight;
+            setDescriptionHeight(Math.max(height, 200)); // Minimum 200px
+        }
         if (selectedTaskDetails) {
             setEditedDescription(selectedTaskDetails.description || '');
         } else if (selectedSprintDetails) {
@@ -471,7 +478,7 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
                                                             {/* Column Headers for Sprint */}
                                                             {!collapsedSprints[sprint.id] && (
                                                                 <div className="ml-6">
-                                                                    <div className="grid grid-cols-[40px_minmax(250px,2fr)_150px_150px_150px_minmax(300px,3fr)] gap-4 py-2 text-xs font-medium text-muted-foreground/60 border-b border-white/5">
+                                                                    <div className="grid grid-cols-[40px_minmax(250px,2fr)_150px_150px_150px_minmax(300px,3fr)] gap-4 py-2 text-[14px] font-medium text-muted-foreground/60 border-b border-white/5">
                                                                         <div></div>
                                                                         <div className="flex items-center gap-2">
                                                                             <CheckSquare className="w-3 h-3" />
@@ -539,17 +546,17 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
                                                                                     </div>
 
                                                                                     {/* Start Date */}
-                                                                                    <div className="text-muted-foreground text-sm">
+                                                                                    <div className="text-muted-foreground text-[14px]">
                                                                                         {formatDate(task.createdAt)}
                                                                                     </div>
 
                                                                                     {/* Due Date / End Date */}
-                                                                                    <div className="text-muted-foreground text-sm">
+                                                                                    <div className="text-muted-foreground text-[14px]">
                                                                                         {formatDate(task.dueDate)}
                                                                                     </div>
 
                                                                                     {/* Description / Note */}
-                                                                                    <div className="text-muted-foreground line-clamp-2 pr-4 text-sm">
+                                                                                    <div className="text-muted-foreground line-clamp-2 pr-4 text-[14px]">
                                                                                         {task.description || '-'}
                                                                                     </div>
                                                                                 </div>
@@ -687,7 +694,8 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
                                         <textarea
                                             value={editedDescription}
                                             onChange={(e) => setEditedDescription(e.target.value)}
-                                            className="w-full bg-[#1B1B1B] border border-white/20 rounded-lg px-4 py-3 text-white placeholder:text-muted-foreground min-h-[120px] resize-none focus:outline-none focus:ring-2 focus:ring-white/20 dark-scrollbar"
+                                            style={{ height: `${descriptionHeight}px` }}
+                                            className="w-full bg-[#1B1B1B] border border-white/20 rounded-lg px-4 py-3 text-white placeholder:text-muted-foreground resize-none focus:outline-none focus:ring-2 focus:ring-white/20 dark-scrollbar"
                                             placeholder="Dodaj opis zadania..."
                                             autoFocus
                                             disabled={isSaving}
@@ -712,8 +720,9 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
                                     </div>
                                 ) : (
                                     <div
+                                        ref={descriptionDisplayRef}
                                         onClick={startEditingDescription}
-                                        className="min-h-[120px] p-3 bg-[#1B1B1B] rounded-lg cursor-pointer hover:bg-[#222] transition-colors border border-transparent hover:border-white/10"
+                                        className="min-h-[200px] p-3 bg-[#1B1B1B] rounded-lg cursor-pointer hover:bg-[#222] transition-colors border border-transparent hover:border-white/10"
                                     >
                                         {selectedTaskDetails.description ? (
                                             <p className="text-white whitespace-pre-wrap">{selectedTaskDetails.description}</p>
@@ -826,7 +835,8 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
                                         <textarea
                                             value={editedDescription}
                                             onChange={(e) => setEditedDescription(e.target.value)}
-                                            className="w-full bg-[#1B1B1B] border border-white/20 rounded-lg px-4 py-3 text-white placeholder:text-muted-foreground min-h-[120px] resize-none focus:outline-none focus:ring-2 focus:ring-white/20 dark-scrollbar"
+                                            style={{ height: `${descriptionHeight}px` }}
+                                            className="w-full bg-[#1B1B1B] border border-white/20 rounded-lg px-4 py-3 text-white placeholder:text-muted-foreground resize-none focus:outline-none focus:ring-2 focus:ring-white/20 dark-scrollbar"
                                             placeholder="Dodaj cel sprintu..."
                                             autoFocus
                                             disabled={isSaving}
@@ -851,8 +861,9 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
                                     </div>
                                 ) : (
                                     <div
+                                        ref={descriptionDisplayRef}
                                         onClick={startEditingDescription}
-                                        className="min-h-[120px] p-3 bg-[#1B1B1B] rounded-lg cursor-pointer hover:bg-[#222] transition-colors border border-transparent hover:border-white/10"
+                                        className="min-h-[200px] p-3 bg-[#1B1B1B] rounded-lg cursor-pointer hover:bg-[#222] transition-colors border border-transparent hover:border-white/10"
                                     >
                                         {selectedSprintDetails.goal ? (
                                             <p className="text-white whitespace-pre-wrap">{selectedSprintDetails.goal}</p>

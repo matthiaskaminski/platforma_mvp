@@ -446,19 +446,19 @@ export default function DashboardClient({ user, project, stats, recentProducts =
                                 <Button variant="secondary" size="sm" className="rounded-full h-auto py-1 px-3 border border-white/5 bg-[#232323] hover:bg-[#2a2a2a]">Zarządzaj</Button>
                             </div>
 
-                            <div className="flex flex-col gap-2 flex-1 min-h-0 mb-4">
-                                {/* Show max 3 tasks or placeholder slots */}
-                                {[0, 1, 2].map((index) => {
+                            <div className="flex flex-col gap-2 flex-1 min-h-0">
+                                {/* Show max 4 tasks or placeholder slots */}
+                                {[0, 1, 2, 3].map((index) => {
                                     const task = recentTasks[index];
                                     if (task) {
                                         return (
-                                            <div key={task.id || index} className="flex flex-col justify-between p-2.5 bg-secondary/30 hover:bg-[#232323] transition-colors cursor-pointer rounded-lg">
-                                                <h4 className="text-[14px] font-medium mb-1 truncate">{task.title}</h4>
-                                                <div className="flex justify-between items-center text-xs">
-                                                    <span className="text-[#F1F1F1] flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-[#E8B491] shadow-[0_0_6px_rgba(232,180,145,0.4)]"></span> W trakcie</span>
+                                            <div key={task.id || index} className="flex-1 flex flex-col justify-between p-3 bg-secondary/30 hover:bg-[#232323] transition-colors cursor-pointer rounded-lg">
+                                                <h4 className="text-[14px] font-medium mb-2 truncate">{task.title}</h4>
+                                                <div className="flex justify-between items-center text-[14px] leading-relaxed">
+                                                    <span className="text-[#F1F1F1] flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-[#E8B491] shadow-[0_0_6px_rgba(232,180,145,0.4)]"></span> W trakcie</span>
                                                     <span className="text-muted-foreground">{task.room?.name || "Ogólne"}</span>
                                                 </div>
-                                                <div className="mt-1 text-xs text-muted-foreground flex justify-between">
+                                                <div className="mt-2 text-[14px] text-muted-foreground flex justify-between leading-relaxed">
                                                     <span>Termin</span>
                                                     <span>{task.dueDate ? new Date(task.dueDate).toLocaleDateString('pl-PL') : 'Brak'}</span>
                                                 </div>
@@ -466,19 +466,12 @@ export default function DashboardClient({ user, project, stats, recentProducts =
                                         );
                                     } else {
                                         return (
-                                            <div key={`placeholder-${index}`} className="flex items-center justify-center p-2.5 bg-secondary/20 rounded-lg border border-dashed border-white/5 min-h-[60px]">
-                                                <span className="text-xs text-muted-foreground">Brak zadania</span>
+                                            <div key={`placeholder-${index}`} className="flex-1 flex items-center justify-center p-3 bg-secondary/20 rounded-lg">
+                                                <span className="text-[14px] text-muted-foreground">Brak zadania</span>
                                             </div>
                                         );
                                     }
                                 })}
-                            </div>
-
-                            {/* Add Task Button - Pinned to bottom */}
-                            <div className="mt-auto">
-                                <Button variant="ghost" className="w-full py-4 border border-dashed border-white/10 rounded-lg text-muted-foreground hover:text-white hover:border-white/20 hover:bg-white/5 transition-all text-sm font-medium justify-center">
-                                    + Dodaj nowe zadanie
-                                </Button>
                             </div>
                         </Card>
 
