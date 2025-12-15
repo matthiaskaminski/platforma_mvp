@@ -11,6 +11,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
+import { updateTask } from "@/app/actions/sprints";
 import type { User } from '@supabase/supabase-js'
 
 // Mock Data
@@ -87,6 +88,12 @@ export default function DashboardClient({ user, project, stats, recentProducts =
     const [selectedTask, setSelectedTask] = useState<any | null>(null);
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
+    // Inline editing states
+    const [editingStatus, setEditingStatus] = useState(false);
+    const [editingDeadline, setEditingDeadline] = useState(false);
+    const [editedDeadline, setEditedDeadline] = useState('');
+    const [isSaving, setIsSaving] = useState(false);
+
     const openTaskDetails = (task: any) => {
         setSelectedTask(task);
         setSidebarOpen(true);
@@ -94,7 +101,57 @@ export default function DashboardClient({ user, project, stats, recentProducts =
 
     const closeSidebar = () => {
         setSidebarOpen(false);
+        setEditingStatus(false);
+        setEditingDeadline(false);
         setTimeout(() => setSelectedTask(null), 300);
+    };
+
+    // Save status
+    const saveStatus = async (newStatus: string) => {
+        if (!selectedTask) return;
+        setIsSaving(true);
+
+        try {
+            const result = await updateTask(selectedTask.id, { status: newStatus as any });
+            if (result.success) {
+                setSelectedTask({ ...selectedTask, status: newStatus as any });
+            }
+            router.refresh();
+        } catch (error) {
+            console.error('Error saving status:', error);
+        } finally {
+            setIsSaving(false);
+            setEditingStatus(false);
+        }
+    };
+
+    // Start editing deadline
+    const startEditingDeadline = () => {
+        if (selectedTask) {
+            const date = selectedTask.dueDate ? new Date(selectedTask.dueDate) : null;
+            setEditedDeadline(date ? date.toISOString().split('T')[0] : '');
+        }
+        setEditingDeadline(true);
+    };
+
+    // Save deadline
+    const saveDeadline = async () => {
+        if (!selectedTask) return;
+        setIsSaving(true);
+
+        try {
+            const newDate = editedDeadline ? new Date(editedDeadline) : undefined;
+            const result = await updateTask(selectedTask.id, { dueDate: newDate });
+            if (result.success) {
+                setSelectedTask({ ...selectedTask, dueDate: newDate || null });
+            }
+            router.refresh();
+        } catch (error) {
+            console.error('Error saving deadline:', error);
+        } finally {
+            setIsSaving(false);
+            setEditingDeadline(false);
+        }
     };
 
     const formatDate = (date: Date | string | null) => {
@@ -115,14 +172,18 @@ export default function DashboardClient({ user, project, stats, recentProducts =
     const statusMap: Record<string, "overdue" | "in_progress" | "not_started" | "completed"> = {
         "TODO": "not_started",
         "IN_PROGRESS": "in_progress",
-        "DONE": "completed"
+        "DONE": "completed",
+        "READY": "completed"
     };
 
     const statusLabels: Record<string, string> = {
         "TODO": "Do zrobienia",
         "IN_PROGRESS": "W trakcie",
-        "DONE": "Zakończone"
+        "DONE": "Zakończone",
+        "READY": "Gotowe"
     };
+
+    const allStatuses = ["TODO", "IN_PROGRESS", "DONE", "READY"] as const;
 
     // Dynamic Budget Data
     const budgetData = [
@@ -524,7 +585,7 @@ export default function DashboardClient({ user, project, stats, recentProducts =
                                                     <span className="text-muted-foreground">{task.room?.name || "Ogólne"}</span>
                                                 </div>
                                                 <div className="mt-2 text-[14px] text-muted-foreground flex justify-between leading-relaxed">
-                                                    <span>Termin</span>
+                                                    <span>Deadline</span>
                                                     <span>{task.dueDate ? new Date(task.dueDate).toLocaleDateString('pl-PL') : 'Brak'}</span>
                                                 </div>
                                             </div>
@@ -664,20 +725,51 @@ export default function DashboardClient({ user, project, stats, recentProducts =
 
                         {/* Details */}
                         <div className="space-y-6">
-                            {(() => {
-                                const isTaskOverdue = selectedTask.dueDate && selectedTask.status !== 'DONE' && new Date(selectedTask.dueDate) < new Date(new Date().setHours(0, 0, 0, 0));
-                                const badgeStatus = isTaskOverdue ? 'overdue' : (statusMap[selectedTask.status] || 'not_started');
-                                const badgeLabel = isTaskOverdue ? 'Przeterminowane' : (statusLabels[selectedTask.status] || 'Do zrobienia');
-
-                                return (
-                                    <div>
-                                        <label className="text-sm font-medium text-muted-foreground block mb-2">Status</label>
-                                        <Badge status={badgeStatus} dot>
-                                            {badgeLabel}
-                                        </Badge>
+                            {/* Editable Status */}
+                            <div>
+                                <label className="text-sm font-medium text-muted-foreground block mb-2">Status</label>
+                                {editingStatus ? (
+                                    <div className="flex flex-wrap gap-2">
+                                        {allStatuses.map((status) => (
+                                            <button
+                                                key={status}
+                                                onClick={() => saveStatus(status)}
+                                                disabled={isSaving}
+                                                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                                                    selectedTask.status === status
+                                                        ? 'bg-white/20 text-white'
+                                                        : 'bg-[#1B1B1B] text-muted-foreground hover:bg-[#252525] hover:text-white'
+                                                }`}
+                                            >
+                                                {statusLabels[status]}
+                                            </button>
+                                        ))}
+                                        <button
+                                            onClick={() => setEditingStatus(false)}
+                                            className="px-3 py-2 text-sm text-muted-foreground hover:text-white"
+                                        >
+                                            Anuluj
+                                        </button>
                                     </div>
-                                );
-                            })()}
+                                ) : (
+                                    <div
+                                        onClick={() => setEditingStatus(true)}
+                                        className="cursor-pointer inline-block"
+                                    >
+                                        {(() => {
+                                            const isTaskOverdue = selectedTask.dueDate && selectedTask.status !== 'DONE' && new Date(selectedTask.dueDate) < new Date(new Date().setHours(0, 0, 0, 0));
+                                            const badgeStatus = isTaskOverdue ? 'overdue' : (statusMap[selectedTask.status] || 'not_started');
+                                            const badgeLabel = isTaskOverdue ? 'Przeterminowane' : (statusLabels[selectedTask.status] || 'Do zrobienia');
+
+                                            return (
+                                                <Badge status={badgeStatus} dot className="hover:opacity-80 transition-opacity">
+                                                    {badgeLabel}
+                                                </Badge>
+                                            );
+                                        })()}
+                                    </div>
+                                )}
+                            </div>
 
                             {/* Description */}
                             <div>
@@ -691,15 +783,48 @@ export default function DashboardClient({ user, project, stats, recentProducts =
                                 </div>
                             </div>
 
-                            {selectedTask.dueDate && (
-                                <div>
-                                    <label className="text-sm font-medium text-muted-foreground block mb-2">Termin</label>
-                                    <p className="text-white flex items-center gap-2">
-                                        <Calendar className="w-4 h-4" />
-                                        {formatDate(selectedTask.dueDate)}
-                                    </p>
-                                </div>
-                            )}
+                            {/* Editable Deadline */}
+                            <div>
+                                <label className="text-sm font-medium text-muted-foreground block mb-2">Deadline</label>
+                                {editingDeadline ? (
+                                    <div className="space-y-2">
+                                        <input
+                                            type="date"
+                                            value={editedDeadline}
+                                            onChange={(e) => setEditedDeadline(e.target.value)}
+                                            className="w-full bg-[#1B1B1B] border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-white/20"
+                                            disabled={isSaving}
+                                        />
+                                        <div className="flex gap-2">
+                                            <Button
+                                                size="sm"
+                                                onClick={saveDeadline}
+                                                disabled={isSaving}
+                                            >
+                                                {isSaving ? 'Zapisywanie...' : 'Zapisz'}
+                                            </Button>
+                                            <Button
+                                                size="sm"
+                                                variant="ghost"
+                                                onClick={() => setEditingDeadline(false)}
+                                                disabled={isSaving}
+                                            >
+                                                Anuluj
+                                            </Button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div
+                                        onClick={startEditingDeadline}
+                                        className="cursor-pointer p-3 bg-[#1B1B1B] rounded-lg hover:bg-[#222] transition-colors border border-transparent hover:border-white/10 flex items-center gap-2"
+                                    >
+                                        <Calendar className="w-4 h-4 text-muted-foreground" />
+                                        <span className="text-white">
+                                            {selectedTask.dueDate ? formatDate(selectedTask.dueDate) : 'Kliknij, aby ustawić deadline...'}
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
 
                             {selectedTask.room && (
                                 <div>

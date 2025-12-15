@@ -50,14 +50,18 @@ const statusConfig: Record<string, { label: string; badgeStatus: "overdue" | "in
 const statusMap: Record<string, "overdue" | "in_progress" | "not_started" | "completed"> = {
     "TODO": "not_started",
     "IN_PROGRESS": "in_progress",
-    "DONE": "completed"
+    "DONE": "completed",
+    "READY": "completed"
 };
 
 const statusLabels: Record<string, string> = {
     "TODO": "Do zrobienia",
     "IN_PROGRESS": "W trakcie",
-    "DONE": "Zakończone"
+    "DONE": "Zakończone",
+    "READY": "Gotowe"
 };
+
+const allStatuses = ["TODO", "IN_PROGRESS", "DONE", "READY"] as const;
 
 export const TasksList = React.memo(function TasksList({
     tasks,
@@ -77,8 +81,11 @@ export const TasksList = React.memo(function TasksList({
     // Inline editing states
     const [editingTitle, setEditingTitle] = useState(false);
     const [editingDescription, setEditingDescription] = useState(false);
+    const [editingStatus, setEditingStatus] = useState(false);
+    const [editingDeadline, setEditingDeadline] = useState(false);
     const [editedTitle, setEditedTitle] = useState('');
     const [editedDescription, setEditedDescription] = useState('');
+    const [editedDeadline, setEditedDeadline] = useState('');
     const [isSaving, setIsSaving] = useState(false);
     const [descriptionHeight, setDescriptionHeight] = useState<number>(200);
     const descriptionDisplayRef = React.useRef<HTMLDivElement>(null);
@@ -124,6 +131,8 @@ export const TasksList = React.memo(function TasksList({
         setSidebarOpen(false);
         setEditingTitle(false);
         setEditingDescription(false);
+        setEditingStatus(false);
+        setEditingDeadline(false);
         setTimeout(() => {
             setSelectedTaskDetails(null);
             setSelectedSprintDetails(null);
@@ -203,6 +212,54 @@ export const TasksList = React.memo(function TasksList({
         } finally {
             setIsSaving(false);
             setEditingDescription(false);
+        }
+    };
+
+    // Save status
+    const saveStatus = async (newStatus: string) => {
+        if (!selectedTaskDetails) return;
+        setIsSaving(true);
+
+        try {
+            const result = await updateTask(selectedTaskDetails.id, { status: newStatus as any });
+            if (result.success) {
+                setSelectedTaskDetails({ ...selectedTaskDetails, status: newStatus as any });
+            }
+            router.refresh();
+        } catch (error) {
+            console.error('Error saving status:', error);
+        } finally {
+            setIsSaving(false);
+            setEditingStatus(false);
+        }
+    };
+
+    // Start editing deadline
+    const startEditingDeadline = () => {
+        if (selectedTaskDetails) {
+            const date = selectedTaskDetails.dueDate ? new Date(selectedTaskDetails.dueDate) : null;
+            setEditedDeadline(date ? date.toISOString().split('T')[0] : '');
+        }
+        setEditingDeadline(true);
+    };
+
+    // Save deadline
+    const saveDeadline = async () => {
+        if (!selectedTaskDetails) return;
+        setIsSaving(true);
+
+        try {
+            const newDate = editedDeadline ? new Date(editedDeadline) : undefined;
+            const result = await updateTask(selectedTaskDetails.id, { dueDate: newDate });
+            if (result.success) {
+                setSelectedTaskDetails({ ...selectedTaskDetails, dueDate: newDate || null });
+            }
+            router.refresh();
+        } catch (error) {
+            console.error('Error saving deadline:', error);
+        } finally {
+            setIsSaving(false);
+            setEditingDeadline(false);
         }
     };
 
@@ -294,7 +351,7 @@ export const TasksList = React.memo(function TasksList({
                                     <div className="flex items-center gap-2"><CheckSquare className="w-4 h-4" /> Zadania</div>
                                     <div className="flex items-center gap-2"><Flame className="w-4 h-4" /> Status</div>
                                     <div className="flex items-center gap-2"><Calendar className="w-4 h-4" /> Data utworzenia</div>
-                                    <div className="flex items-center gap-2"><Clock className="w-4 h-4" /> Termin</div>
+                                    <div className="flex items-center gap-2"><Clock className="w-4 h-4" /> Deadline</div>
                                     <div className="flex items-center gap-2"><FileText className="w-4 h-4" /> ID Zadania</div>
                                 </div>
                                 <div className="border-b border-white/5"></div>
@@ -410,7 +467,7 @@ export const TasksList = React.memo(function TasksList({
                                             </div>
                                             <div className="flex items-center gap-2">
                                                 <Calendar className="w-3 h-3" />
-                                                Data zakończenia
+                                                Deadline
                                             </div>
                                             <div className="flex items-center gap-2">
                                                 <FileText className="w-3 h-3" />
@@ -586,11 +643,42 @@ export const TasksList = React.memo(function TasksList({
 
                         {/* Details */}
                         <div className="space-y-6">
+                            {/* Editable Status */}
                             <div>
                                 <label className="text-sm font-medium text-muted-foreground block mb-2">Status</label>
-                                <Badge status={statusMap[selectedTaskDetails.status]} dot>
-                                    {statusLabels[selectedTaskDetails.status]}
-                                </Badge>
+                                {editingStatus ? (
+                                    <div className="flex flex-wrap gap-2">
+                                        {allStatuses.map((status) => (
+                                            <button
+                                                key={status}
+                                                onClick={() => saveStatus(status)}
+                                                disabled={isSaving}
+                                                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                                                    selectedTaskDetails.status === status
+                                                        ? 'bg-white/20 text-white'
+                                                        : 'bg-[#1B1B1B] text-muted-foreground hover:bg-[#252525] hover:text-white'
+                                                }`}
+                                            >
+                                                {statusLabels[status]}
+                                            </button>
+                                        ))}
+                                        <button
+                                            onClick={() => setEditingStatus(false)}
+                                            className="px-3 py-2 text-sm text-muted-foreground hover:text-white"
+                                        >
+                                            Anuluj
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div
+                                        onClick={() => setEditingStatus(true)}
+                                        className="cursor-pointer inline-block"
+                                    >
+                                        <Badge status={statusMap[selectedTaskDetails.status]} dot className="hover:opacity-80 transition-opacity">
+                                            {statusLabels[selectedTaskDetails.status]}
+                                        </Badge>
+                                    </div>
+                                )}
                             </div>
 
                             {/* Editable Description - Jira style */}
@@ -640,15 +728,48 @@ export const TasksList = React.memo(function TasksList({
                                 )}
                             </div>
 
-                            {selectedTaskDetails.dueDate && (
-                                <div>
-                                    <label className="text-sm font-medium text-muted-foreground block mb-2">Termin</label>
-                                    <p className="text-white flex items-center gap-2">
-                                        <Calendar className="w-4 h-4" />
-                                        {formatDate(selectedTaskDetails.dueDate)}
-                                    </p>
-                                </div>
-                            )}
+                            {/* Editable Deadline */}
+                            <div>
+                                <label className="text-sm font-medium text-muted-foreground block mb-2">Deadline</label>
+                                {editingDeadline ? (
+                                    <div className="space-y-2">
+                                        <input
+                                            type="date"
+                                            value={editedDeadline}
+                                            onChange={(e) => setEditedDeadline(e.target.value)}
+                                            className="w-full bg-[#1B1B1B] border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-white/20"
+                                            disabled={isSaving}
+                                        />
+                                        <div className="flex gap-2">
+                                            <Button
+                                                size="sm"
+                                                onClick={saveDeadline}
+                                                disabled={isSaving}
+                                            >
+                                                {isSaving ? 'Zapisywanie...' : 'Zapisz'}
+                                            </Button>
+                                            <Button
+                                                size="sm"
+                                                variant="ghost"
+                                                onClick={() => setEditingDeadline(false)}
+                                                disabled={isSaving}
+                                            >
+                                                Anuluj
+                                            </Button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div
+                                        onClick={startEditingDeadline}
+                                        className="cursor-pointer p-3 bg-[#1B1B1B] rounded-lg hover:bg-[#222] transition-colors border border-transparent hover:border-white/10 flex items-center gap-2"
+                                    >
+                                        <Calendar className="w-4 h-4 text-muted-foreground" />
+                                        <span className="text-white">
+                                            {selectedTaskDetails.dueDate ? formatDate(selectedTaskDetails.dueDate) : 'Kliknij, aby ustawić deadline...'}
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
 
                             <div className="pt-4 border-t border-white/10">
                                 <Button
