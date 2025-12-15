@@ -24,13 +24,14 @@ interface CreateTaskModalProps {
     projectId: string;
     sprints: Sprint[];
     rooms: Room[];
+    defaultRoomId?: string;
 }
 
-export function CreateTaskModal({ isOpen, onClose, projectId, sprints, rooms }: CreateTaskModalProps) {
+export function CreateTaskModal({ isOpen, onClose, projectId, sprints, rooms, defaultRoomId }: CreateTaskModalProps) {
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [sprintId, setSprintId] = useState('');
-    const [roomId, setRoomId] = useState('');
+    const [roomId, setRoomId] = useState(defaultRoomId || '');
     const [dueDate, setDueDate] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -60,7 +61,7 @@ export function CreateTaskModal({ isOpen, onClose, projectId, sprints, rooms }: 
                 setTitle('');
                 setDescription('');
                 setSprintId('');
-                setRoomId('');
+                setRoomId(defaultRoomId || '');
                 setDueDate('');
                 onClose();
             } else {
@@ -79,7 +80,7 @@ export function CreateTaskModal({ isOpen, onClose, projectId, sprints, rooms }: 
             setTitle('');
             setDescription('');
             setSprintId('');
-            setRoomId('');
+            setRoomId(defaultRoomId || '');
             setDueDate('');
             onClose();
         }

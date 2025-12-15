@@ -336,3 +336,75 @@ export async function getTasksBySprint(sprintId: string) {
         return [];
     }
 }
+
+export async function getSprintsForRoom(roomId: string) {
+    try {
+        // Get the room to find projectId
+        const room = await prisma.room.findUnique({
+            where: { id: roomId },
+            select: { projectId: true }
+        });
+
+        if (!room) {
+            return [];
+        }
+
+        // Get all sprints for the project that have tasks in this room
+        const sprints = await prisma.sprint.findMany({
+            where: {
+                projectId: room.projectId,
+                tasks: {
+                    some: {
+                        roomId: roomId
+                    }
+                }
+            },
+            include: {
+                tasks: {
+                    where: {
+                        roomId: roomId
+                    },
+                    orderBy: {
+                        createdAt: 'desc'
+                    }
+                },
+                _count: {
+                    select: {
+                        tasks: true
+                    }
+                }
+            },
+            orderBy: [
+                { status: 'asc' },
+                { createdAt: 'desc' }
+            ]
+        });
+
+        // Also get sprints without tasks (empty sprints) - they should also be available
+        const emptyProjectSprints = await prisma.sprint.findMany({
+            where: {
+                projectId: room.projectId,
+                tasks: {
+                    none: {}
+                }
+            },
+            include: {
+                tasks: true,
+                _count: {
+                    select: {
+                        tasks: true
+                    }
+                }
+            },
+            orderBy: [
+                { status: 'asc' },
+                { createdAt: 'desc' }
+            ]
+        });
+
+        return [...sprints, ...emptyProjectSprints];
+    } catch (error) {
+        console.error('Error fetching sprints for room:', error);
+        return [];
+    }
+}

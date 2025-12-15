@@ -17,6 +17,8 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { uploadRoomCoverImage } from "@/app/actions/rooms";
 import { useRouter } from "next/navigation";
+import { CreateSprintModal } from "@/components/modals/CreateSprintModal";
+import { CreateTaskModal } from "@/components/modals/CreateTaskModal";
 
 const ROOM_IMG_PLACEHOLDER = "https://zotnacipqsjewlzofpga.supabase.co/storage/v1/object/public/Liru/526853319_1355299613265765_6668356102677043657_n.jpg";
 
@@ -88,6 +90,32 @@ interface HistoryItem {
     icon: string;
 }
 
+interface Sprint {
+    id: string;
+    name: string;
+    goal: string | null;
+    status: string;
+    startDate: Date | null;
+    endDate: Date | null;
+    tasks: Task[];
+    _count: {
+        tasks: number;
+    };
+}
+
+interface AllProjectSprint {
+    id: string;
+    name: string;
+    goal: string | null;
+    status: string;
+    startDate: Date | null;
+    endDate: Date | null;
+    tasks: any[];
+    _count: {
+        tasks: number;
+    };
+}
+
 interface ProjectSummary {
     budgetGoal: any;
     rooms: {
@@ -128,11 +156,15 @@ interface RoomDetailsClientProps {
     documents: Document[];
     history: HistoryItem[];
     projectSummary: ProjectSummary | null;
+    sprints: Sprint[];
+    allProjectSprints: AllProjectSprint[];
 }
 
-export default function RoomDetailsClient({ roomData, products, tasks, budgetItems, galleryImages, notes, documents, history, projectSummary }: RoomDetailsClientProps) {
+export default function RoomDetailsClient({ roomData, products, tasks, budgetItems, galleryImages, notes, documents, history, projectSummary, sprints, allProjectSprints }: RoomDetailsClientProps) {
     const [activeTab, setActiveTab] = useState("Produkty");
     const [isUploading, setIsUploading] = useState(false);
+    const [isSprintModalOpen, setIsSprintModalOpen] = useState(false);
+    const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const router = useRouter();
 
@@ -277,8 +309,17 @@ export default function RoomDetailsClient({ roomData, products, tasks, budgetIte
                         <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto no-scrollbar">
                             {activeTab === "Zadania" ? (
                                 <>
-                                    <Button className="flex items-center gap-2 bg-[#232323] hover:bg-[#2a2a2a] text-white px-5 py-3 rounded-lg text-sm font-medium transition-colors whitespace-nowrap min-h-[48px] shadow-sm">
-                                        <Plus className="w-5 h-5" /> Dodaj nowe zadanie
+                                    <Button
+                                        onClick={() => setIsSprintModalOpen(true)}
+                                        className="flex items-center gap-2 bg-[#232323] hover:bg-[#2a2a2a] text-white px-5 py-3 rounded-lg text-sm font-medium transition-colors whitespace-nowrap min-h-[48px] shadow-sm"
+                                    >
+                                        <Plus className="w-5 h-5" /> Dodaj sprint
+                                    </Button>
+                                    <Button
+                                        onClick={() => setIsTaskModalOpen(true)}
+                                        className="flex items-center gap-2 bg-[#232323] hover:bg-[#2a2a2a] text-white px-5 py-3 rounded-lg text-sm font-medium transition-colors whitespace-nowrap min-h-[48px] shadow-sm"
+                                    >
+                                        <Plus className="w-5 h-5" /> Dodaj zadanie
                                     </Button>
                                     <Button className="flex items-center gap-2 bg-[#1B1B1B] hover:bg-[#232323] text-muted-foreground hover:text-white px-5 py-3 rounded-lg text-sm font-medium transition-colors whitespace-nowrap min-h-[48px]">
                                         <LayoutGrid className="w-5 h-5" /> Widok
@@ -352,7 +393,14 @@ export default function RoomDetailsClient({ roomData, products, tasks, budgetIte
                             <ProductGrid products={products} />
                         </div>
                     ) : activeTab === "Zadania" ? (
-                        <TasksList tasks={tasks} />
+                        <TasksList
+                            tasks={tasks}
+                            sprints={sprints}
+                            roomId={roomData.id}
+                            projectId={roomData.projectId}
+                            onOpenSprintModal={() => setIsSprintModalOpen(true)}
+                            onOpenTaskModal={() => setIsTaskModalOpen(true)}
+                        />
                     ) : activeTab === "Dokumenty" ? (
                         <div className="flex-1 overflow-y-auto no-scrollbar">
                             <DocumentsGrid documents={documents} />
@@ -381,6 +429,21 @@ export default function RoomDetailsClient({ roomData, products, tasks, budgetIte
 
                 </div>
             </div>
+
+            {/* Modals */}
+            <CreateSprintModal
+                isOpen={isSprintModalOpen}
+                onClose={() => setIsSprintModalOpen(false)}
+                projectId={roomData.projectId}
+            />
+            <CreateTaskModal
+                isOpen={isTaskModalOpen}
+                onClose={() => setIsTaskModalOpen(false)}
+                projectId={roomData.projectId}
+                sprints={allProjectSprints}
+                rooms={[{ id: roomData.id, name: roomData.name, type: roomData.type }]}
+                defaultRoomId={roomData.id}
+            />
         </div>
     );
 }
