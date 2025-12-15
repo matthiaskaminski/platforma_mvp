@@ -30,11 +30,12 @@ interface MonthViewProps {
     currentDate: Date;
     events: CalendarEventType[];
     onEventClick?: (event: CalendarEventType) => void;
+    onDayClick?: (date: Date) => void;
 }
 
 const WEEKDAYS = ["Pon.", "Wt.", "Śr.", "Czw.", "Pt.", "Sob.", "Niedz."];
 
-export function MonthView({ currentDate, events, onEventClick }: MonthViewProps) {
+export function MonthView({ currentDate, events, onEventClick, onDayClick }: MonthViewProps) {
     const monthStart = startOfMonth(currentDate);
     const monthEnd = endOfMonth(monthStart);
     const startDate = startOfWeek(monthStart, { locale: pl }); // Monday start
@@ -69,10 +70,11 @@ export function MonthView({ currentDate, events, onEventClick }: MonthViewProps)
                         <div
                             key={day.toISOString()}
                             className={`
-                                relative border-b border-r border-white/5 p-2 transition-colors min-h-[120px]
+                                relative border-b border-r border-white/5 p-2 transition-colors min-h-[120px] cursor-pointer
                                 ${!isCurrentMonth ? "bg-[#0A0A0A] text-white/20" : "bg-[#0E0E0E] hover:bg-[#121212]"}
                                 ${(idx + 1) % 7 === 0 ? "border-r-0" : ""}
                             `}
+                            onClick={() => isCurrentMonth && onDayClick?.(day)}
                         >
                             <div className="flex justify-between items-start mb-2">
                                 <span className={`
@@ -92,7 +94,10 @@ export function MonthView({ currentDate, events, onEventClick }: MonthViewProps)
                                         color={event.color}
                                         isTask={event.isTask}
                                         type={event.type}
-                                        onClick={() => onEventClick?.(event)}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            onEventClick?.(event);
+                                        }}
                                     />
                                 ))}
                             </div>

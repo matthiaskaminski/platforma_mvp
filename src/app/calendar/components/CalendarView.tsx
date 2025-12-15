@@ -69,6 +69,7 @@ export function CalendarView({ events, projectId }: CalendarViewProps) {
     const [currentDate, setCurrentDate] = useState(new Date());
     const [view, setView] = useState<"month" | "week" | "day">("month");
     const [isEventModalOpen, setIsEventModalOpen] = useState(false);
+    const [selectedDateForEvent, setSelectedDateForEvent] = useState<Date | undefined>(undefined);
     const [selectedItem, setSelectedItem] = useState<CalendarEvent | null>(null);
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -83,6 +84,16 @@ export function CalendarView({ events, projectId }: CalendarViewProps) {
     const openItemDetails = (item: CalendarEvent) => {
         setSelectedItem(item);
         setSidebarOpen(true);
+    };
+
+    const openCreateEventModal = (date?: Date) => {
+        setSelectedDateForEvent(date);
+        setIsEventModalOpen(true);
+    };
+
+    const closeCreateEventModal = () => {
+        setIsEventModalOpen(false);
+        setSelectedDateForEvent(undefined);
     };
 
     const closeSidebar = () => {
@@ -156,7 +167,7 @@ export function CalendarView({ events, projectId }: CalendarViewProps) {
                 onToday={handleToday}
                 view={view}
                 onViewChange={setView}
-                onAddEvent={() => setIsEventModalOpen(true)}
+                onAddEvent={() => openCreateEventModal()}
             />
 
             <div className="flex-1 overflow-y-auto no-scrollbar">
@@ -165,6 +176,7 @@ export function CalendarView({ events, projectId }: CalendarViewProps) {
                         currentDate={currentDate}
                         events={events}
                         onEventClick={openItemDetails}
+                        onDayClick={(date) => openCreateEventModal(date)}
                     />
                 )}
                 {/* Week and Day views can be added here later */}
@@ -172,8 +184,9 @@ export function CalendarView({ events, projectId }: CalendarViewProps) {
 
             <CreateEventModal
                 isOpen={isEventModalOpen}
-                onClose={() => setIsEventModalOpen(false)}
+                onClose={closeCreateEventModal}
                 projectId={projectId}
+                defaultDate={selectedDateForEvent}
             />
 
             {/* Sidebar Overlay */}

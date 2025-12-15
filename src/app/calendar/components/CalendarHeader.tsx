@@ -86,7 +86,8 @@ export function CalendarHeader({ currentDate, onPrevDate, onNextDate, onToday, v
                     {onAddEvent && (
                         <Button
                             onClick={onAddEvent}
-                            className="flex items-center gap-2 bg-white text-black hover:bg-white/90 px-4 py-2 rounded-lg text-sm font-medium transition-colors ml-2"
+                            variant="secondary"
+                            className="flex items-center gap-2 ml-2"
                         >
                             <Plus className="w-4 h-4" /> Dodaj wydarzenie
                         </Button>

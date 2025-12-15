@@ -6,7 +6,7 @@ interface CalendarEventProps {
     color: string; // Hex color
     isTask?: boolean;
     type?: string;
-    onClick?: () => void;
+    onClick?: (e: React.MouseEvent) => void;
 }
 
 export function CalendarEvent({ title, color, isTask, type, onClick }: CalendarEventProps) {
