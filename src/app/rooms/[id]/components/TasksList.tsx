@@ -50,18 +50,16 @@ const statusConfig: Record<string, { label: string; badgeStatus: "overdue" | "in
 const statusMap: Record<string, "overdue" | "in_progress" | "not_started" | "completed"> = {
     "TODO": "not_started",
     "IN_PROGRESS": "in_progress",
-    "DONE": "completed",
-    "READY": "completed"
+    "DONE": "completed"
 };
 
 const statusLabels: Record<string, string> = {
     "TODO": "Do zrobienia",
     "IN_PROGRESS": "W trakcie",
-    "DONE": "Zakończone",
-    "READY": "Gotowe"
+    "DONE": "Zakończone"
 };
 
-const allStatuses = ["TODO", "IN_PROGRESS", "DONE", "READY"] as const;
+const allStatuses = ["TODO", "IN_PROGRESS", "DONE"] as const;
 
 export const TasksList = React.memo(function TasksList({
     tasks,
@@ -89,6 +87,9 @@ export const TasksList = React.memo(function TasksList({
     const [isSaving, setIsSaving] = useState(false);
     const [descriptionHeight, setDescriptionHeight] = useState<number>(200);
     const descriptionDisplayRef = React.useRef<HTMLDivElement>(null);
+
+    // Inline status editing in list view
+    const [inlineEditingStatusTaskId, setInlineEditingStatusTaskId] = useState<string | null>(null);
 
     const toggleSprint = (id: string) => {
         setCollapsedSprints(prev => ({ ...prev, [id]: !prev[id] }));
@@ -231,6 +232,22 @@ export const TasksList = React.memo(function TasksList({
         } finally {
             setIsSaving(false);
             setEditingStatus(false);
+        }
+    };
+
+    // Save status inline from list view
+    const saveInlineStatus = async (taskId: string, newStatus: string) => {
+        setIsSaving(true);
+        try {
+            const result = await updateTask(taskId, { status: newStatus as any });
+            if (result.success) {
+                router.refresh();
+            }
+        } catch (error) {
+            console.error('Error saving status:', error);
+        } finally {
+            setIsSaving(false);
+            setInlineEditingStatusTaskId(null);
         }
     };
 
@@ -391,10 +408,49 @@ export const TasksList = React.memo(function TasksList({
                                             </div>
 
                                             {/* Status */}
-                                            <div className="flex items-center gap-2">
-                                                <Badge status={displayStatus} dot className="bg-transparent px-0 font-normal gap-2 rounded-none hover:bg-transparent">
-                                                    {overdue ? "Przeterminowane" : statusInfo.label}
-                                                </Badge>
+                                            <div className="flex items-center gap-2 relative">
+                                                {inlineEditingStatusTaskId === task.id ? (
+                                                    <div className="flex flex-wrap gap-1">
+                                                        {allStatuses.map((status) => (
+                                                            <button
+                                                                key={status}
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    saveInlineStatus(task.id, status);
+                                                                }}
+                                                                disabled={isSaving}
+                                                                className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
+                                                                    task.status === status
+                                                                        ? 'bg-white/20 text-white'
+                                                                        : 'bg-[#1B1B1B] text-muted-foreground hover:bg-[#252525] hover:text-white'
+                                                                }`}
+                                                            >
+                                                                {statusLabels[status]}
+                                                            </button>
+                                                        ))}
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setInlineEditingStatusTaskId(null);
+                                                            }}
+                                                            className="px-2 py-1 text-xs text-muted-foreground hover:text-white"
+                                                        >
+                                                            ✕
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <div
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setInlineEditingStatusTaskId(task.id);
+                                                        }}
+                                                        className="cursor-pointer"
+                                                    >
+                                                        <Badge status={displayStatus} dot className="bg-transparent px-0 font-normal gap-2 rounded-none hover:bg-transparent hover:opacity-80 transition-opacity">
+                                                            {overdue ? "Przeterminowane" : statusInfo.label}
+                                                        </Badge>
+                                                    </div>
+                                                )}
                                             </div>
 
                                             {/* Created Date */}
@@ -512,10 +568,49 @@ export const TasksList = React.memo(function TasksList({
                                                         </div>
 
                                                         {/* Status */}
-                                                        <div className="flex items-center gap-2">
-                                                            <Badge status={taskStatus} dot className="bg-transparent px-0 font-normal gap-2 rounded-none hover:bg-transparent text-[#EDEDED]">
-                                                                {taskLabel}
-                                                            </Badge>
+                                                        <div className="flex items-center gap-2 relative">
+                                                            {inlineEditingStatusTaskId === task.id ? (
+                                                                <div className="flex flex-wrap gap-1">
+                                                                    {allStatuses.map((status) => (
+                                                                        <button
+                                                                            key={status}
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                saveInlineStatus(task.id, status);
+                                                                            }}
+                                                                            disabled={isSaving}
+                                                                            className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
+                                                                                task.status === status
+                                                                                    ? 'bg-white/20 text-white'
+                                                                                    : 'bg-[#1B1B1B] text-muted-foreground hover:bg-[#252525] hover:text-white'
+                                                                            }`}
+                                                                        >
+                                                                            {statusLabels[status]}
+                                                                        </button>
+                                                                    ))}
+                                                                    <button
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            setInlineEditingStatusTaskId(null);
+                                                                        }}
+                                                                        className="px-2 py-1 text-xs text-muted-foreground hover:text-white"
+                                                                    >
+                                                                        ✕
+                                                                    </button>
+                                                                </div>
+                                                            ) : (
+                                                                <div
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        setInlineEditingStatusTaskId(task.id);
+                                                                    }}
+                                                                    className="cursor-pointer"
+                                                                >
+                                                                    <Badge status={taskStatus} dot className="bg-transparent px-0 font-normal gap-2 rounded-none hover:bg-transparent text-[#EDEDED] hover:opacity-80 transition-opacity">
+                                                                        {taskLabel}
+                                                                    </Badge>
+                                                                </div>
+                                                            )}
                                                         </div>
 
                                                         {/* Start Date */}

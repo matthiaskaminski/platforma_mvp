@@ -172,18 +172,16 @@ export default function DashboardClient({ user, project, stats, recentProducts =
     const statusMap: Record<string, "overdue" | "in_progress" | "not_started" | "completed"> = {
         "TODO": "not_started",
         "IN_PROGRESS": "in_progress",
-        "DONE": "completed",
-        "READY": "completed"
+        "DONE": "completed"
     };
 
     const statusLabels: Record<string, string> = {
         "TODO": "Do zrobienia",
         "IN_PROGRESS": "W trakcie",
-        "DONE": "Zakończone",
-        "READY": "Gotowe"
+        "DONE": "Zakończone"
     };
 
-    const allStatuses = ["TODO", "IN_PROGRESS", "DONE", "READY"] as const;
+    const allStatuses = ["TODO", "IN_PROGRESS", "DONE"] as const;
 
     // Dynamic Budget Data
     const budgetData = [
@@ -564,9 +562,9 @@ export default function DashboardClient({ user, project, stats, recentProducts =
                                         const isOverdue = task.dueDate && task.status !== 'DONE' && new Date(task.dueDate) < new Date(new Date().setHours(0, 0, 0, 0));
 
                                         const statusColors: Record<string, string> = {
-                                            "TODO": "bg-[#6E6E6E]",
-                                            "IN_PROGRESS": "bg-[#E8B491] shadow-[0_0_6px_rgba(232,180,145,0.4)]",
-                                            "DONE": "bg-[#91E8A8] shadow-[0_0_6px_rgba(145,232,168,0.4)]",
+                                            "TODO": "bg-[#6E9EE8] shadow-[0_0_6px_rgba(110,158,232,0.4)]",
+                                            "IN_PROGRESS": "bg-[#91E8A8] shadow-[0_0_6px_rgba(145,232,168,0.4)]",
+                                            "DONE": "bg-[#6E6E6E]",
                                             "OVERDUE": "bg-[#E89191] shadow-[0_0_6px_rgba(232,145,145,0.4)]"
                                         };
 
