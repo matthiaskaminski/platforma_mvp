@@ -42,8 +42,8 @@ const eventTypeLabels: Record<string, string> = {
 
 const eventTypeColors: Record<string, string> = {
     MEETING: '#878FA9',
-    DELIVERY: '#EFC2A2',
-    INSPECTION: '#C5C5B6',
+    DELIVERY: '#B79074',
+    INSPECTION: '#A4A490',
     DEADLINE: '#89B786',
     PAYMENT: '#DCA2EF',
     INSTALLATION: '#A2EAEF',

@@ -15,8 +15,8 @@ interface CreateEventModalProps {
 
 const eventTypeOptions = [
     { value: 'MEETING', label: 'Spotkanie', color: '#878FA9' },
-    { value: 'DELIVERY', label: 'Dostawa', color: '#EFC2A2' },
-    { value: 'INSPECTION', label: 'Odbiór', color: '#C5C5B6' },
+    { value: 'DELIVERY', label: 'Dostawa', color: '#B79074' },
+    { value: 'INSPECTION', label: 'Odbiór', color: '#A4A490' },
     { value: 'DEADLINE', label: 'Termin', color: '#89B786' },
     { value: 'PAYMENT', label: 'Płatność', color: '#DCA2EF' },
     { value: 'INSTALLATION', label: 'Instalacja', color: '#A2EAEF' },

@@ -403,20 +403,31 @@ export default function DashboardClient({ user, project, stats, recentProducts =
 
                                 // Check if this day has events or tasks
                                 const dayDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), d.day);
+
+                                const dayEventTypeColors: Record<string, string> = {
+                                    MEETING: '#878FA9',
+                                    DELIVERY: '#B79074',
+                                    INSPECTION: '#A4A490',
+                                    DEADLINE: '#89B786',
+                                    PAYMENT: '#DCA2EF',
+                                    INSTALLATION: '#A2EAEF',
+                                    TASK: '#6E9EE8',
+                                };
+
                                 const dayEvents = d.type === 'current' ? [
                                     ...calendarEvents.filter(e => {
                                         const eventDate = new Date(e.date);
                                         return eventDate.getDate() === d.day &&
                                                eventDate.getMonth() === currentDate.getMonth() &&
                                                eventDate.getFullYear() === currentDate.getFullYear();
-                                    }),
+                                    }).map(e => ({ ...e, color: dayEventTypeColors[e.type] || '#878FA9' })),
                                     ...recentTasks.filter(t => {
                                         if (!t.dueDate) return false;
                                         const taskDate = new Date(t.dueDate);
                                         return taskDate.getDate() === d.day &&
                                                taskDate.getMonth() === currentDate.getMonth() &&
                                                taskDate.getFullYear() === currentDate.getFullYear();
-                                    })
+                                    }).map(t => ({ ...t, type: 'TASK', color: dayEventTypeColors['TASK'] }))
                                 ] : [];
                                 const hasEvents = dayEvents.length > 0;
 
@@ -432,10 +443,11 @@ export default function DashboardClient({ user, project, stats, recentProducts =
                                         {d.day}
                                         {hasEvents && (
                                             <div className="absolute bottom-1 flex gap-0.5">
-                                                {dayEvents.slice(0, 3).map((_, i) => (
+                                                {dayEvents.slice(0, 3).map((event, i) => (
                                                     <span
                                                         key={i}
-                                                        className={`w-1 h-1 rounded-full ${isToday ? 'bg-black/60' : 'bg-[#536AC8]'}`}
+                                                        className="w-1 h-1 rounded-full"
+                                                        style={{ backgroundColor: isToday ? 'rgba(0,0,0,0.6)' : event.color }}
                                                     />
                                                 ))}
                                             </div>
@@ -463,10 +475,10 @@ export default function DashboardClient({ user, project, stats, recentProducts =
                             const nearestEvent = upcomingEvents[0];
                             if (!nearestEvent) return null;
 
-                            const eventTypeColors: Record<string, string> = {
+                            const nearestEventTypeColors: Record<string, string> = {
                                 MEETING: '#878FA9',
-                                DELIVERY: '#EFC2A2',
-                                INSPECTION: '#C5C5B6',
+                                DELIVERY: '#B79074',
+                                INSPECTION: '#A4A490',
                                 DEADLINE: '#89B786',
                                 PAYMENT: '#DCA2EF',
                                 INSTALLATION: '#A2EAEF',
@@ -479,7 +491,7 @@ export default function DashboardClient({ user, project, stats, recentProducts =
                                     <div className="flex items-center gap-2 text-[14px]">
                                         <span
                                             className="w-2.5 h-2.5 rounded-full shrink-0"
-                                            style={{ backgroundColor: eventTypeColors[nearestEvent.type] || '#9B6DD8' }}
+                                            style={{ backgroundColor: nearestEventTypeColors[nearestEvent.type] || '#878FA9' }}
                                         />
                                         <span className="truncate flex-1 text-white">{nearestEvent.title}</span>
                                         <span className="text-muted-foreground text-[14px] shrink-0">
