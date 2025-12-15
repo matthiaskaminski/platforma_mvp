@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Clock, Flame, Check, Calendar, FileText, CheckSquare, Plus, ChevronDown, Armchair, BedDouble, Bath, Utensils, DoorOpen, Baby, Layers, ListTodo, X, Trash2, Edit, MoreHorizontal } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -348,6 +348,19 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
         return groups;
     }, [tasks, sprints, project.rooms]);
 
+    // Auto-collapse empty groups on initial load
+    useEffect(() => {
+        const emptyGroups: Record<string, boolean> = {};
+        tasksGrouped.forEach(group => {
+            if (group.sprints.length === 0) {
+                emptyGroups[group.id] = true;
+            }
+        });
+        if (Object.keys(emptyGroups).length > 0) {
+            setCollapsedGroups(prev => ({ ...emptyGroups, ...prev }));
+        }
+    }, []); // Only run on initial mount
+
     return (
         <div className="flex flex-col h-full animate-in fade-in duration-500 pb-0 overflow-hidden w-full">
             {/* Toolbar - Matches Rooms Page Styling */}
@@ -363,6 +376,10 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
                         </Button>
                         <Button variant="secondary" className="flex items-center gap-2 bg-[#1B1B1B] hover:bg-[#252525] text-sm px-4 py-2 rounded-lg transition-colors text-muted-foreground min-w-[130px] justify-between h-[48px]">
                             Priorytet
+                            <ChevronDown className="w-4 h-4 opacity-50" />
+                        </Button>
+                        <Button variant="secondary" className="flex items-center gap-2 bg-[#1B1B1B] hover:bg-[#252525] text-sm px-4 py-2 rounded-lg transition-colors text-muted-foreground min-w-[130px] justify-between h-[48px]">
+                            Kategoria
                             <ChevronDown className="w-4 h-4 opacity-50" />
                         </Button>
                         <Button variant="secondary" className="flex items-center gap-2 bg-[#1B1B1B] hover:bg-[#252525] text-sm px-4 py-2 rounded-lg transition-colors text-muted-foreground min-w-[150px] justify-between h-[48px]">

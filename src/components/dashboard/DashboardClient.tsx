@@ -499,6 +499,14 @@ export default function DashboardClient({ user, project, stats, recentProducts =
                                 {[0, 1, 2, 3].map((index) => {
                                     const task = recentTasks[index];
                                     if (task) {
+                                        const statusColors: Record<string, string> = {
+                                            "TODO": "bg-[#6E6E6E]",
+                                            "IN_PROGRESS": "bg-[#E8B491] shadow-[0_0_6px_rgba(232,180,145,0.4)]",
+                                            "DONE": "bg-[#91E8A8] shadow-[0_0_6px_rgba(145,232,168,0.4)]"
+                                        };
+                                        const dotColor = statusColors[task.status] || statusColors["TODO"];
+                                        const statusLabel = statusLabels[task.status] || "Do zrobienia";
+
                                         return (
                                             <div
                                                 key={task.id || index}
@@ -507,7 +515,7 @@ export default function DashboardClient({ user, project, stats, recentProducts =
                                             >
                                                 <h4 className="text-[14px] font-medium mb-2 truncate">{task.title}</h4>
                                                 <div className="flex justify-between items-center text-[14px] leading-relaxed">
-                                                    <span className="text-[#F1F1F1] flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-[#E8B491] shadow-[0_0_6px_rgba(232,180,145,0.4)]"></span> W trakcie</span>
+                                                    <span className="text-[#F1F1F1] flex items-center gap-2"><span className={`w-2 h-2 rounded-full ${dotColor}`}></span> {statusLabel}</span>
                                                     <span className="text-muted-foreground">{task.room?.name || "Ogólne"}</span>
                                                 </div>
                                                 <div className="mt-2 text-[14px] text-muted-foreground flex justify-between leading-relaxed">
