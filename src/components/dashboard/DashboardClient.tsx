@@ -479,7 +479,7 @@ export default function DashboardClient({ user, project, stats, recentProducts =
                     <div className="grid grid-cols-2 gap-3 flex-[1.4] min-h-0">
                         {/* Tasks */}
                         <Card className="flex flex-col h-full min-h-0 relative">
-                            <div className="flex items-center justify-between mb-3 shrink-0">
+                            <div className="flex items-center justify-between mb-5 shrink-0">
                                 <div className="flex items-center gap-2">
                                     <h3 className="text-[20px] font-medium text-[#E5E5E5]">Lista zadań</h3>
                                     <span className="w-5 h-5 bg-[#E5E5E5] text-black text-xs font-bold rounded-full flex items-center justify-center">{stats.activeTasks}</span>
@@ -499,13 +499,18 @@ export default function DashboardClient({ user, project, stats, recentProducts =
                                 {[0, 1, 2, 3].map((index) => {
                                     const task = recentTasks[index];
                                     if (task) {
+                                        // Check if task is overdue
+                                        const isOverdue = task.dueDate && task.status !== 'DONE' && new Date(task.dueDate) < new Date(new Date().setHours(0, 0, 0, 0));
+
                                         const statusColors: Record<string, string> = {
                                             "TODO": "bg-[#6E6E6E]",
                                             "IN_PROGRESS": "bg-[#E8B491] shadow-[0_0_6px_rgba(232,180,145,0.4)]",
-                                            "DONE": "bg-[#91E8A8] shadow-[0_0_6px_rgba(145,232,168,0.4)]"
+                                            "DONE": "bg-[#91E8A8] shadow-[0_0_6px_rgba(145,232,168,0.4)]",
+                                            "OVERDUE": "bg-[#E89191] shadow-[0_0_6px_rgba(232,145,145,0.4)]"
                                         };
-                                        const dotColor = statusColors[task.status] || statusColors["TODO"];
-                                        const statusLabel = statusLabels[task.status] || "Do zrobienia";
+
+                                        const dotColor = isOverdue ? statusColors["OVERDUE"] : (statusColors[task.status] || statusColors["TODO"]);
+                                        const statusLabel = isOverdue ? "Przeterminowane" : (statusLabels[task.status] || "Do zrobienia");
 
                                         return (
                                             <div
@@ -659,12 +664,20 @@ export default function DashboardClient({ user, project, stats, recentProducts =
 
                         {/* Details */}
                         <div className="space-y-6">
-                            <div>
-                                <label className="text-sm font-medium text-muted-foreground block mb-2">Status</label>
-                                <Badge status={statusMap[selectedTask.status] || 'not_started'} dot>
-                                    {statusLabels[selectedTask.status] || 'Do zrobienia'}
-                                </Badge>
-                            </div>
+                            {(() => {
+                                const isTaskOverdue = selectedTask.dueDate && selectedTask.status !== 'DONE' && new Date(selectedTask.dueDate) < new Date(new Date().setHours(0, 0, 0, 0));
+                                const badgeStatus = isTaskOverdue ? 'overdue' : (statusMap[selectedTask.status] || 'not_started');
+                                const badgeLabel = isTaskOverdue ? 'Przeterminowane' : (statusLabels[selectedTask.status] || 'Do zrobienia');
+
+                                return (
+                                    <div>
+                                        <label className="text-sm font-medium text-muted-foreground block mb-2">Status</label>
+                                        <Badge status={badgeStatus} dot>
+                                            {badgeLabel}
+                                        </Badge>
+                                    </div>
+                                );
+                            })()}
 
                             {/* Description */}
                             <div>
