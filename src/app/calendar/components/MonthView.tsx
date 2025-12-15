@@ -13,9 +13,22 @@ import {
 import { pl } from "date-fns/locale";
 import { CalendarEvent } from "./CalendarEvent";
 
+interface CalendarEventType {
+    id: string;
+    title: string;
+    date: string;
+    description?: string | null;
+    type: string;
+    isTask: boolean;
+    color: string;
+    status?: string;
+    roomName?: string;
+    sprintName?: string;
+}
+
 interface MonthViewProps {
     currentDate: Date;
-    events: any[]; // Define proper type later
+    events: CalendarEventType[];
 }
 
 const WEEKDAYS = ["Pon.", "Wt.", "Śr.", "Czw.", "Pt.", "Sob.", "Niedz."];
@@ -76,6 +89,8 @@ export function MonthView({ currentDate, events }: MonthViewProps) {
                                         key={event.id}
                                         title={event.title}
                                         color={event.color}
+                                        isTask={event.isTask}
+                                        type={event.type}
                                     />
                                 ))}
                             </div>

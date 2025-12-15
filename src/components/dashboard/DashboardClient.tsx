@@ -400,20 +400,99 @@ export default function DashboardClient({ user, project, stats, recentProducts =
                         <div className="grid grid-cols-7 gap-2 flex-1 min-h-0 content-center">
                             {calendarDays.map((d, index) => {
                                 const isToday = d.type === 'current' && d.day === today.getDate() && currentDate.getMonth() === today.getMonth() && currentDate.getFullYear() === today.getFullYear();
+
+                                // Check if this day has events or tasks
+                                const dayDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), d.day);
+                                const dayEvents = d.type === 'current' ? [
+                                    ...calendarEvents.filter(e => {
+                                        const eventDate = new Date(e.date);
+                                        return eventDate.getDate() === d.day &&
+                                               eventDate.getMonth() === currentDate.getMonth() &&
+                                               eventDate.getFullYear() === currentDate.getFullYear();
+                                    }),
+                                    ...recentTasks.filter(t => {
+                                        if (!t.dueDate) return false;
+                                        const taskDate = new Date(t.dueDate);
+                                        return taskDate.getDate() === d.day &&
+                                               taskDate.getMonth() === currentDate.getMonth() &&
+                                               taskDate.getFullYear() === currentDate.getFullYear();
+                                    })
+                                ] : [];
+                                const hasEvents = dayEvents.length > 0;
+
                                 return (
                                     <div
                                         key={index}
-                                        className={`aspect-square flex items-center justify-center rounded-lg text-sm transition-all cursor-default border border-transparent
+                                        className={`aspect-square flex flex-col items-center justify-center rounded-lg text-sm transition-all cursor-default border border-transparent relative
                                             ${d.type === 'current' ? 'text-muted-foreground hover:bg-[#2F2F2F] hover:text-white cursor-pointer' : 'opacity-20 text-muted-foreground'}
                                             ${isToday ? 'bg-[#F3F3F3] text-black font-bold hover:bg-[#F3F3F3] hover:text-black' : 'bg-[#232323]'}
                                             ${d.type !== 'current' ? 'bg-[#1B1B1B]' : ''}
                                         `}
                                     >
                                         {d.day}
+                                        {hasEvents && (
+                                            <div className="absolute bottom-1 flex gap-0.5">
+                                                {dayEvents.slice(0, 3).map((_, i) => (
+                                                    <span
+                                                        key={i}
+                                                        className={`w-1 h-1 rounded-full ${isToday ? 'bg-black/60' : 'bg-[#536AC8]'}`}
+                                                    />
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
                                 )
                             })}
                         </div>
+
+                        {/* Upcoming Events Section */}
+                        {(() => {
+                            const upcomingEvents = [
+                                ...calendarEvents.map(e => ({ ...e, isTask: false })),
+                                ...recentTasks.filter(t => t.dueDate).map(t => ({
+                                    id: t.id,
+                                    title: t.title,
+                                    date: t.dueDate,
+                                    type: 'TASK',
+                                    isTask: true
+                                }))
+                            ]
+                            .filter(e => new Date(e.date) >= new Date(new Date().setHours(0, 0, 0, 0)))
+                            .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+                            .slice(0, 3);
+
+                            if (upcomingEvents.length === 0) return null;
+
+                            const eventTypeColors: Record<string, string> = {
+                                MEETING: '#536AC8',
+                                DELIVERY: '#E8B491',
+                                INSPECTION: '#91E8A8',
+                                DEADLINE: '#E89191',
+                                PAYMENT: '#C8A853',
+                                INSTALLATION: '#A891E8',
+                                TASK: '#6E9EE8',
+                            };
+
+                            return (
+                                <div className="mt-4 pt-4 border-t border-white/5">
+                                    <h4 className="text-xs font-medium text-muted-foreground mb-2">Nadchodzące</h4>
+                                    <div className="space-y-2">
+                                        {upcomingEvents.map(event => (
+                                            <div key={event.id} className="flex items-center gap-2 text-sm">
+                                                <span
+                                                    className="w-2 h-2 rounded-full shrink-0"
+                                                    style={{ backgroundColor: eventTypeColors[event.type] || '#536AC8' }}
+                                                />
+                                                <span className="truncate flex-1">{event.title}</span>
+                                                <span className="text-muted-foreground text-xs shrink-0">
+                                                    {new Date(event.date).toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit' })}
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            );
+                        })()}
                     </Card>
                 </div>
 

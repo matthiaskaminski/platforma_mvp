@@ -1,5 +1,5 @@
 import React from "react";
-import { ChevronLeft, ChevronRight, Search, Settings, Filter, ChevronDown, LayoutGrid, List } from "lucide-react";
+import { ChevronLeft, ChevronRight, Search, Settings, Filter, ChevronDown, LayoutGrid, List, Plus } from "lucide-react";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import { Button } from "@/components/ui/Button";
@@ -12,9 +12,10 @@ interface CalendarHeaderProps {
     onToday: () => void;
     view: "month" | "week" | "day";
     onViewChange: (view: "month" | "week" | "day") => void;
+    onAddEvent?: () => void;
 }
 
-export function CalendarHeader({ currentDate, onPrevDate, onNextDate, onToday, view, onViewChange }: CalendarHeaderProps) {
+export function CalendarHeader({ currentDate, onPrevDate, onNextDate, onToday, view, onViewChange, onAddEvent }: CalendarHeaderProps) {
     const formattedDate = format(currentDate, "LLLL yyyy", { locale: pl });
     const capitalizedDate = formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
 
@@ -80,6 +81,16 @@ export function CalendarHeader({ currentDate, onPrevDate, onNextDate, onToday, v
                             <Settings className="w-5 h-5" />
                         </Button>
                     </div>
+
+                    {/* Add Event Button */}
+                    {onAddEvent && (
+                        <Button
+                            onClick={onAddEvent}
+                            className="flex items-center gap-2 bg-white text-black hover:bg-white/90 px-4 py-2 rounded-lg text-sm font-medium transition-colors ml-2"
+                        >
+                            <Plus className="w-4 h-4" /> Dodaj wydarzenie
+                        </Button>
+                    )}
                 </div>
             </div>
         </div>
