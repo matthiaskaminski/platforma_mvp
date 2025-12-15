@@ -667,7 +667,7 @@ export default function DashboardClient({ user, project, stats, recentProducts =
                                 </Button>
                             </div>
 
-                            <div className="flex flex-col gap-2 flex-1 min-h-0">
+                            <div className="flex flex-col gap-3 flex-1 min-h-0">
                                 {/* Show max 4 tasks or placeholder slots */}
                                 {[0, 1, 2, 3].map((index) => {
                                     const task = recentTasks[index];
@@ -756,14 +756,14 @@ export default function DashboardClient({ user, project, stats, recentProducts =
                         </div>
                         <div className="flex flex-col gap-3 overflow-y-auto pr-1 flex-1 min-h-0 no-scrollbar">
                             {recentProducts.length > 0 ? (
-                                recentProducts.map((prod, i) => (
+                                recentProducts.slice(0, 4).map((prod, i) => (
                                     <div key={i} className="h-24 shrink-0 flex gap-4 items-center p-2 bg-[#1B1B1B] rounded-xl group cursor-pointer hover:bg-[#232323] transition-colors overflow-hidden">
                                         <div className="h-full aspect-square bg-white rounded-lg flex-shrink-0 relative flex items-center justify-center p-2">
                                             <img src={prod.imageUrl || "/placeholder.png"} className="max-w-full max-h-full object-contain" alt={prod.name} />
                                         </div>
                                         <div className="flex-1 min-w-0 py-1 pr-2">
                                             <div className="flex justify-between items-start">
-                                                <div className="text-[16px] font-medium leading-tight mb-1 line-clamp-2">{prod.name}</div>
+                                                <div className="text-[16px] font-medium leading-tight mb-1 truncate">{prod.name}</div>
                                                 <ArrowUpRight className="w-4 h-4 text-muted-foreground flex-shrink-0 ml-2" />
                                             </div>
                                             <div className="text-sm text-muted-foreground">{prod.supplier || "Brak marki"}</div>
@@ -788,7 +788,7 @@ export default function DashboardClient({ user, project, stats, recentProducts =
                             <h3 className="font-medium text-[20px]">Wizualizacje</h3>
                             <Button variant="secondary" size="sm" className="rounded-full h-auto py-1 px-3 border border-white/5 bg-[#232323] hover:bg-[#2a2a2a]">Zarządzaj</Button>
                         </div>
-                        <div className="grid grid-cols-2 grid-rows-2 gap-2 h-full min-h-0 flex-1">
+                        <div className="grid grid-cols-2 grid-rows-2 gap-3 h-full min-h-0 flex-1">
                             {visualizations.length > 0 ? (
                                 visualizations.slice(0, 4).map((img, i) => (
                                     <div key={i} className="relative bg-zinc-800 rounded-lg border border-[var(--color-border)]/50 overflow-hidden group w-full h-full min-h-[100px]">
