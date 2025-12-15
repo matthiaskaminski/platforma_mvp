@@ -124,8 +124,8 @@ export function CreateTaskModal({ isOpen, onClose, projectId, sprints, defaultRo
                         <textarea
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
-                            placeholder="Dodaj szczegoly zadania..."
-                            className="w-full bg-[#1B1B1B] border border-white/10 rounded-lg px-4 py-3 text-white placeholder:text-muted-foreground min-h-[100px] resize-none focus:outline-none focus:ring-2 focus:ring-white/20"
+                            placeholder="Dodaj szczegóły zadania..."
+                            className="w-full bg-[#1B1B1B] border border-white/10 rounded-lg px-4 py-3 text-white placeholder:text-muted-foreground min-h-[150px] resize-y focus:outline-none focus:ring-2 focus:ring-white/20 dark-scrollbar"
                             disabled={isSubmitting}
                         />
                     </div>

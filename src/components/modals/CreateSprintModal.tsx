@@ -117,7 +117,7 @@ export function CreateSprintModal({ isOpen, onClose, projectId, rooms = [], defa
                             value={goal}
                             onChange={(e) => setGoal(e.target.value)}
                             placeholder="Opisz cel tego sprintu..."
-                            className="w-full bg-[#1B1B1B] border border-white/10 rounded-lg px-4 py-3 text-white placeholder:text-muted-foreground min-h-[100px] resize-none focus:outline-none focus:ring-2 focus:ring-white/20"
+                            className="w-full bg-[#1B1B1B] border border-white/10 rounded-lg px-4 py-3 text-white placeholder:text-muted-foreground min-h-[200px] resize-y focus:outline-none focus:ring-2 focus:ring-white/20 dark-scrollbar"
                             disabled={isSubmitting}
                         />
                     </div>

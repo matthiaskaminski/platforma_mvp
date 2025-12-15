@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Input } from "@/components/ui/Input";
 import { CreateSprintModal } from "@/components/modals/CreateSprintModal";
 import { CreateTaskModal } from "@/components/modals/CreateTaskModal";
-import { deleteSprint, deleteTask, updateTask } from "@/app/actions/sprints";
+import { deleteSprint, deleteTask, updateTask, updateSprint } from "@/app/actions/sprints";
 import { useRouter } from "next/navigation";
 
 interface Project {
@@ -117,6 +117,13 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
     const [selectedSprintDetails, setSelectedSprintDetails] = useState<Sprint | null>(null);
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
+    // Inline editing states
+    const [editingTitle, setEditingTitle] = useState(false);
+    const [editingDescription, setEditingDescription] = useState(false);
+    const [editedTitle, setEditedTitle] = useState('');
+    const [editedDescription, setEditedDescription] = useState('');
+    const [isSaving, setIsSaving] = useState(false);
+
     const toggleGroup = (id: string) => {
         setCollapsedGroups(prev => ({ ...prev, [id]: !prev[id] }));
     };
@@ -160,10 +167,83 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
 
     const closeSidebar = () => {
         setSidebarOpen(false);
+        setEditingTitle(false);
+        setEditingDescription(false);
         setTimeout(() => {
             setSelectedTaskDetails(null);
             setSelectedSprintDetails(null);
         }, 300);
+    };
+
+    // Start editing title
+    const startEditingTitle = () => {
+        if (selectedTaskDetails) {
+            setEditedTitle(selectedTaskDetails.title);
+        } else if (selectedSprintDetails) {
+            setEditedTitle(selectedSprintDetails.name);
+        }
+        setEditingTitle(true);
+    };
+
+    // Start editing description
+    const startEditingDescription = () => {
+        if (selectedTaskDetails) {
+            setEditedDescription(selectedTaskDetails.description || '');
+        } else if (selectedSprintDetails) {
+            setEditedDescription(selectedSprintDetails.goal || '');
+        }
+        setEditingDescription(true);
+    };
+
+    // Save title
+    const saveTitle = async () => {
+        if (!editedTitle.trim()) return;
+        setIsSaving(true);
+
+        try {
+            if (selectedTaskDetails) {
+                const result = await updateTask(selectedTaskDetails.id, { title: editedTitle.trim() });
+                if (result.success) {
+                    setSelectedTaskDetails({ ...selectedTaskDetails, title: editedTitle.trim() });
+                }
+            } else if (selectedSprintDetails) {
+                const result = await updateSprint(selectedSprintDetails.id, { name: editedTitle.trim() });
+                if (result.success) {
+                    setSelectedSprintDetails({ ...selectedSprintDetails, name: editedTitle.trim() });
+                }
+            }
+            router.refresh();
+        } catch (error) {
+            console.error('Error saving title:', error);
+        } finally {
+            setIsSaving(false);
+            setEditingTitle(false);
+        }
+    };
+
+    // Save description
+    const saveDescription = async () => {
+        setIsSaving(true);
+
+        try {
+            if (selectedTaskDetails) {
+                const result = await updateTask(selectedTaskDetails.id, { description: editedDescription.trim() || undefined });
+                if (result.success) {
+                    setSelectedTaskDetails({ ...selectedTaskDetails, description: editedDescription.trim() || null });
+                }
+            } else if (selectedSprintDetails) {
+                const result = await updateSprint(selectedSprintDetails.id, { goal: editedDescription.trim() || undefined });
+                if (result.success) {
+                    setSelectedSprintDetails({ ...selectedSprintDetails, goal: editedDescription.trim() || null });
+                }
+            }
+            router.refresh();
+        } catch (error) {
+            console.error('Error saving description:', error);
+        } finally {
+            setIsSaving(false);
+            setEditingDescription(false);
+        }
     };
 
     // Delete handlers
@@ -544,23 +624,42 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
             )}
 
             {/* Sidebar Overlay */}
-            {(selectedTaskDetails || selectedSprintDetails) && (
-                <div
-                    className={`fixed inset-0 bg-black/40 z-40 transition-opacity duration-300 ${sidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
-                    onClick={closeSidebar}
-                />
-            )}
+            <div
+                className={`fixed inset-0 bg-black/40 z-40 transition-opacity duration-300 ${sidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                onClick={closeSidebar}
+            />
 
             {/* Right Sidebar - Task Details */}
-            {selectedTaskDetails && (
-                <div className={`fixed right-0 top-0 bottom-0 w-[500px] bg-[#0A0A0A] border-l border-white/10 z-50 overflow-y-auto transition-transform duration-300 ease-out ${sidebarOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+            <div className={`fixed right-0 top-0 bottom-0 w-[500px] bg-[#0A0A0A] border-l border-white/10 z-50 overflow-y-auto dark-scrollbar transition-transform duration-300 ease-out ${sidebarOpen && selectedTaskDetails ? 'translate-x-0' : 'translate-x-full'}`}>
+                {selectedTaskDetails && (
                     <div className="p-6">
                         {/* Header */}
                         <div className="flex items-start justify-between mb-6">
                             <div className="flex-1">
-                                <h2 className="text-2xl font-semibold text-white mb-2">{selectedTaskDetails.title}</h2>
+                                {editingTitle ? (
+                                    <input
+                                        type="text"
+                                        value={editedTitle}
+                                        onChange={(e) => setEditedTitle(e.target.value)}
+                                        onBlur={saveTitle}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter') saveTitle();
+                                            if (e.key === 'Escape') setEditingTitle(false);
+                                        }}
+                                        className="text-2xl font-semibold text-white bg-transparent border-b-2 border-white/20 focus:border-white/50 outline-none w-full mb-2"
+                                        autoFocus
+                                        disabled={isSaving}
+                                    />
+                                ) : (
+                                    <h2
+                                        className="text-2xl font-semibold text-white mb-2 cursor-pointer hover:bg-white/5 px-2 py-1 -mx-2 rounded transition-colors"
+                                        onClick={startEditingTitle}
+                                    >
+                                        {selectedTaskDetails.title}
+                                    </h2>
+                                )}
                                 <p className="text-sm text-muted-foreground">
-                                    {'room' in selectedTaskDetails && selectedTaskDetails.room ? selectedTaskDetails.room.name : 'Zadanie ogolne'}
+                                    {'room' in selectedTaskDetails && selectedTaskDetails.room ? selectedTaskDetails.room.name : 'Zadanie ogólne'}
                                 </p>
                             </div>
                             <button
@@ -580,12 +679,50 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
                                 </Badge>
                             </div>
 
-                            {selectedTaskDetails.description && (
-                                <div>
-                                    <label className="text-sm font-medium text-muted-foreground block mb-2">Opis</label>
-                                    <p className="text-white">{selectedTaskDetails.description}</p>
-                                </div>
-                            )}
+                            {/* Editable Description - Jira style */}
+                            <div>
+                                <label className="text-sm font-medium text-muted-foreground block mb-2">Opis</label>
+                                {editingDescription ? (
+                                    <div className="space-y-2">
+                                        <textarea
+                                            value={editedDescription}
+                                            onChange={(e) => setEditedDescription(e.target.value)}
+                                            className="w-full bg-[#1B1B1B] border border-white/20 rounded-lg px-4 py-3 text-white placeholder:text-muted-foreground min-h-[150px] resize-y focus:outline-none focus:ring-2 focus:ring-white/20 dark-scrollbar"
+                                            placeholder="Dodaj opis zadania..."
+                                            autoFocus
+                                            disabled={isSaving}
+                                        />
+                                        <div className="flex gap-2">
+                                            <Button
+                                                size="sm"
+                                                onClick={saveDescription}
+                                                disabled={isSaving}
+                                            >
+                                                {isSaving ? 'Zapisywanie...' : 'Zapisz'}
+                                            </Button>
+                                            <Button
+                                                size="sm"
+                                                variant="ghost"
+                                                onClick={() => setEditingDescription(false)}
+                                                disabled={isSaving}
+                                            >
+                                                Anuluj
+                                            </Button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div
+                                        onClick={startEditingDescription}
+                                        className="min-h-[60px] p-3 bg-[#1B1B1B] rounded-lg cursor-pointer hover:bg-[#222] transition-colors border border-transparent hover:border-white/10"
+                                    >
+                                        {selectedTaskDetails.description ? (
+                                            <p className="text-white whitespace-pre-wrap">{selectedTaskDetails.description}</p>
+                                        ) : (
+                                            <p className="text-muted-foreground">Kliknij, aby dodać opis...</p>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
 
                             {selectedTaskDetails.dueDate && (
                                 <div>
@@ -599,40 +736,50 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
 
                             <div className="pt-4 border-t border-white/10">
                                 <Button
-                                    variant="secondary"
-                                    className="w-full mb-2"
-                                    onClick={() => {
-                                        // TODO: Implement edit task modal
-                                        alert('Funkcja edycji w przygotowaniu');
-                                    }}
-                                >
-                                    <Edit className="w-4 h-4 mr-2" />
-                                    Edytuj zadanie
-                                </Button>
-                                <Button
                                     variant="ghost"
                                     className="w-full text-red-400 hover:text-red-300"
                                     onClick={() => handleDeleteTask(selectedTaskDetails.id)}
                                 >
                                     <Trash2 className="w-4 h-4 mr-2" />
-                                    Usun zadanie
+                                    Usuń zadanie
                                 </Button>
                             </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )}
+            </div>
 
             {/* Right Sidebar - Sprint Details */}
-            {selectedSprintDetails && (
-                <div className={`fixed right-0 top-0 bottom-0 w-[500px] bg-[#0A0A0A] border-l border-white/10 z-50 overflow-y-auto transition-transform duration-300 ease-out ${sidebarOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+            <div className={`fixed right-0 top-0 bottom-0 w-[500px] bg-[#0A0A0A] border-l border-white/10 z-50 overflow-y-auto dark-scrollbar transition-transform duration-300 ease-out ${sidebarOpen && selectedSprintDetails ? 'translate-x-0' : 'translate-x-full'}`}>
+                {selectedSprintDetails && (
                     <div className="p-6">
                         {/* Header */}
                         <div className="flex items-start justify-between mb-6">
                             <div className="flex-1">
-                                <h2 className="text-2xl font-semibold text-white mb-2">{selectedSprintDetails.name}</h2>
+                                {editingTitle ? (
+                                    <input
+                                        type="text"
+                                        value={editedTitle}
+                                        onChange={(e) => setEditedTitle(e.target.value)}
+                                        onBlur={saveTitle}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter') saveTitle();
+                                            if (e.key === 'Escape') setEditingTitle(false);
+                                        }}
+                                        className="text-2xl font-semibold text-white bg-transparent border-b-2 border-white/20 focus:border-white/50 outline-none w-full mb-2"
+                                        autoFocus
+                                        disabled={isSaving}
+                                    />
+                                ) : (
+                                    <h2
+                                        className="text-2xl font-semibold text-white mb-2 cursor-pointer hover:bg-white/5 px-2 py-1 -mx-2 rounded transition-colors"
+                                        onClick={startEditingTitle}
+                                    >
+                                        {selectedSprintDetails.name}
+                                    </h2>
+                                )}
                                 <p className="text-sm text-muted-foreground">
-                                    {selectedSprintDetails._count.tasks} {selectedSprintDetails._count.tasks === 1 ? 'zadanie' : 'zadan'}
+                                    {selectedSprintDetails._count.tasks} {selectedSprintDetails._count.tasks === 1 ? 'zadanie' : 'zadań'}
                                 </p>
                             </div>
                             <button
@@ -671,12 +818,50 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
                                 </Badge>
                             </div>
 
-                            {selectedSprintDetails.goal && (
-                                <div>
-                                    <label className="text-sm font-medium text-muted-foreground block mb-2">Cel sprintu</label>
-                                    <p className="text-white">{selectedSprintDetails.goal}</p>
-                                </div>
-                            )}
+                            {/* Editable Goal - Jira style */}
+                            <div>
+                                <label className="text-sm font-medium text-muted-foreground block mb-2">Cel sprintu</label>
+                                {editingDescription ? (
+                                    <div className="space-y-2">
+                                        <textarea
+                                            value={editedDescription}
+                                            onChange={(e) => setEditedDescription(e.target.value)}
+                                            className="w-full bg-[#1B1B1B] border border-white/20 rounded-lg px-4 py-3 text-white placeholder:text-muted-foreground min-h-[150px] resize-y focus:outline-none focus:ring-2 focus:ring-white/20 dark-scrollbar"
+                                            placeholder="Dodaj cel sprintu..."
+                                            autoFocus
+                                            disabled={isSaving}
+                                        />
+                                        <div className="flex gap-2">
+                                            <Button
+                                                size="sm"
+                                                onClick={saveDescription}
+                                                disabled={isSaving}
+                                            >
+                                                {isSaving ? 'Zapisywanie...' : 'Zapisz'}
+                                            </Button>
+                                            <Button
+                                                size="sm"
+                                                variant="ghost"
+                                                onClick={() => setEditingDescription(false)}
+                                                disabled={isSaving}
+                                            >
+                                                Anuluj
+                                            </Button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div
+                                        onClick={startEditingDescription}
+                                        className="min-h-[60px] p-3 bg-[#1B1B1B] rounded-lg cursor-pointer hover:bg-[#222] transition-colors border border-transparent hover:border-white/10"
+                                    >
+                                        {selectedSprintDetails.goal ? (
+                                            <p className="text-white whitespace-pre-wrap">{selectedSprintDetails.goal}</p>
+                                        ) : (
+                                            <p className="text-muted-foreground">Kliknij, aby dodać cel sprintu...</p>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
 
                             {selectedSprintDetails.startDate && selectedSprintDetails.endDate && (
                                 <div>
@@ -702,36 +887,25 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
                                         </div>
                                     ))}
                                     {selectedSprintDetails.tasks.length === 0 && (
-                                        <p className="text-muted-foreground text-sm">Brak zadan w tym sprincie</p>
+                                        <p className="text-muted-foreground text-sm">Brak zadań w tym sprincie</p>
                                     )}
                                 </div>
                             </div>
 
                             <div className="pt-4 border-t border-white/10">
                                 <Button
-                                    variant="secondary"
-                                    className="w-full mb-2"
-                                    onClick={() => {
-                                        // TODO: Implement edit sprint modal
-                                        alert('Funkcja edycji w przygotowaniu');
-                                    }}
-                                >
-                                    <Edit className="w-4 h-4 mr-2" />
-                                    Edytuj sprint
-                                </Button>
-                                <Button
                                     variant="ghost"
                                     className="w-full text-red-400 hover:text-red-300"
                                     onClick={() => handleDeleteSprint(selectedSprintDetails.id)}
                                 >
                                     <Trash2 className="w-4 h-4 mr-2" />
-                                    Usun sprint
+                                    Usuń sprint
                                 </Button>
                             </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )}
+            </div>
 
             {/* Modals */}
             <CreateSprintModal
