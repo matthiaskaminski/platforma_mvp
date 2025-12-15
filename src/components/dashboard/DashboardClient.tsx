@@ -464,9 +464,9 @@ export default function DashboardClient({ user, project, stats, recentProducts =
                             if (!nearestEvent) return null;
 
                             const eventTypeColors: Record<string, string> = {
-                                MEETING: '#A2EAEF',
+                                MEETING: '#878FA9',
                                 DELIVERY: '#EFC2A2',
-                                INSPECTION: '#EFECA2',
+                                INSPECTION: '#C5C5B6',
                                 DEADLINE: '#89B786',
                                 PAYMENT: '#DCA2EF',
                                 INSTALLATION: '#A2EAEF',
