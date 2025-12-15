@@ -162,6 +162,7 @@ model Room {
   productItems ProductItem[]
   galleryImages GalleryImage[]
   tasks       Task[]      @relation("RoomTasks")
+  sprints     Sprint[]    @relation("RoomSprints")
   notes       Note[]
 
   @@index([projectId])
@@ -218,6 +219,9 @@ model Sprint {
   projectId   String   @map("project_id") @db.Uuid
   project     Project  @relation("ProjectSprints", fields: [projectId], references: [id], onDelete: Cascade)
 
+  roomId      String?  @map("room_id") @db.Uuid
+  room        Room?    @relation("RoomSprints", fields: [roomId], references: [id], onDelete: SetNull)
+
   name        String
   goal        String?
   status      SprintStatus @default(PLANNED)
@@ -232,6 +236,7 @@ model Sprint {
   updatedAt   DateTime @updatedAt @map("updated_at")
 
   @@index([projectId])
+  @@index([roomId])
   @@map("sprints")
 }
 

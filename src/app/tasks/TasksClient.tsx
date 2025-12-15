@@ -42,6 +42,7 @@ interface Sprint {
     status: string;
     startDate: Date | null;
     endDate: Date | null;
+    roomId: string | null;
     tasks: TaskInSprint[];
     _count: {
         tasks: number;
@@ -114,7 +115,7 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
     const [selectedTasks, setSelectedTasks] = useState<Set<string>>(new Set());
     const [selectedTaskDetails, setSelectedTaskDetails] = useState<Task | TaskInSprint | null>(null);
     const [selectedSprintDetails, setSelectedSprintDetails] = useState<Sprint | null>(null);
-    const [sidebarClosing, setSidebarClosing] = useState(false);
+    const [sidebarOpen, setSidebarOpen] = useState(false);
 
     const toggleGroup = (id: string) => {
         setCollapsedGroups(prev => ({ ...prev, [id]: !prev[id] }));
@@ -148,20 +149,21 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
     const openTaskDetails = (task: Task | TaskInSprint) => {
         setSelectedTaskDetails(task);
         setSelectedSprintDetails(null);
+        setSidebarOpen(true);
     };
 
     const openSprintDetails = (sprint: Sprint) => {
         setSelectedSprintDetails(sprint);
         setSelectedTaskDetails(null);
+        setSidebarOpen(true);
     };
 
     const closeSidebar = () => {
-        setSidebarClosing(true);
+        setSidebarOpen(false);
         setTimeout(() => {
             setSelectedTaskDetails(null);
             setSelectedSprintDetails(null);
-            setSidebarClosing(false);
-        }, 200);
+        }, 300);
     };
 
     // Delete handlers
@@ -541,9 +543,17 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
                 </div>
             )}
 
+            {/* Sidebar Overlay */}
+            {(selectedTaskDetails || selectedSprintDetails) && (
+                <div
+                    className={`fixed inset-0 bg-black/40 z-40 transition-opacity duration-300 ${sidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                    onClick={closeSidebar}
+                />
+            )}
+
             {/* Right Sidebar - Task Details */}
             {selectedTaskDetails && (
-                <div className={`fixed right-0 top-0 bottom-0 w-[500px] bg-[#0A0A0A] border-l border-white/10 z-50 overflow-y-auto transition-transform duration-200 ${sidebarClosing ? 'translate-x-full' : 'translate-x-0'}`}>
+                <div className={`fixed right-0 top-0 bottom-0 w-[500px] bg-[#0A0A0A] border-l border-white/10 z-50 overflow-y-auto transition-transform duration-300 ease-out ${sidebarOpen ? 'translate-x-0' : 'translate-x-full'}`}>
                     <div className="p-6">
                         {/* Header */}
                         <div className="flex items-start justify-between mb-6">
@@ -615,7 +625,7 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
 
             {/* Right Sidebar - Sprint Details */}
             {selectedSprintDetails && (
-                <div className={`fixed right-0 top-0 bottom-0 w-[500px] bg-[#0A0A0A] border-l border-white/10 z-50 overflow-y-auto transition-transform duration-200 ${sidebarClosing ? 'translate-x-full' : 'translate-x-0'}`}>
+                <div className={`fixed right-0 top-0 bottom-0 w-[500px] bg-[#0A0A0A] border-l border-white/10 z-50 overflow-y-auto transition-transform duration-300 ease-out ${sidebarOpen ? 'translate-x-0' : 'translate-x-full'}`}>
                     <div className="p-6">
                         {/* Header */}
                         <div className="flex items-start justify-between mb-6">
@@ -728,13 +738,13 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
                 isOpen={isSprintModalOpen}
                 onClose={() => setIsSprintModalOpen(false)}
                 projectId={project.id}
+                rooms={project.rooms}
             />
             <CreateTaskModal
                 isOpen={isTaskModalOpen}
                 onClose={() => setIsTaskModalOpen(false)}
                 projectId={project.id}
-                sprints={sprints}
-                rooms={project.rooms}
+                sprints={sprints.map(s => ({ ...s, roomId: s.roomId || null }))}
             />
         </div>
     );

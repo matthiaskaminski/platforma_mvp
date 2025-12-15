@@ -72,7 +72,7 @@ export const TasksList = React.memo(function TasksList({
     const [selectedTasks, setSelectedTasks] = useState<Set<string>>(new Set());
     const [selectedTaskDetails, setSelectedTaskDetails] = useState<Task | null>(null);
     const [selectedSprintDetails, setSelectedSprintDetails] = useState<Sprint | null>(null);
-    const [sidebarClosing, setSidebarClosing] = useState(false);
+    const [sidebarOpen, setSidebarOpen] = useState(false);
 
     const toggleSprint = (id: string) => {
         setCollapsedSprints(prev => ({ ...prev, [id]: !prev[id] }));
@@ -102,20 +102,21 @@ export const TasksList = React.memo(function TasksList({
     const openTaskDetails = (task: Task) => {
         setSelectedTaskDetails(task);
         setSelectedSprintDetails(null);
+        setSidebarOpen(true);
     };
 
     const openSprintDetails = (sprint: Sprint) => {
         setSelectedSprintDetails(sprint);
         setSelectedTaskDetails(null);
+        setSidebarOpen(true);
     };
 
     const closeSidebar = () => {
-        setSidebarClosing(true);
+        setSidebarOpen(false);
         setTimeout(() => {
             setSelectedTaskDetails(null);
             setSelectedSprintDetails(null);
-            setSidebarClosing(false);
-        }, 200);
+        }, 300);
     };
 
     const handleDeleteTask = async (taskId: string) => {
@@ -451,9 +452,17 @@ export const TasksList = React.memo(function TasksList({
                 </div>
             )}
 
+            {/* Sidebar Overlay */}
+            {(selectedTaskDetails || selectedSprintDetails) && (
+                <div
+                    className={`fixed inset-0 bg-black/40 z-40 transition-opacity duration-300 ${sidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                    onClick={closeSidebar}
+                />
+            )}
+
             {/* Right Sidebar - Task Details */}
             {selectedTaskDetails && (
-                <div className={`fixed right-0 top-0 bottom-0 w-[500px] bg-[#0A0A0A] border-l border-white/10 z-50 overflow-y-auto transition-transform duration-200 ${sidebarClosing ? 'translate-x-full' : 'translate-x-0'}`}>
+                <div className={`fixed right-0 top-0 bottom-0 w-[500px] bg-[#0A0A0A] border-l border-white/10 z-50 overflow-y-auto transition-transform duration-300 ease-out ${sidebarOpen ? 'translate-x-0' : 'translate-x-full'}`}>
                     <div className="p-6">
                         {/* Header */}
                         <div className="flex items-start justify-between mb-6">
@@ -522,7 +531,7 @@ export const TasksList = React.memo(function TasksList({
 
             {/* Right Sidebar - Sprint Details */}
             {selectedSprintDetails && (
-                <div className={`fixed right-0 top-0 bottom-0 w-[500px] bg-[#0A0A0A] border-l border-white/10 z-50 overflow-y-auto transition-transform duration-200 ${sidebarClosing ? 'translate-x-full' : 'translate-x-0'}`}>
+                <div className={`fixed right-0 top-0 bottom-0 w-[500px] bg-[#0A0A0A] border-l border-white/10 z-50 overflow-y-auto transition-transform duration-300 ease-out ${sidebarOpen ? 'translate-x-0' : 'translate-x-full'}`}>
                     <div className="p-6">
                         {/* Header */}
                         <div className="flex items-start justify-between mb-6">

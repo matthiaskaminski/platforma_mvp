@@ -10,6 +10,7 @@ export async function createSprint(data: {
     projectId: string;
     name: string;
     goal?: string;
+    roomId?: string;
     startDate?: Date;
     endDate?: Date;
 }) {
@@ -19,6 +20,7 @@ export async function createSprint(data: {
                 projectId: data.projectId,
                 name: data.name,
                 goal: data.goal,
+                roomId: data.roomId,
                 startDate: data.startDate,
                 endDate: data.endDate,
                 status: 'PLANNED'
@@ -27,6 +29,9 @@ export async function createSprint(data: {
 
         revalidatePath('/tasks');
         revalidatePath(`/projects/${data.projectId}`);
+        if (data.roomId) {
+            revalidatePath(`/rooms/${data.roomId}`);
+        }
 
         return { success: true, sprint };
     } catch (error) {

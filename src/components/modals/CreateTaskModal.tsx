@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { X, Clock, Armchair, Calendar } from "lucide-react";
+import { X, Clock, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { createTask } from "@/app/actions/sprints";
@@ -10,12 +10,7 @@ interface Sprint {
     id: string;
     name: string;
     status: string;
-}
-
-interface Room {
-    id: string;
-    name: string;
-    type: string;
+    roomId?: string | null;
 }
 
 interface CreateTaskModalProps {
@@ -23,15 +18,13 @@ interface CreateTaskModalProps {
     onClose: () => void;
     projectId: string;
     sprints: Sprint[];
-    rooms: Room[];
     defaultRoomId?: string;
 }
 
-export function CreateTaskModal({ isOpen, onClose, projectId, sprints, rooms, defaultRoomId }: CreateTaskModalProps) {
+export function CreateTaskModal({ isOpen, onClose, projectId, sprints, defaultRoomId }: CreateTaskModalProps) {
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [sprintId, setSprintId] = useState('');
-    const [roomId, setRoomId] = useState(defaultRoomId || '');
     const [dueDate, setDueDate] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -48,6 +41,10 @@ export function CreateTaskModal({ isOpen, onClose, projectId, sprints, rooms, de
         setIsSubmitting(true);
 
         try {
+            // Get roomId from selected sprint or use defaultRoomId
+            const selectedSprint = sprints.find(s => s.id === sprintId);
+            const roomId = selectedSprint?.roomId || defaultRoomId;
+
             const result = await createTask({
                 projectId,
                 title: title.trim(),
@@ -61,7 +58,6 @@ export function CreateTaskModal({ isOpen, onClose, projectId, sprints, rooms, de
                 setTitle('');
                 setDescription('');
                 setSprintId('');
-                setRoomId(defaultRoomId || '');
                 setDueDate('');
                 onClose();
             } else {
@@ -80,7 +76,6 @@ export function CreateTaskModal({ isOpen, onClose, projectId, sprints, rooms, de
             setTitle('');
             setDescription('');
             setSprintId('');
-            setRoomId(defaultRoomId || '');
             setDueDate('');
             onClose();
         }
@@ -147,32 +142,10 @@ export function CreateTaskModal({ isOpen, onClose, projectId, sprints, rooms, de
                                 className="w-full bg-[#1B1B1B] border border-white/10 rounded-lg pl-10 pr-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-white/20 appearance-none cursor-pointer"
                                 disabled={isSubmitting}
                             >
-                                <option value="">Brak sprintu (zadanie ogolne)</option>
+                                <option value="">Brak sprintu (zadanie ogólne)</option>
                                 {sprints.map(sprint => (
                                     <option key={sprint.id} value={sprint.id}>
                                         {sprint.name}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium mb-2">
-                            Pomieszczenie (opcjonalnie)
-                        </label>
-                        <div className="relative">
-                            <Armchair className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-                            <select
-                                value={roomId}
-                                onChange={(e) => setRoomId(e.target.value)}
-                                className="w-full bg-[#1B1B1B] border border-white/10 rounded-lg pl-10 pr-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-white/20 appearance-none cursor-pointer"
-                                disabled={isSubmitting}
-                            >
-                                <option value="">Brak pomieszczenia</option>
-                                {rooms.map(room => (
-                                    <option key={room.id} value={room.id}>
-                                        {room.name}
                                     </option>
                                 ))}
                             </select>
@@ -209,7 +182,7 @@ export function CreateTaskModal({ isOpen, onClose, projectId, sprints, rooms, de
                             type="submit"
                             disabled={isSubmitting}
                         >
-                            {isSubmitting ? 'Tworzenie...' : 'Utworz zadanie'}
+                            {isSubmitting ? 'Tworzenie...' : 'Utwórz zadanie'}
                         </Button>
                     </div>
                 </form>

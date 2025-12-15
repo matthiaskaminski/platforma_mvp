@@ -1,20 +1,29 @@
 "use client";
 
 import React, { useState } from "react";
-import { X, Calendar } from "lucide-react";
+import { X, Calendar, Armchair } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { createSprint } from "@/app/actions/sprints";
+
+interface Room {
+    id: string;
+    name: string;
+    type: string;
+}
 
 interface CreateSprintModalProps {
     isOpen: boolean;
     onClose: () => void;
     projectId: string;
+    rooms?: Room[];
+    defaultRoomId?: string;
 }
 
-export function CreateSprintModal({ isOpen, onClose, projectId }: CreateSprintModalProps) {
+export function CreateSprintModal({ isOpen, onClose, projectId, rooms = [], defaultRoomId }: CreateSprintModalProps) {
     const [name, setName] = useState('');
     const [goal, setGoal] = useState('');
+    const [roomId, setRoomId] = useState(defaultRoomId || '');
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -30,6 +39,7 @@ export function CreateSprintModal({ isOpen, onClose, projectId }: CreateSprintMo
                 projectId,
                 name: name.trim() || 'Nowy sprint',
                 goal: goal.trim() || undefined,
+                roomId: roomId || undefined,
                 startDate: startDate ? new Date(startDate) : undefined,
                 endDate: endDate ? new Date(endDate) : undefined
             });
@@ -37,15 +47,16 @@ export function CreateSprintModal({ isOpen, onClose, projectId }: CreateSprintMo
             if (result.success) {
                 setName('');
                 setGoal('');
+                setRoomId(defaultRoomId || '');
                 setStartDate('');
                 setEndDate('');
                 onClose();
             } else {
-                alert('Blad podczas tworzenia sprintu');
+                alert('Błąd podczas tworzenia sprintu');
             }
         } catch (error) {
             console.error('Error creating sprint:', error);
-            alert('Blad podczas tworzenia sprintu');
+            alert('Błąd podczas tworzenia sprintu');
         } finally {
             setIsSubmitting(false);
         }
@@ -55,6 +66,7 @@ export function CreateSprintModal({ isOpen, onClose, projectId }: CreateSprintMo
         if (!isSubmitting) {
             setName('');
             setGoal('');
+            setRoomId(defaultRoomId || '');
             setStartDate('');
             setEndDate('');
             onClose();
@@ -110,10 +122,37 @@ export function CreateSprintModal({ isOpen, onClose, projectId }: CreateSprintMo
                         />
                     </div>
 
+                    {rooms.length > 0 && (
+                        <div>
+                            <label className="block text-sm font-medium mb-2">
+                                Pomieszczenie (opcjonalnie)
+                            </label>
+                            <div className="relative">
+                                <Armchair className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                                <select
+                                    value={roomId}
+                                    onChange={(e) => setRoomId(e.target.value)}
+                                    className="w-full bg-[#1B1B1B] border border-white/10 rounded-lg pl-10 pr-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-white/20 appearance-none cursor-pointer"
+                                    disabled={isSubmitting}
+                                >
+                                    <option value="">Brak pomieszczenia (sprint ogólny)</option>
+                                    {rooms.map(room => (
+                                        <option key={room.id} value={room.id}>
+                                            {room.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-2">
+                                Zadania dodane do tego sprintu będą automatycznie przypisane do wybranego pomieszczenia.
+                            </p>
+                        </div>
+                    )}
+
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-medium mb-2">
-                                Data rozpoczecia
+                                Data rozpoczęcia
                             </label>
                             <div className="relative cursor-pointer" onClick={() => (document.getElementById('start-date-input') as HTMLInputElement)?.showPicker?.()}>
                                 <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none z-10" />
@@ -130,7 +169,7 @@ export function CreateSprintModal({ isOpen, onClose, projectId }: CreateSprintMo
 
                         <div>
                             <label className="block text-sm font-medium mb-2">
-                                Data zakonczenia
+                                Data zakończenia
                             </label>
                             <div className="relative cursor-pointer" onClick={() => (document.getElementById('end-date-input') as HTMLInputElement)?.showPicker?.()}>
                                 <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none z-10" />
@@ -159,7 +198,7 @@ export function CreateSprintModal({ isOpen, onClose, projectId }: CreateSprintMo
                             type="submit"
                             disabled={isSubmitting}
                         >
-                            {isSubmitting ? 'Tworzenie...' : 'Utworz sprint'}
+                            {isSubmitting ? 'Tworzenie...' : 'Utwórz sprint'}
                         </Button>
                     </div>
                 </form>

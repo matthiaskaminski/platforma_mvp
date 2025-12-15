@@ -110,6 +110,7 @@ interface AllProjectSprint {
     status: string;
     startDate: Date | null;
     endDate: Date | null;
+    roomId: string | null;
     tasks: any[];
     _count: {
         tasks: number;
@@ -435,13 +436,14 @@ export default function RoomDetailsClient({ roomData, products, tasks, budgetIte
                 isOpen={isSprintModalOpen}
                 onClose={() => setIsSprintModalOpen(false)}
                 projectId={roomData.projectId}
+                rooms={[{ id: roomData.id, name: roomData.name, type: roomData.type }]}
+                defaultRoomId={roomData.id}
             />
             <CreateTaskModal
                 isOpen={isTaskModalOpen}
                 onClose={() => setIsTaskModalOpen(false)}
                 projectId={roomData.projectId}
-                sprints={allProjectSprints}
-                rooms={[{ id: roomData.id, name: roomData.name, type: roomData.type }]}
+                sprints={allProjectSprints.map(s => ({ ...s, roomId: s.roomId || null }))}
                 defaultRoomId={roomData.id}
             />
         </div>
