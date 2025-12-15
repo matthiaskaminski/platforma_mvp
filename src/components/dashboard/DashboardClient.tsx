@@ -746,15 +746,15 @@ export default function DashboardClient({ user, project, stats, recentProducts =
 
                 {/* Column 3: Products & Visualizations */}
                 <div className="xl:col-span-4 flex flex-col gap-3 h-full min-h-0">
-                    {/* Last Added */}
-                    <Card className="flex flex-col flex-1 min-h-0">
+                    {/* Last Added - fixed height for 4 products */}
+                    <Card className="flex flex-col shrink-0">
                         <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center gap-2">
                                 <h3 className="text-[20px] font-medium text-[#E5E5E5]">Ostatnio dodane produkty</h3>
                             </div>
                             <Button variant="secondary" size="sm" className="rounded-full h-auto py-1 px-3 border border-white/5 bg-[#232323] hover:bg-[#2a2a2a]">Zarządzaj</Button>
                         </div>
-                        <div className="flex flex-col gap-3 overflow-y-auto pr-1 flex-1 min-h-0 no-scrollbar">
+                        <div className="flex flex-col gap-3">
                             {recentProducts.length > 0 ? (
                                 recentProducts.slice(0, 4).map((prod, i) => (
                                     <div key={i} className="h-24 shrink-0 flex gap-4 items-center p-2 bg-[#1B1B1B] rounded-xl group cursor-pointer hover:bg-[#232323] transition-colors overflow-hidden">
@@ -775,7 +775,7 @@ export default function DashboardClient({ user, project, stats, recentProducts =
                                     </div>
                                 ))
                             ) : (
-                                <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
+                                <div className="h-24 flex items-center justify-center text-muted-foreground text-sm">
                                     Brak produktów. Dodaj pierwszy produkt!
                                 </div>
                             )}
