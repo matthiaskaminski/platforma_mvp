@@ -29,11 +29,12 @@ interface CalendarEventType {
 interface MonthViewProps {
     currentDate: Date;
     events: CalendarEventType[];
+    onEventClick?: (event: CalendarEventType) => void;
 }
 
 const WEEKDAYS = ["Pon.", "Wt.", "Śr.", "Czw.", "Pt.", "Sob.", "Niedz."];
 
-export function MonthView({ currentDate, events }: MonthViewProps) {
+export function MonthView({ currentDate, events, onEventClick }: MonthViewProps) {
     const monthStart = startOfMonth(currentDate);
     const monthEnd = endOfMonth(monthStart);
     const startDate = startOfWeek(monthStart, { locale: pl }); // Monday start
@@ -91,6 +92,7 @@ export function MonthView({ currentDate, events }: MonthViewProps) {
                                         color={event.color}
                                         isTask={event.isTask}
                                         type={event.type}
+                                        onClick={() => onEventClick?.(event)}
                                     />
                                 ))}
                             </div>

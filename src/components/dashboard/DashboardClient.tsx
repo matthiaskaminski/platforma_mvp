@@ -445,7 +445,7 @@ export default function DashboardClient({ user, project, stats, recentProducts =
                             })}
                         </div>
 
-                        {/* Upcoming Events Section */}
+                        {/* Nearest Event Section */}
                         {(() => {
                             const upcomingEvents = [
                                 ...calendarEvents.map(e => ({ ...e, isTask: false })),
@@ -458,13 +458,13 @@ export default function DashboardClient({ user, project, stats, recentProducts =
                                 }))
                             ]
                             .filter(e => new Date(e.date) >= new Date(new Date().setHours(0, 0, 0, 0)))
-                            .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-                            .slice(0, 3);
+                            .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-                            if (upcomingEvents.length === 0) return null;
+                            const nearestEvent = upcomingEvents[0];
+                            if (!nearestEvent) return null;
 
                             const eventTypeColors: Record<string, string> = {
-                                MEETING: '#536AC8',
+                                MEETING: '#9B6DD8',
                                 DELIVERY: '#E8B491',
                                 INSPECTION: '#91E8A8',
                                 DEADLINE: '#E89191',
@@ -475,20 +475,16 @@ export default function DashboardClient({ user, project, stats, recentProducts =
 
                             return (
                                 <div className="mt-4 pt-4 border-t border-white/5">
-                                    <h4 className="text-xs font-medium text-muted-foreground mb-2">Nadchodzące</h4>
-                                    <div className="space-y-2">
-                                        {upcomingEvents.map(event => (
-                                            <div key={event.id} className="flex items-center gap-2 text-sm">
-                                                <span
-                                                    className="w-2 h-2 rounded-full shrink-0"
-                                                    style={{ backgroundColor: eventTypeColors[event.type] || '#536AC8' }}
-                                                />
-                                                <span className="truncate flex-1">{event.title}</span>
-                                                <span className="text-muted-foreground text-xs shrink-0">
-                                                    {new Date(event.date).toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit' })}
-                                                </span>
-                                            </div>
-                                        ))}
+                                    <h4 className="text-[14px] font-medium text-muted-foreground mb-2">Najbliższe wydarzenie</h4>
+                                    <div className="flex items-center gap-2 text-[14px]">
+                                        <span
+                                            className="w-2.5 h-2.5 rounded-full shrink-0"
+                                            style={{ backgroundColor: eventTypeColors[nearestEvent.type] || '#9B6DD8' }}
+                                        />
+                                        <span className="truncate flex-1 text-white">{nearestEvent.title}</span>
+                                        <span className="text-muted-foreground text-[14px] shrink-0">
+                                            {new Date(nearestEvent.date).toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit' })}
+                                        </span>
                                     </div>
                                 </div>
                             );

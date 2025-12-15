@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache';
 
 // Event type colors mapping (internal use only)
 const EVENT_TYPE_COLORS: Record<string, string> = {
-    MEETING: '#536AC8',
+    MEETING: '#9B6DD8',
     DELIVERY: '#E8B491',
     INSPECTION: '#91E8A8',
     DEADLINE: '#E89191',
