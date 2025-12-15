@@ -1,11 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
-import { Clock, Flame, Check, Calendar, FileText, CheckSquare, Search, Plus, ChevronDown, Armchair, BedDouble, Bath, Utensils, DoorOpen, Baby, Layers, ListTodo, X, Trash2, Edit, MoreHorizontal } from "lucide-react";
+import { Clock, Flame, Check, Calendar, FileText, CheckSquare, Plus, ChevronDown, Armchair, BedDouble, Bath, Utensils, DoorOpen, Baby, Layers, ListTodo, X, Trash2, Edit, MoreHorizontal } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
-import { Input } from "@/components/ui/Input";
 import { CreateSprintModal } from "@/components/modals/CreateSprintModal";
 import { CreateTaskModal } from "@/components/modals/CreateTaskModal";
 import { deleteSprint, deleteTask, updateTask, updateSprint } from "@/app/actions/sprints";
@@ -353,24 +352,21 @@ export default function TasksClient({ project, sprints, tasks }: TasksClientProp
         <div className="flex flex-col h-full animate-in fade-in duration-500 pb-0 overflow-hidden w-full">
             {/* Toolbar - Matches Rooms Page Styling */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-stretch gap-3 shrink-0 mb-3">
-                {/* Left Side: Search & Filter */}
+                {/* Left Side: Sorting & Filter Options */}
                 <Card className="flex-1 p-4 flex gap-4 items-center w-full md:w-auto overflow-x-auto no-scrollbar min-h-[80px]">
-                    <span className="text-[16px] font-medium text-[#DBDAD9] whitespace-nowrap px-2">Opcje wyszukiwania i sortowania</span>
+                    <span className="text-[16px] font-medium text-[#DBDAD9] whitespace-nowrap px-2">Opcje sortowania</span>
 
                     <div className="flex gap-2 ml-auto items-center">
-                        <div className="relative w-full md:w-[300px]">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                            <Input
-                                placeholder="Szukaj zadania..."
-                                className="pl-9 bg-[#1B1B1B] border-white/5 h-[48px] placeholder:text-muted-foreground"
-                            />
-                        </div>
-                        <Button variant="secondary" className="flex items-center gap-2 bg-[#1B1B1B] hover:bg-[#252525] text-sm px-4 py-2 rounded-lg transition-colors text-muted-foreground min-w-[110px] justify-between h-[48px]">
+                        <Button variant="secondary" className="flex items-center gap-2 bg-[#1B1B1B] hover:bg-[#252525] text-sm px-4 py-2 rounded-lg transition-colors text-muted-foreground min-w-[130px] justify-between h-[48px]">
                             Status
                             <ChevronDown className="w-4 h-4 opacity-50" />
                         </Button>
-                        <Button variant="secondary" className="flex items-center gap-2 bg-[#1B1B1B] hover:bg-[#252525] text-sm px-4 py-2 rounded-lg transition-colors text-muted-foreground min-w-[110px] justify-between h-[48px]">
-                            Sortuj
+                        <Button variant="secondary" className="flex items-center gap-2 bg-[#1B1B1B] hover:bg-[#252525] text-sm px-4 py-2 rounded-lg transition-colors text-muted-foreground min-w-[130px] justify-between h-[48px]">
+                            Priorytet
+                            <ChevronDown className="w-4 h-4 opacity-50" />
+                        </Button>
+                        <Button variant="secondary" className="flex items-center gap-2 bg-[#1B1B1B] hover:bg-[#252525] text-sm px-4 py-2 rounded-lg transition-colors text-muted-foreground min-w-[150px] justify-between h-[48px]">
+                            Sortuj: Data
                             <ChevronDown className="w-4 h-4 opacity-50" />
                         </Button>
                     </div>
