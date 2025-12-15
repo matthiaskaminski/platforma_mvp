@@ -87,6 +87,7 @@ export default function DashboardClient({ user, project, stats, recentProducts =
     const [activeId, setActiveId] = useState<string | null>(null);
     const [selectedTask, setSelectedTask] = useState<any | null>(null);
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [hoveredDayEvents, setHoveredDayEvents] = useState<any[] | null>(null);
 
     // Inline editing states
     const [editingStatus, setEditingStatus] = useState(false);
@@ -439,6 +440,8 @@ export default function DashboardClient({ user, project, stats, recentProducts =
                                             ${isToday ? 'bg-[#F3F3F3] text-black font-bold hover:bg-[#F3F3F3] hover:text-black' : 'bg-[#232323]'}
                                             ${d.type !== 'current' ? 'bg-[#1B1B1B]' : ''}
                                         `}
+                                        onMouseEnter={() => hasEvents ? setHoveredDayEvents(dayEvents) : null}
+                                        onMouseLeave={() => setHoveredDayEvents(null)}
                                     >
                                         {d.day}
                                         {hasEvents && (
@@ -459,6 +462,40 @@ export default function DashboardClient({ user, project, stats, recentProducts =
 
                         {/* Nearest Event Section */}
                         {(() => {
+                            const nearestEventTypeColors: Record<string, string> = {
+                                MEETING: '#878FA9',
+                                DELIVERY: '#B79074',
+                                INSPECTION: '#A4A490',
+                                DEADLINE: '#89B786',
+                                PAYMENT: '#DCA2EF',
+                                INSTALLATION: '#A2EAEF',
+                                TASK: '#6E9EE8',
+                            };
+
+                            // If hovering over a day with events, show those events
+                            if (hoveredDayEvents && hoveredDayEvents.length > 0) {
+                                const hoveredEvent = hoveredDayEvents[0];
+                                return (
+                                    <div className="mt-4 pt-4 border-t border-white/5">
+                                        <h4 className="text-[14px] font-medium text-muted-foreground mb-2">
+                                            {hoveredDayEvents.length > 1 ? `Wydarzenia (${hoveredDayEvents.length})` : 'Wydarzenie'}
+                                        </h4>
+                                        <div className="flex items-center gap-2 text-[14px]">
+                                            <span
+                                                className="w-2.5 h-2.5 rounded-full shrink-0"
+                                                style={{ backgroundColor: hoveredEvent.color || nearestEventTypeColors[hoveredEvent.type] || '#878FA9' }}
+                                            />
+                                            <span className="truncate flex-1 text-white">{hoveredEvent.title}</span>
+                                            <span className="text-muted-foreground text-[14px] shrink-0">
+                                                {hoveredEvent.date ? new Date(hoveredEvent.date).toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit' }) :
+                                                 hoveredEvent.dueDate ? new Date(hoveredEvent.dueDate).toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit' }) : ''}
+                                            </span>
+                                        </div>
+                                    </div>
+                                );
+                            }
+
+                            // Default: show nearest upcoming event
                             const upcomingEvents = [
                                 ...calendarEvents.map(e => ({ ...e, isTask: false })),
                                 ...recentTasks.filter(t => t.dueDate).map(t => ({
@@ -474,16 +511,6 @@ export default function DashboardClient({ user, project, stats, recentProducts =
 
                             const nearestEvent = upcomingEvents[0];
                             if (!nearestEvent) return null;
-
-                            const nearestEventTypeColors: Record<string, string> = {
-                                MEETING: '#878FA9',
-                                DELIVERY: '#B79074',
-                                INSPECTION: '#A4A490',
-                                DEADLINE: '#89B786',
-                                PAYMENT: '#DCA2EF',
-                                INSTALLATION: '#A2EAEF',
-                                TASK: '#6E9EE8',
-                            };
 
                             return (
                                 <div className="mt-4 pt-4 border-t border-white/5">
