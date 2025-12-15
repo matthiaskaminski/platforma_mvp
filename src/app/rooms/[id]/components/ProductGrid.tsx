@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { Check, Package, Plus, Trash2, Loader2, ExternalLink, X, RefreshCw, ChevronDown, StickyNote } from "lucide-react";
+import { Check, Package, Plus, Trash2, Loader2, ExternalLink, X, RefreshCw, StickyNote } from "lucide-react";
 import { deleteProduct, updateProduct, refreshProduct } from "@/app/actions/products";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -68,6 +68,7 @@ function StatusDropdown({
 
     return (
         <div className="relative" ref={dropdownRef}>
+            {/* Status trigger - looks like plain text, no button styling */}
             <button
                 onClick={(e) => {
                     e.stopPropagation();
@@ -75,17 +76,19 @@ function StatusDropdown({
                 }}
                 disabled={disabled}
                 className={cn(
-                    "flex items-center gap-2 px-3 py-2 rounded-lg bg-[#232323] hover:bg-[#2a2a2a] transition-colors text-sm",
+                    "flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity",
                     disabled && "opacity-50 cursor-not-allowed"
                 )}
             >
                 <span className={`w-2.5 h-2.5 rounded-full ${statusInfo.dotColor}`}></span>
                 <span className="text-[#F3F3F3]">{statusInfo.label}</span>
-                <ChevronDown className={cn("w-4 h-4 text-muted-foreground transition-transform", isOpen && "rotate-180")} />
             </button>
 
+            {/* Dropdown menu - opens UPWARD to avoid being clipped */}
             {isOpen && (
-                <div className="absolute top-full left-0 mt-1 w-48 bg-[#1B1B1B] border border-white/10 rounded-lg shadow-xl z-50 py-1 overflow-hidden">
+                <div className="absolute bottom-full left-0 mb-2 w-48 bg-[#1B1B1B] border border-white/10 rounded-lg shadow-2xl py-1 overflow-hidden"
+                    style={{ zIndex: 9999 }}
+                >
                     {statusOptions.map((option) => (
                         <button
                             key={option.value}
