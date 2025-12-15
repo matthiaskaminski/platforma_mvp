@@ -121,30 +121,46 @@ export default async function DashboardPage() {
     let labor = 0
     let productsCount = 0
 
+    // Helper to categorize and sum product costs
+    const processProduct = (item: any) => {
+      const cost = Number(item.price) * item.quantity
+      const paid = Number(item.paidAmount) || 0
+
+      // Only count as spent if paid/delivered
+      if (item.status === 'PAID' || item.status === 'DELIVERED') {
+        spent += cost
+      }
+      planned += cost
+      productsCount++
+
+      // Logic for categories (simple string match)
+      const cat = item.category?.toLowerCase() || ''
+      if (cat.includes('materiał') || cat.includes('budowlan')) materials += cost
+      else if (cat.includes('mebl') || cat.includes('dekorac')) furniture += cost
+      else if (cat.includes('robociz')) labor += cost
+      else furniture += cost // Default fallback
+    }
+
+    // Process products from rooms
     project.rooms.forEach(room => {
-      room.productItems.forEach(item => {
-        const cost = Number(item.price) * item.quantity
-        const paid = Number(item.paidAmount)
-
-        spent += paid
-        planned += cost
-        productsCount++
-
-        // Logic for categories (simple string match)
-        const cat = item.category?.toLowerCase() || ''
-        if (cat.includes('materiał') || cat.includes('budowlan')) materials += cost
-        else if (cat.includes('mebl') || cat.includes('dekorac')) furniture += cost
-        else if (cat.includes('robociz')) labor += cost
-        else furniture += cost // Default fallback
-      })
+      room.productItems.forEach(processProduct)
     })
+
+    // Get wishlist products for budget calculation
+    const wishlistProducts = await prisma.productItem.findMany({
+      where: { wishlist: { designerId: profile!.id } }
+    })
+
+    // Process wishlist products
+    wishlistProducts.forEach(processProduct)
 
     // Parallelize all data fetching dependent on project
     const [
       statsCounts,
       recentTasksData,
       interactionsData,
-      recentProductsData,
+      roomProductsData,
+      wishlistProductsData,
       visualizationsData
     ] = await Promise.all([
       // 1. Stats Counts
@@ -165,14 +181,21 @@ export default async function DashboardPage() {
         prisma.moodboard.count({ where: { projectId: project.id } }),
         prisma.message.count({ where: { conversation: { projectId: project.id } } })
       ]),
-      // 4. Recent Products
+      // 4. Recent Products from Rooms
       prisma.productItem.findMany({
         where: { room: { projectId: project.id } },
         orderBy: { createdAt: 'desc' },
-        take: 3,
+        take: 5,
         include: { room: true }
       }),
-      // 5. Visualizations
+      // 5. Recent Products from Wishlists (same designer)
+      prisma.productItem.findMany({
+        where: { wishlist: { designerId: profile!.id } },
+        orderBy: { createdAt: 'desc' },
+        take: 5,
+        include: { wishlist: true }
+      }),
+      // 6. Visualizations
       prisma.galleryImage.findMany({
         where: { room: { projectId: project.id } },
         orderBy: { createdAt: 'desc' },
@@ -184,7 +207,13 @@ export default async function DashboardPage() {
     const [surveyCount, moodboardCount, messagesCount] = interactionsData;
 
     recentTasks = recentTasksData;
-    recentProducts = recentProductsData;
+
+    // Combine room products and wishlist products, sort by createdAt, take 5 most recent
+    const allProducts = [...roomProductsData, ...wishlistProductsData]
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 5);
+    recentProducts = allProducts;
+
     visualizations = visualizationsData;
 
     const floorsCount = project.floorsCount || 0
