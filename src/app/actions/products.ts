@@ -590,6 +590,7 @@ export async function updateProduct(
         category: string;
         quantity: number;
         status: ProductStatus;
+        notes: string;
         wishlistId: string | null;
         roomId: string | null;
     }>
@@ -687,6 +688,76 @@ export async function deleteProduct(productId: string) {
     } catch (error) {
         console.error("Error deleting product:", error);
         return { success: false, error: "Failed to delete product" };
+    }
+}
+
+// Refresh product data by re-scraping from URL
+export async function refreshProduct(productId: string) {
+    const user = await getUser();
+    if (!user) {
+        return { success: false, error: "Unauthorized" };
+    }
+
+    try {
+        // Get the product
+        const existingProduct = await prisma.productItem.findFirst({
+            where: { id: productId },
+            include: {
+                wishlist: true,
+                room: { include: { project: true } },
+            },
+        });
+
+        if (!existingProduct) {
+            return { success: false, error: "Product not found" };
+        }
+
+        // Check ownership
+        const isOwner =
+            (existingProduct.wishlist && existingProduct.wishlist.designerId === user.id) ||
+            (existingProduct.room && existingProduct.room.project.designerId === user.id);
+
+        if (!isOwner) {
+            return { success: false, error: "Unauthorized" };
+        }
+
+        // Check if product has a URL
+        if (!existingProduct.url) {
+            return { success: false, error: "Produkt nie ma przypisanego URL" };
+        }
+
+        // Re-scrape the product data
+        const scrapeResult = await scrapeProductFromUrl(existingProduct.url);
+        if (!scrapeResult.success || !scrapeResult.data) {
+            return { success: false, error: "Nie udało się pobrać danych ze strony" };
+        }
+
+        const scrapedData = scrapeResult.data;
+
+        // Update product with new data (keep notes and status)
+        const product = await prisma.productItem.update({
+            where: { id: productId },
+            data: {
+                name: scrapedData.title || existingProduct.name,
+                price: scrapedData.price || existingProduct.price,
+                imageUrl: scrapedData.imageUrl || existingProduct.imageUrl,
+                supplier: scrapedData.supplier || existingProduct.supplier,
+            },
+        });
+
+        if (existingProduct.wishlistId) {
+            revalidatePath(`/wishlists/${existingProduct.wishlistId}`);
+        }
+        if (existingProduct.roomId) {
+            revalidatePath("/rooms");
+        }
+        revalidatePath("/wishlists");
+        revalidatePath("/");
+
+        return { success: true, data: product };
+    } catch (error) {
+        console.error("Error refreshing product:", error);
+        return { success: false, error: "Nie udało się odświeżyć produktu" };
     }
 }
 
