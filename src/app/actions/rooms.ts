@@ -733,11 +733,7 @@ export async function getRoomSummary(roomId: string) {
         },
         select: {
             id: true,
-            project: {
-                select: {
-                    budgetGoal: true
-                }
-            },
+            budgetAllocated: true,  // Room-specific budget
             productItems: {
                 select: {
                     price: true,
@@ -770,9 +766,9 @@ export async function getRoomSummary(roomId: string) {
         return null
     }
 
-    // Transform to match expected format
+    // Transform to match expected format - use room's budget, not project's
     return {
-        budgetGoal: room.project.budgetGoal,
+        budgetGoal: room.budgetAllocated,  // Room-specific budget
         rooms: [{ productItems: room.productItems }],
         tasks: room.tasks
     }
