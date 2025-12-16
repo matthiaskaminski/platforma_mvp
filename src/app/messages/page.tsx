@@ -18,6 +18,7 @@ export default function MessagesPage() {
     const [gmailConnected, setGmailConnected] = useState<boolean | null>(null);
     const [userEmail, setUserEmail] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [needsReconnect, setNeedsReconnect] = useState(false);
 
     const selectedThread = threads.find(t => t.id === selectedId) || null;
 
@@ -47,12 +48,16 @@ export default function MessagesPage() {
 
             if (result.success) {
                 setThreads(result.threads);
+                setNeedsReconnect(false);
                 // Auto-select first thread
                 if (result.threads.length > 0 && !selectedId) {
                     setSelectedId(result.threads[0].id);
                 }
             } else {
-                setError(result.error || 'Failed to load emails');
+                setError(result.error || 'Nie udało się pobrać wiadomości');
+                if ((result as any).needsReconnect) {
+                    setNeedsReconnect(true);
+                }
             }
         } catch (err) {
             console.error('Error loading threads:', err);
@@ -138,7 +143,32 @@ export default function MessagesPage() {
         );
     }
 
-    // Error state
+    // Error state - needs reconnect
+    if (error && threads.length === 0 && needsReconnect) {
+        return (
+            <div className="flex h-full w-full items-center justify-center animate-in fade-in duration-500">
+                <div className="max-w-md text-center p-8">
+                    <div className="w-16 h-16 bg-orange-500/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                        <AlertCircle className="w-8 h-8 text-orange-400" />
+                    </div>
+                    <h2 className="text-xl font-semibold text-white mb-3">
+                        Sesja wygasła
+                    </h2>
+                    <p className="text-muted-foreground mb-6">
+                        {error}
+                    </p>
+                    <Link href="/settings">
+                        <Button className="bg-white text-black hover:bg-gray-100">
+                            <Settings className="w-4 h-4 mr-2" />
+                            Połącz ponownie
+                        </Button>
+                    </Link>
+                </div>
+            </div>
+        );
+    }
+
+    // Error state - general
     if (error && threads.length === 0) {
         return (
             <div className="flex h-full w-full items-center justify-center animate-in fade-in duration-500">

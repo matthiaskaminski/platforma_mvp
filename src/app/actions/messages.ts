@@ -28,7 +28,10 @@ async function getValidGmailClient(profile: any) {
     let { accessToken, refreshToken, expiresAt } = profile.gmailToken;
 
     // Check if token is expired or about to expire (5 min buffer)
-    if (new Date(expiresAt) < new Date(Date.now() + 5 * 60 * 1000)) {
+    const isExpired = new Date(expiresAt) < new Date(Date.now() + 5 * 60 * 1000);
+
+    if (isExpired) {
+        console.log('Gmail token expired, attempting refresh...');
         try {
             const newCredentials = await refreshAccessToken(refreshToken);
 
@@ -43,10 +46,12 @@ async function getValidGmailClient(profile: any) {
                         expiresAt: new Date(newCredentials.expiry_date || Date.now() + 3600 * 1000),
                     },
                 });
+                console.log('Gmail token refreshed successfully');
             }
-        } catch (error) {
-            console.error('Error refreshing token:', error);
-            throw new Error('Failed to refresh Gmail token');
+        } catch (error: any) {
+            console.error('Error refreshing Gmail token:', error?.message || error);
+            // If refresh fails, user needs to reconnect Gmail
+            throw new Error('TOKEN_EXPIRED');
         }
     }
 
@@ -183,9 +188,20 @@ export async function getEmailThreads(limit: number = 30) {
         );
 
         return { success: true, threads };
-    } catch (error) {
-        console.error('Error fetching email threads:', error);
-        return { success: false, error: 'Failed to fetch emails', threads: [] };
+    } catch (error: any) {
+        console.error('Error fetching email threads:', error?.message || error);
+
+        // Check if token expired
+        if (error?.message === 'TOKEN_EXPIRED') {
+            return {
+                success: false,
+                error: 'Sesja Gmail wygasła. Połącz ponownie w ustawieniach.',
+                threads: [],
+                needsReconnect: true
+            };
+        }
+
+        return { success: false, error: 'Nie udało się pobrać wiadomości', threads: [] };
     }
 }
 
