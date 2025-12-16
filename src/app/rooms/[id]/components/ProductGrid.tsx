@@ -84,10 +84,13 @@ function StatusDropdown({
                 <span className="text-[#F3F3F3]">{statusInfo.label}</span>
             </button>
 
-            {/* Dropdown menu - opens UPWARD to avoid being clipped */}
+            {/* Dropdown menu - opens UPWARD and to the RIGHT to avoid being clipped */}
             {isOpen && (
-                <div className="absolute bottom-full left-0 mb-2 w-48 bg-[#1B1B1B] border border-white/10 rounded-lg shadow-2xl py-1 overflow-hidden"
-                    style={{ zIndex: 9999 }}
+                <div className="fixed w-48 bg-[#1B1B1B] border border-white/10 rounded-lg shadow-2xl py-1"
+                    style={{
+                        zIndex: 9999,
+                        transform: 'translateY(-100%) translateY(-8px)'
+                    }}
                 >
                     {statusOptions.map((option) => (
                         <button

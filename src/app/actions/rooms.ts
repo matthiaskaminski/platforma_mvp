@@ -705,6 +705,80 @@ export async function getProjectSummary(projectId: string) {
 }
 
 /**
+ * Get room summary (budget and tasks for specific room)
+ */
+export async function getRoomSummary(roomId: string) {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user?.email) {
+        return null
+    }
+
+    const profile = await prisma.profile.findUnique({
+        where: { email: user.email }
+    })
+
+    if (!profile) {
+        return null
+    }
+
+    // Get room with products and tasks
+    const room = await prisma.room.findFirst({
+        where: {
+            id: roomId,
+            project: {
+                designerId: profile.id
+            }
+        },
+        select: {
+            id: true,
+            project: {
+                select: {
+                    budgetGoal: true
+                }
+            },
+            productItems: {
+                select: {
+                    price: true,
+                    quantity: true,
+                    paidAmount: true,
+                    category: true
+                }
+            },
+            tasks: {
+                where: {
+                    status: {
+                        in: ['TODO', 'IN_PROGRESS']
+                    }
+                },
+                orderBy: [
+                    { dueDate: 'asc' }
+                ],
+                take: 2,
+                select: {
+                    id: true,
+                    title: true,
+                    status: true,
+                    dueDate: true
+                }
+            }
+        }
+    })
+
+    if (!room) {
+        return null
+    }
+
+    // Transform to match expected format
+    return {
+        budgetGoal: room.project.budgetGoal,
+        rooms: [{ productItems: room.productItems }],
+        tasks: room.tasks
+    }
+}
+
+/**
  * Upload room cover image
  */
 export async function uploadRoomCoverImage(roomId: string, formData: FormData) {
