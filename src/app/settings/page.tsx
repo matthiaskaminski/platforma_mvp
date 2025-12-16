@@ -1,5 +1,5 @@
 import { getGmailStatus } from '@/app/actions/gmail';
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@/utils/supabase/server';
 import { redirect } from 'next/navigation';
 import SettingsClient from './SettingsClient';
 

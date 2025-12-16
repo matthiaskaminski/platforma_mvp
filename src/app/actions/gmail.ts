@@ -1,6 +1,6 @@
 'use server';
 
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@/utils/supabase/server';
 import prisma from '@/lib/prisma';
 import { getGmailClient, refreshAccessToken } from '@/lib/google';
 import { revalidatePath } from 'next/cache';

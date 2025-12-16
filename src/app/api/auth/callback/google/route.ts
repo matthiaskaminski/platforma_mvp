@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getGoogleTokens, getGoogleUserInfo } from '@/lib/google';
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@/utils/supabase/server';
 import prisma from '@/lib/prisma';
 
 export async function GET(request: NextRequest) {
