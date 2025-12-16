@@ -6,14 +6,52 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Search, Mail, Phone, Plus, MoreHorizontal } from "lucide-react";
 import Link from "next/link";
-import { MOCK_CONVERSATIONS } from "../messages/data";
 
-// Extracting users from mock conversations and adding phone numbers
-const contacts = MOCK_CONVERSATIONS.map(c => ({
-    ...c.user,
-    phone: "+48 500 000 000", // Mock phone
-    role: c.user.role || "Współpracownik"
-}));
+// Sample contacts data
+const contacts = [
+    {
+        id: "1",
+        name: "Olga Bailey",
+        email: "olga.bailey@gmail.com",
+        phone: "+48 500 123 456",
+        role: "Klient"
+    },
+    {
+        id: "2",
+        name: "Piotr Zieliński",
+        email: "piotr@elektro.pl",
+        phone: "+48 501 234 567",
+        role: "Elektryk"
+    },
+    {
+        id: "3",
+        name: "Marcin Nowak",
+        email: "marcin@boconcept.pl",
+        phone: "+48 502 345 678",
+        role: "Dostawca"
+    },
+    {
+        id: "4",
+        name: "Karolina Lewandowska",
+        email: "karolina@colors.pl",
+        phone: "+48 503 456 789",
+        role: "Malarz"
+    },
+    {
+        id: "5",
+        name: "Tomasz Dąbrowski",
+        email: "tomasz@woodwork.pl",
+        phone: "+48 504 567 890",
+        role: "Stolarz"
+    },
+    {
+        id: "6",
+        name: "Anna Kowalska",
+        email: "anna.k@design.pl",
+        phone: "+48 505 678 901",
+        role: "Architekt"
+    }
+];
 
 export default function ContactsPage() {
     return (
