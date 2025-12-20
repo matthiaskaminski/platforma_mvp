@@ -39,13 +39,17 @@ interface ClientLayoutProps {
         fullName?: string;
         avatarUrl?: string;
     };
+    activeTasksCount?: number;
+    unreadMessagesCount?: number;
 }
 
 export function ClientLayout({
     children,
     projects = [],
     currentProjectId = '',
-    user
+    user,
+    activeTasksCount = 0,
+    unreadMessagesCount = 0
 }: ClientLayoutProps) {
     const pathname = usePathname();
 
@@ -86,6 +90,8 @@ export function ClientLayout({
                 projects={projects}
                 currentProjectId={currentProjectId}
                 user={user}
+                activeTasksCount={activeTasksCount}
+                unreadMessagesCount={unreadMessagesCount}
             />
 
             <div className="flex-1 flex flex-col h-full min-w-0 p-4 transition-all duration-300">

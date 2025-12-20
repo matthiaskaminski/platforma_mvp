@@ -789,20 +789,31 @@ export default function DashboardClient({ user, project, stats, recentProducts =
                             <Button variant="secondary" size="sm" className="rounded-full h-auto py-1 px-3 border border-white/5 bg-[#232323] hover:bg-[#2a2a2a]">Zarządzaj</Button>
                         </div>
                         <div className="grid grid-cols-2 grid-rows-2 gap-3 h-full min-h-0 flex-1">
-                            {visualizations.length > 0 ? (
-                                visualizations.slice(0, 4).map((img, i) => (
-                                    <div key={i} className="relative bg-zinc-800 rounded-lg border border-[var(--color-border)]/50 overflow-hidden group w-full h-full min-h-[100px]">
-                                        <img src={img.url} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" alt={`Wizualizacja ${i + 1}`} />
-                                    </div>
-                                ))
-                            ) : (
-                                // 4-icon placeholder state
-                                Array.from({ length: 4 }).map((_, i) => (
-                                    <div key={i} className="flex items-center justify-center bg-[#1B1B1B] rounded-lg">
+                            {/* Show visualizations + placeholders to always have 4 items */}
+                            {Array.from({ length: 4 }).map((_, i) => {
+                                const room = visualizations[i];
+                                if (room) {
+                                    return (
+                                        <div
+                                            key={room.id || i}
+                                            className="relative bg-zinc-800 rounded-lg border border-[var(--color-border)]/50 overflow-hidden group w-full h-full min-h-[100px] cursor-pointer"
+                                            onClick={() => router.push(`/rooms/${room.id}`)}
+                                        >
+                                            <img src={room.coverImage} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" alt={room.name || `Wizualizacja ${i + 1}`} />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                                            <div className="absolute bottom-2 left-2 right-2 text-white text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300 truncate">
+                                                {room.name}
+                                            </div>
+                                        </div>
+                                    );
+                                }
+                                // Placeholder for missing visualizations
+                                return (
+                                    <div key={`placeholder-${i}`} className="flex items-center justify-center bg-[#1B1B1B] rounded-lg">
                                         <ImageIcon className="w-5 h-5 text-muted-foreground" strokeWidth={1.5} />
                                     </div>
-                                ))
-                            )}
+                                );
+                            })}
                         </div>
                     </Card>
                 </div>

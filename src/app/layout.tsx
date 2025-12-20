@@ -4,7 +4,8 @@ import "./globals.css";
 import { ClientLayout } from "@/components/ClientLayout";
 import { createClient } from "@/utils/supabase/server";
 import prisma from "@/lib/prisma";
-import { getUserProjects, getActiveProjectId } from "./actions/projects";
+import { getUserProjects, getActiveProjectId, getActiveTasksCount } from "./actions/projects";
+import { getUnreadEmailCount } from "./actions/messages";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -33,6 +34,8 @@ export default async function RootLayout({
     fullName: string | null;
     avatarUrl: string | null;
   } | null = null;
+  let activeTasksCount = 0;
+  let unreadMessagesCount = 0;
 
   try {
     const supabase = await createClient();
@@ -58,6 +61,11 @@ export default async function RootLayout({
           activeId = projects[0].id;
         }
         currentProjectId = activeId || '';
+
+        // Get badge counts
+        activeTasksCount = await getActiveTasksCount();
+        const unreadResult = await getUnreadEmailCount();
+        unreadMessagesCount = unreadResult.count || 0;
       }
     }
   } catch (error) {
@@ -79,6 +87,8 @@ export default async function RootLayout({
             fullName: user.fullName || undefined,
             avatarUrl: user.avatarUrl || undefined
           } : undefined}
+          activeTasksCount={activeTasksCount}
+          unreadMessagesCount={unreadMessagesCount}
         >
           {children}
         </ClientLayout>

@@ -290,3 +290,397 @@ export async function uploadProjectCoverImage(projectId: string, formData: FormD
 
     return { url: publicUrl }
 }
+
+/**
+ * Get project with clients and contacts
+ */
+export async function getProjectWithContacts(projectId: string) {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user?.email) {
+        return null
+    }
+
+    const profile = await prisma.profile.findUnique({
+        where: { email: user.email }
+    })
+
+    if (!profile) {
+        return null
+    }
+
+    const project = await prisma.project.findFirst({
+        where: {
+            id: projectId,
+            designerId: profile.id
+        },
+        include: {
+            clients: true,
+            contacts: true
+        }
+    })
+
+    return project
+}
+
+/**
+ * Add client to project
+ */
+export async function addClientToProject(projectId: string, data: {
+    email: string
+    fullName?: string
+    phoneNumber?: string
+    nip?: string
+}) {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user?.email) {
+        return { success: false, error: 'Unauthorized' }
+    }
+
+    const profile = await prisma.profile.findUnique({
+        where: { email: user.email }
+    })
+
+    if (!profile) {
+        return { success: false, error: 'Profile not found' }
+    }
+
+    // Verify ownership
+    const project = await prisma.project.findFirst({
+        where: {
+            id: projectId,
+            designerId: profile.id
+        }
+    })
+
+    if (!project) {
+        return { success: false, error: 'Project not found' }
+    }
+
+    const client = await prisma.client.create({
+        data: {
+            projectId,
+            email: data.email,
+            fullName: data.fullName,
+            phoneNumber: data.phoneNumber,
+            nip: data.nip
+        }
+    })
+
+    revalidatePath('/')
+    revalidatePath('/messages')
+
+    return { success: true, client }
+}
+
+/**
+ * Update client
+ */
+export async function updateClient(clientId: string, data: {
+    email?: string
+    fullName?: string
+    phoneNumber?: string
+    nip?: string
+}) {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user?.email) {
+        return { success: false, error: 'Unauthorized' }
+    }
+
+    const profile = await prisma.profile.findUnique({
+        where: { email: user.email }
+    })
+
+    if (!profile) {
+        return { success: false, error: 'Profile not found' }
+    }
+
+    // Find client and verify ownership through project
+    const client = await prisma.client.findUnique({
+        where: { id: clientId },
+        include: { project: true }
+    })
+
+    if (!client || client.project.designerId !== profile.id) {
+        return { success: false, error: 'Client not found' }
+    }
+
+    const updated = await prisma.client.update({
+        where: { id: clientId },
+        data
+    })
+
+    revalidatePath('/')
+    revalidatePath('/messages')
+
+    return { success: true, client: updated }
+}
+
+/**
+ * Delete client
+ */
+export async function deleteClient(clientId: string) {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user?.email) {
+        return { success: false, error: 'Unauthorized' }
+    }
+
+    const profile = await prisma.profile.findUnique({
+        where: { email: user.email }
+    })
+
+    if (!profile) {
+        return { success: false, error: 'Profile not found' }
+    }
+
+    // Find client and verify ownership through project
+    const client = await prisma.client.findUnique({
+        where: { id: clientId },
+        include: { project: true }
+    })
+
+    if (!client || client.project.designerId !== profile.id) {
+        return { success: false, error: 'Client not found' }
+    }
+
+    await prisma.client.delete({
+        where: { id: clientId }
+    })
+
+    revalidatePath('/')
+    revalidatePath('/messages')
+
+    return { success: true }
+}
+
+/**
+ * Add contact to project
+ */
+export async function addContactToProject(projectId: string, data: {
+    name: string
+    email?: string
+    phone?: string
+    role?: string
+}) {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user?.email) {
+        return { success: false, error: 'Unauthorized' }
+    }
+
+    const profile = await prisma.profile.findUnique({
+        where: { email: user.email }
+    })
+
+    if (!profile) {
+        return { success: false, error: 'Profile not found' }
+    }
+
+    // Verify ownership
+    const project = await prisma.project.findFirst({
+        where: {
+            id: projectId,
+            designerId: profile.id
+        }
+    })
+
+    if (!project) {
+        return { success: false, error: 'Project not found' }
+    }
+
+    const contact = await prisma.contact.create({
+        data: {
+            projectId,
+            name: data.name,
+            email: data.email,
+            phone: data.phone,
+            role: data.role
+        }
+    })
+
+    revalidatePath('/')
+    revalidatePath('/messages')
+    revalidatePath('/contacts')
+
+    return { success: true, contact }
+}
+
+/**
+ * Update contact
+ */
+export async function updateContact(contactId: string, data: {
+    name?: string
+    email?: string
+    phone?: string
+    role?: string
+}) {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user?.email) {
+        return { success: false, error: 'Unauthorized' }
+    }
+
+    const profile = await prisma.profile.findUnique({
+        where: { email: user.email }
+    })
+
+    if (!profile) {
+        return { success: false, error: 'Profile not found' }
+    }
+
+    // Find contact and verify ownership through project
+    const contact = await prisma.contact.findUnique({
+        where: { id: contactId },
+        include: { project: true }
+    })
+
+    if (!contact || contact.project.designerId !== profile.id) {
+        return { success: false, error: 'Contact not found' }
+    }
+
+    const updated = await prisma.contact.update({
+        where: { id: contactId },
+        data
+    })
+
+    revalidatePath('/')
+    revalidatePath('/messages')
+    revalidatePath('/contacts')
+
+    return { success: true, contact: updated }
+}
+
+/**
+ * Delete contact
+ */
+export async function deleteContact(contactId: string) {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user?.email) {
+        return { success: false, error: 'Unauthorized' }
+    }
+
+    const profile = await prisma.profile.findUnique({
+        where: { email: user.email }
+    })
+
+    if (!profile) {
+        return { success: false, error: 'Profile not found' }
+    }
+
+    // Find contact and verify ownership through project
+    const contact = await prisma.contact.findUnique({
+        where: { id: contactId },
+        include: { project: true }
+    })
+
+    if (!contact || contact.project.designerId !== profile.id) {
+        return { success: false, error: 'Contact not found' }
+    }
+
+    await prisma.contact.delete({
+        where: { id: contactId }
+    })
+
+    revalidatePath('/')
+    revalidatePath('/messages')
+    revalidatePath('/contacts')
+
+    return { success: true }
+}
+
+/**
+ * Get all contacts from all projects
+ */
+export async function getAllContacts() {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user?.email) {
+        return { success: false, contacts: [], clients: [] }
+    }
+
+    const profile = await prisma.profile.findUnique({
+        where: { email: user.email }
+    })
+
+    if (!profile) {
+        return { success: false, contacts: [], clients: [] }
+    }
+
+    const projects = await prisma.project.findMany({
+        where: { designerId: profile.id },
+        include: {
+            clients: true,
+            contacts: true
+        }
+    })
+
+    const contacts: any[] = []
+    const clients: any[] = []
+
+    projects.forEach(project => {
+        project.clients.forEach(client => {
+            clients.push({
+                ...client,
+                projectId: project.id,
+                projectName: project.name
+            })
+        })
+        project.contacts.forEach(contact => {
+            contacts.push({
+                ...contact,
+                projectId: project.id,
+                projectName: project.name
+            })
+        })
+    })
+
+    return { success: true, contacts, clients }
+}
+
+/**
+ * Get active tasks count for sidebar badge
+ */
+export async function getActiveTasksCount() {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user?.email) {
+        return 0
+    }
+
+    const profile = await prisma.profile.findUnique({
+        where: { email: user.email }
+    })
+
+    if (!profile) {
+        return 0
+    }
+
+    const activeProjectId = await getActiveProjectId()
+
+    if (!activeProjectId) {
+        return 0
+    }
+
+    const count = await prisma.task.count({
+        where: {
+            projectId: activeProjectId,
+            project: { designerId: profile.id },
+            status: { not: 'DONE' }
+        }
+    })
+
+    return count
+}

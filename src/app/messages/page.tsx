@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { ConversationList } from "./components/ConversationList";
 import { ChatWindow } from "./components/ChatWindow";
 import { EmailThread, EmailMessage } from "./data";
@@ -8,6 +8,8 @@ import { getEmailThreads, getFullEmailThread, getMessagesGmailStatus } from "@/a
 import { Button } from "@/components/ui/Button";
 import { Mail, Settings, AlertCircle } from "lucide-react";
 import Link from "next/link";
+
+const AUTO_REFRESH_INTERVAL = 60000; // 60 seconds
 
 export default function MessagesPage() {
     const [threads, setThreads] = useState<EmailThread[]>([]);
@@ -19,10 +21,73 @@ export default function MessagesPage() {
     const [userEmail, setUserEmail] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [needsReconnect, setNeedsReconnect] = useState(false);
+    const autoRefreshRef = useRef<NodeJS.Timeout | null>(null);
 
     const selectedThread = threads.find(t => t.id === selectedId) || null;
 
-    // Check Gmail connection status
+    // Load email threads
+    const loadThreads = useCallback(async (silent = false) => {
+        if (!silent) {
+            setIsLoadingThreads(true);
+        }
+        setError(null);
+
+        try {
+            const result = await getEmailThreads(30);
+
+            if (result.success) {
+                setThreads(result.threads);
+                setNeedsReconnect(false);
+                // Auto-select first thread if none selected
+                if (result.threads.length > 0 && !selectedId) {
+                    setSelectedId(result.threads[0].id);
+                }
+            } else {
+                if (!silent) {
+                    setError(result.error || 'Nie udało się pobrać wiadomości');
+                }
+                if ((result as any).needsReconnect) {
+                    setNeedsReconnect(true);
+                }
+            }
+        } catch (err) {
+            console.error('Error loading threads:', err);
+            if (!silent) {
+                setError('Failed to load emails');
+            }
+        } finally {
+            if (!silent) {
+                setIsLoadingThreads(false);
+            }
+        }
+    }, [selectedId]);
+
+    // Load messages for selected thread
+    const loadMessages = useCallback(async () => {
+        if (!selectedId) {
+            setMessages([]);
+            return;
+        }
+
+        setIsLoadingMessages(true);
+
+        try {
+            const result = await getFullEmailThread(selectedId);
+
+            if (result.success && result.messages) {
+                setMessages(result.messages);
+            } else {
+                setMessages([]);
+            }
+        } catch (err) {
+            console.error('Error loading messages:', err);
+            setMessages([]);
+        } finally {
+            setIsLoadingMessages(false);
+        }
+    }, [selectedId]);
+
+    // Check Gmail connection status on mount
     useEffect(() => {
         async function checkStatus() {
             const status = await getMessagesGmailStatus();
@@ -38,72 +103,41 @@ export default function MessagesPage() {
         checkStatus();
     }, []);
 
-    // Load email threads
-    const loadThreads = useCallback(async () => {
-        setIsLoadingThreads(true);
-        setError(null);
-
-        try {
-            const result = await getEmailThreads(30);
-
-            if (result.success) {
-                setThreads(result.threads);
-                setNeedsReconnect(false);
-                // Auto-select first thread
-                if (result.threads.length > 0 && !selectedId) {
-                    setSelectedId(result.threads[0].id);
-                }
-            } else {
-                setError(result.error || 'Nie udało się pobrać wiadomości');
-                if ((result as any).needsReconnect) {
-                    setNeedsReconnect(true);
-                }
-            }
-        } catch (err) {
-            console.error('Error loading threads:', err);
-            setError('Failed to load emails');
-        } finally {
-            setIsLoadingThreads(false);
-        }
-    }, [selectedId]);
-
     // Load messages when thread is selected
     useEffect(() => {
-        if (!selectedId) {
-            setMessages([]);
-            return;
-        }
-
-        async function loadMessages() {
-            setIsLoadingMessages(true);
-
-            try {
-                const result = await getFullEmailThread(selectedId!);
-
-                if (result.success && result.messages) {
-                    setMessages(result.messages);
-                } else {
-                    setMessages([]);
-                }
-            } catch (err) {
-                console.error('Error loading messages:', err);
-                setMessages([]);
-            } finally {
-                setIsLoadingMessages(false);
-            }
-        }
-
         loadMessages();
-    }, [selectedId]);
+    }, [selectedId, loadMessages]);
+
+    // Auto-refresh threads
+    useEffect(() => {
+        if (gmailConnected) {
+            autoRefreshRef.current = setInterval(() => {
+                loadThreads(true); // Silent refresh
+            }, AUTO_REFRESH_INTERVAL);
+        }
+
+        return () => {
+            if (autoRefreshRef.current) {
+                clearInterval(autoRefreshRef.current);
+            }
+        };
+    }, [gmailConnected, loadThreads]);
 
     // Handle thread selection
     const handleSelect = (id: string) => {
         setSelectedId(id);
     };
 
-    // Handle refresh
+    // Handle manual refresh
     const handleRefresh = () => {
         loadThreads();
+    };
+
+    // Handle message sent - reload thread
+    const handleMessageSent = () => {
+        loadMessages();
+        // Also refresh thread list to update snippets
+        setTimeout(() => loadThreads(true), 1000);
     };
 
     // Not connected state
@@ -204,6 +238,7 @@ export default function MessagesPage() {
                 messages={messages}
                 isLoading={isLoadingMessages}
                 userEmail={userEmail || undefined}
+                onMessageSent={handleMessageSent}
             />
         </div>
     );

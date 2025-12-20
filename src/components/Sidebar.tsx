@@ -26,43 +26,6 @@ import { UserMenu } from "./UserMenu";
 import { setActiveProject } from "@/app/actions/projects";
 import { logout } from "@/app/actions/auth";
 
-const sidebarData = [
-    {
-        title: "PROJEKT",
-        items: [
-            { name: "Dashboard", icon: LayoutDashboard, href: "/" },
-            { name: "Pomieszczenia", icon: Armchair, href: "/rooms" },
-            { name: "Kalendarz", icon: Calendar, href: "/calendar" },
-            { name: "Lista zadań", icon: ListTodo, href: "/tasks", badge: 2 },
-            { name: "Korespondencja", icon: Mail, href: "/messages", badge: 3 },
-            { name: "Kontakty", icon: Users, href: "/contacts" },
-        ],
-    },
-    {
-        title: "PRODUKTY",
-        items: [
-            { name: "Szukaj produktów", icon: Search, href: "/products/search" },
-            { name: "Wishlisty", icon: Heart, href: "/wishlists" },
-            { name: "Koszyk", icon: ShoppingCart, href: "/cart" },
-        ],
-    },
-    {
-        title: "INTERAKCJA Z KLIENTEM",
-        items: [
-            { name: "Ankiety", icon: ClipboardList, href: "/surveys" },
-            { name: "Style", icon: Palette, href: "/styles" },
-            { name: "Moodboardy", icon: ImageIcon, href: "/moodboards" },
-            { name: "Prezentacje", icon: MonitorPlay, href: "/presentations" },
-        ],
-    },
-    {
-        title: "NADZÓR",
-        items: [
-            { name: "Przechowywanie", icon: Archive, href: "/storage" },
-        ],
-    },
-];
-
 interface SidebarProps {
     isOpen?: boolean;
     onToggle?: () => void;
@@ -79,6 +42,8 @@ interface SidebarProps {
         fullName?: string;
         avatarUrl?: string;
     };
+    activeTasksCount?: number;
+    unreadMessagesCount?: number;
 }
 
 export function Sidebar({
@@ -86,10 +51,50 @@ export function Sidebar({
     onToggle,
     projects = [],
     currentProjectId = '',
-    user
+    user,
+    activeTasksCount = 0,
+    unreadMessagesCount = 0
 }: SidebarProps) {
     const pathname = usePathname();
     const router = useRouter();
+
+    // Build sidebar data with dynamic badges
+    const sidebarData = [
+        {
+            title: "PROJEKT",
+            items: [
+                { name: "Dashboard", icon: LayoutDashboard, href: "/" },
+                { name: "Pomieszczenia", icon: Armchair, href: "/rooms" },
+                { name: "Kalendarz", icon: Calendar, href: "/calendar" },
+                { name: "Lista zadań", icon: ListTodo, href: "/tasks", badge: activeTasksCount > 0 ? activeTasksCount : undefined },
+                { name: "Korespondencja", icon: Mail, href: "/messages", badge: unreadMessagesCount > 0 ? unreadMessagesCount : undefined },
+                { name: "Kontakty", icon: Users, href: "/contacts" },
+            ],
+        },
+        {
+            title: "PRODUKTY",
+            items: [
+                { name: "Szukaj produktów", icon: Search, href: "/products/search" },
+                { name: "Wishlisty", icon: Heart, href: "/wishlists" },
+                { name: "Koszyk", icon: ShoppingCart, href: "/cart" },
+            ],
+        },
+        {
+            title: "INTERAKCJA Z KLIENTEM",
+            items: [
+                { name: "Ankiety", icon: ClipboardList, href: "/surveys" },
+                { name: "Style", icon: Palette, href: "/styles" },
+                { name: "Moodboardy", icon: ImageIcon, href: "/moodboards" },
+                { name: "Prezentacje", icon: MonitorPlay, href: "/presentations" },
+            ],
+        },
+        {
+            title: "NADZÓR",
+            items: [
+                { name: "Przechowywanie", icon: Archive, href: "/storage" },
+            ],
+        },
+    ];
 
     const handleProjectChange = async (projectId: string) => {
         await setActiveProject(projectId);

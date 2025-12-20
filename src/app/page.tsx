@@ -195,10 +195,17 @@ export default async function DashboardPage() {
         take: 5,
         include: { wishlist: true }
       }),
-      // 6. Visualizations
-      prisma.galleryImage.findMany({
-        where: { room: { projectId: project.id } },
-        orderBy: { createdAt: 'desc' },
+      // 6. Visualizations - Get rooms with cover images
+      prisma.room.findMany({
+        where: {
+          projectId: project.id,
+          coverImage: { not: null }
+        },
+        select: {
+          id: true,
+          name: true,
+          coverImage: true
+        },
         take: 4
       })
     ])
