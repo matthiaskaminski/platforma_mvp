@@ -769,7 +769,7 @@ export async function refreshProduct(productId: string) {
     }
 }
 
-export async function moveProductToRoom(productId: string, roomId: string) {
+export async function moveProductToRoom(productId: string, roomId: string, planningStatus: 'MAIN' | 'VARIANT' = 'VARIANT') {
     const user = await getUser();
     if (!user) {
         return { success: false, error: "Unauthorized" };
@@ -795,7 +795,7 @@ export async function moveProductToRoom(productId: string, roomId: string) {
             data: {
                 roomId,
                 wishlistId: null, // Remove from wishlist when moving to room
-                planningStatus: ProductPlanningStatus.VARIANT, // Default to variant when moved to room
+                planningStatus: planningStatus === 'MAIN' ? ProductPlanningStatus.MAIN : ProductPlanningStatus.VARIANT,
             },
         });
 

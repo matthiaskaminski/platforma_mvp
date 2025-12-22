@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { Check, Package, Plus, Trash2, Loader2, ExternalLink, X, RefreshCw, StickyNote, Star, Layers, CheckCircle, XCircle } from "lucide-react";
+import { Check, Package, Plus, Trash2, Loader2, ExternalLink, X, RefreshCw, StickyNote, CheckCircle, XCircle } from "lucide-react";
 import { deleteProduct, updateProduct, refreshProduct, approveProduct, rejectProduct } from "@/app/actions/products";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -29,13 +29,13 @@ interface ProductGridProps {
     onAddProduct?: () => void;
 }
 
-// Planning status configuration (for room - Main/Variant)
-const planningStatusConfig: Record<string, { label: string; dotColor: string; bgColor: string; icon: any }> = {
-    'LIKED': { label: "Polubiony", dotColor: "bg-pink-500", bgColor: "bg-pink-500/20", icon: null },
-    'MAIN': { label: "Glowny", dotColor: "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]", bgColor: "bg-amber-500/20", icon: Star },
-    'VARIANT': { label: "Wariant", dotColor: "bg-blue-500", bgColor: "bg-blue-500/20", icon: Layers },
-    'APPROVED': { label: "Zatwierdzony", dotColor: "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]", bgColor: "bg-emerald-500/20", icon: CheckCircle },
-    'REJECTED': { label: "Odrzucony", dotColor: "bg-red-500", bgColor: "bg-red-500/20", icon: XCircle }
+// Planning status configuration (for room - Main/Variant) - only glowing dots, no icons
+const planningStatusConfig: Record<string, { label: string; dotColor: string; bgColor: string }> = {
+    'LIKED': { label: "Polubiony", dotColor: "bg-pink-500", bgColor: "bg-pink-500/20" },
+    'MAIN': { label: "Glowny", dotColor: "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]", bgColor: "bg-amber-500/20" },
+    'VARIANT': { label: "Wariant", dotColor: "bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.4)]", bgColor: "bg-blue-500/20" },
+    'APPROVED': { label: "Zatwierdzony", dotColor: "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]", bgColor: "bg-emerald-500/20" },
+    'REJECTED': { label: "Odrzucony", dotColor: "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.4)]", bgColor: "bg-red-500/20" }
 };
 
 // Fulfillment status configuration (for approved products)
@@ -135,7 +135,7 @@ function StatusDropdown({
     );
 }
 
-// Planning Status Dropdown Component (Main/Variant)
+// Planning Status Dropdown Component (Main/Variant) - only glowing dots, no icons
 function PlanningStatusDropdown({
     currentStatus,
     onStatusChange,
@@ -148,7 +148,6 @@ function PlanningStatusDropdown({
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
     const statusInfo = planningStatusConfig[currentStatus] || planningStatusConfig['VARIANT'];
-    const IconComponent = statusInfo.icon;
 
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
@@ -164,7 +163,6 @@ function PlanningStatusDropdown({
     if (currentStatus === 'APPROVED' || currentStatus === 'REJECTED') {
         return (
             <div className="flex items-center gap-2">
-                {IconComponent && <IconComponent className="w-4 h-4 text-current" />}
                 <span className={`w-2.5 h-2.5 rounded-full ${statusInfo.dotColor}`}></span>
                 <span className="text-[#F3F3F3]">{statusInfo.label}</span>
             </div>
@@ -184,7 +182,6 @@ function PlanningStatusDropdown({
                     disabled && "opacity-50 cursor-not-allowed"
                 )}
             >
-                {IconComponent && <IconComponent className="w-4 h-4" />}
                 <span className={`w-2.5 h-2.5 rounded-full ${statusInfo.dotColor}`}></span>
                 <span className="text-[#F3F3F3]">{statusInfo.label}</span>
             </button>
@@ -196,30 +193,26 @@ function PlanningStatusDropdown({
                         transform: 'translateY(-100%) translateY(-8px)'
                     }}
                 >
-                    {planningOptions.map((option) => {
-                        const OptionIcon = planningStatusConfig[option.value]?.icon;
-                        return (
-                            <button
-                                key={option.value}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    onStatusChange(option.value);
-                                    setIsOpen(false);
-                                }}
-                                className={cn(
-                                    "w-full flex items-center gap-2 px-3 py-2.5 hover:bg-[#232323] transition-colors text-left",
-                                    currentStatus === option.value && "bg-[#232323]"
-                                )}
-                            >
-                                {OptionIcon && <OptionIcon className="w-4 h-4" />}
-                                <span className={`w-2.5 h-2.5 rounded-full ${option.dotColor}`}></span>
-                                <span className="text-[#F3F3F3] text-sm">{option.label}</span>
-                                {currentStatus === option.value && (
-                                    <Check className="w-4 h-4 text-white ml-auto" />
-                                )}
-                            </button>
-                        );
-                    })}
+                    {planningOptions.map((option) => (
+                        <button
+                            key={option.value}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onStatusChange(option.value);
+                                setIsOpen(false);
+                            }}
+                            className={cn(
+                                "w-full flex items-center gap-2 px-3 py-2.5 hover:bg-[#232323] transition-colors text-left",
+                                currentStatus === option.value && "bg-[#232323]"
+                            )}
+                        >
+                            <span className={`w-2.5 h-2.5 rounded-full ${option.dotColor}`}></span>
+                            <span className="text-[#F3F3F3] text-sm">{option.label}</span>
+                            {currentStatus === option.value && (
+                                <Check className="w-4 h-4 text-white ml-auto" />
+                            )}
+                        </button>
+                    ))}
                 </div>
             )}
         </div>
@@ -618,7 +611,6 @@ export const ProductGrid = React.memo(function ProductGrid({ products, onAddProd
                 {products.map((product) => {
                     const planningInfo = planningStatusConfig[product.planningStatus] || planningStatusConfig['VARIANT'];
                     const fulfillmentInfo = statusConfig[product.status] || statusConfig['TO_ORDER'];
-                    const PlanningIcon = planningInfo.icon;
                     const price = Number(product.price).toLocaleString('pl-PL');
                     const isDeleting = deletingId === product.id;
                     const isApproved = product.planningStatus === 'APPROVED';
@@ -636,20 +628,6 @@ export const ProductGrid = React.memo(function ProductGrid({ products, onAddProd
                         >
                             {/* Image Area */}
                             <div className="aspect-square bg-white relative flex items-center justify-center overflow-hidden">
-                                {/* Planning Status Badge */}
-                                <div className="absolute top-2 left-2 z-10">
-                                    <div className={cn(
-                                        "flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium",
-                                        planningInfo.bgColor,
-                                        product.planningStatus === 'MAIN' && "text-amber-400",
-                                        product.planningStatus === 'VARIANT' && "text-blue-400",
-                                        product.planningStatus === 'APPROVED' && "text-emerald-400",
-                                        product.planningStatus === 'REJECTED' && "text-red-400"
-                                    )}>
-                                        {PlanningIcon && <PlanningIcon className="w-3 h-3" />}
-                                        {planningInfo.label}
-                                    </div>
-                                </div>
                                 {/* Overlay Controls */}
                                 <div className="absolute top-2 right-2 flex gap-1 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
                                     <button

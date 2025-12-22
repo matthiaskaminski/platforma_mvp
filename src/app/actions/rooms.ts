@@ -706,6 +706,8 @@ export async function getProjectSummary(projectId: string) {
 
 /**
  * Get room summary (budget and tasks for specific room)
+ * Budget estymacyjny = sum of MAIN products only
+ * Budget rzeczywisty = sum of APPROVED products only
  */
 export async function getRoomSummary(roomId: string) {
     const supabase = await createClient()
@@ -739,7 +741,8 @@ export async function getRoomSummary(roomId: string) {
                     price: true,
                     quantity: true,
                     paidAmount: true,
-                    category: true
+                    category: true,
+                    planningStatus: true  // Include planning status for budget calculation
                 }
             },
             tasks: {
@@ -766,10 +769,14 @@ export async function getRoomSummary(roomId: string) {
         return null
     }
 
+    // Filter products for estimated budget (only MAIN products)
+    const mainProducts = room.productItems.filter(p => p.planningStatus === 'MAIN');
+
     // Transform to match expected format - use room's budget, not project's
     return {
         budgetGoal: room.budgetAllocated,  // Room-specific budget
-        rooms: [{ productItems: room.productItems }],
+        rooms: [{ productItems: mainProducts }],  // Only MAIN products for budget calculation
+        allProducts: room.productItems,  // All products for reference
         tasks: room.tasks
     }
 }

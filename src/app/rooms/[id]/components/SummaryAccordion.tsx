@@ -205,7 +205,7 @@ export function SummaryAccordion({ projectSummary }: SummaryAccordionProps) {
                                 <div className="flex gap-6 h-full w-full">
                                     {/* List - Flexible */}
                                     <div className="flex-1 min-w-0 flex flex-col justify-center">
-                                        <h3 className="text-sm font-medium text-muted-foreground mb-4">Budżet</h3>
+                                        <h3 className="text-sm font-medium text-muted-foreground mb-4">Budżet estymacyjny</h3>
                                         <div className="space-y-3">
                                             {[
                                                 { label: "Produkty", val: budget.products, color: "bg-[#F3F3F3]" },
