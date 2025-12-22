@@ -4,7 +4,7 @@ import prisma from "@/lib/prisma";
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 import * as cheerio from "cheerio";
-import { ProductStatus } from "@prisma/client";
+import { ProductStatus, ProductPlanningStatus } from "@prisma/client";
 
 async function getUser() {
     const supabase = await createClient();
@@ -549,6 +549,11 @@ export async function createProduct(data: CreateProductData) {
     }
 
     try {
+        // Determine planning status based on destination
+        const planningStatus = data.wishlistId
+            ? ProductPlanningStatus.LIKED
+            : ProductPlanningStatus.VARIANT; // Default to variant when added directly to room
+
         const product = await prisma.productItem.create({
             data: {
                 name: data.name,
@@ -560,6 +565,7 @@ export async function createProduct(data: CreateProductData) {
                 quantity: data.quantity || 1,
                 wishlistId: data.wishlistId,
                 roomId: data.roomId,
+                planningStatus,
                 status: ProductStatus.TO_ORDER,
             },
         });
@@ -589,10 +595,12 @@ export async function updateProduct(
         url: string;
         category: string;
         quantity: number;
+        planningStatus: ProductPlanningStatus;
         status: ProductStatus;
         notes: string;
         wishlistId: string | null;
         roomId: string | null;
+        isInCart: boolean;
     }>
 ) {
     const user = await getUser();
@@ -787,6 +795,7 @@ export async function moveProductToRoom(productId: string, roomId: string) {
             data: {
                 roomId,
                 wishlistId: null, // Remove from wishlist when moving to room
+                planningStatus: ProductPlanningStatus.VARIANT, // Default to variant when moved to room
             },
         });
 
@@ -797,5 +806,87 @@ export async function moveProductToRoom(productId: string, roomId: string) {
     } catch (error) {
         console.error("Error moving product:", error);
         return { success: false, error: "Failed to move product" };
+    }
+}
+
+// Approve product (client approval) - moves to real budget
+export async function approveProduct(productId: string) {
+    const user = await getUser();
+    if (!user) {
+        return { success: false, error: "Unauthorized" };
+    }
+
+    try {
+        const existingProduct = await prisma.productItem.findFirst({
+            where: { id: productId },
+            include: {
+                room: { include: { project: true } },
+            },
+        });
+
+        if (!existingProduct) {
+            return { success: false, error: "Product not found" };
+        }
+
+        if (!existingProduct.room || existingProduct.room.project.designerId !== user.id) {
+            return { success: false, error: "Unauthorized" };
+        }
+
+        const product = await prisma.productItem.update({
+            where: { id: productId },
+            data: {
+                planningStatus: ProductPlanningStatus.APPROVED,
+                isInCart: true, // Add to cart when approved
+            },
+        });
+
+        revalidatePath("/rooms");
+        revalidatePath("/cart");
+
+        return { success: true, data: product };
+    } catch (error) {
+        console.error("Error approving product:", error);
+        return { success: false, error: "Failed to approve product" };
+    }
+}
+
+// Reject product (client rejection)
+export async function rejectProduct(productId: string) {
+    const user = await getUser();
+    if (!user) {
+        return { success: false, error: "Unauthorized" };
+    }
+
+    try {
+        const existingProduct = await prisma.productItem.findFirst({
+            where: { id: productId },
+            include: {
+                room: { include: { project: true } },
+            },
+        });
+
+        if (!existingProduct) {
+            return { success: false, error: "Product not found" };
+        }
+
+        if (!existingProduct.room || existingProduct.room.project.designerId !== user.id) {
+            return { success: false, error: "Unauthorized" };
+        }
+
+        const product = await prisma.productItem.update({
+            where: { id: productId },
+            data: {
+                planningStatus: ProductPlanningStatus.REJECTED,
+                isInCart: false,
+            },
+        });
+
+        revalidatePath("/rooms");
+        revalidatePath("/cart");
+
+        return { success: true, data: product };
+    } catch (error) {
+        console.error("Error rejecting product:", error);
+        return { success: false, error: "Failed to reject product" };
     }
 }

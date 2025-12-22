@@ -1,11 +1,12 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { Check, Package, Plus, Trash2, Loader2, ExternalLink, X, RefreshCw, StickyNote } from "lucide-react";
-import { deleteProduct, updateProduct, refreshProduct } from "@/app/actions/products";
+import { Check, Package, Plus, Trash2, Loader2, ExternalLink, X, RefreshCw, StickyNote, Star, Layers, CheckCircle, XCircle } from "lucide-react";
+import { deleteProduct, updateProduct, refreshProduct, approveProduct, rejectProduct } from "@/app/actions/products";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
+import { ProductPlanningStatus } from "@prisma/client";
 
 interface Product {
     id: string;
@@ -18,6 +19,7 @@ interface Product {
     quantity: number;
     paidAmount: any;
     isInCart: boolean;
+    planningStatus: string;
     status: string;
     notes?: string | null;
 }
@@ -27,13 +29,22 @@ interface ProductGridProps {
     onAddProduct?: () => void;
 }
 
-// Status configuration
+// Planning status configuration (for room - Main/Variant)
+const planningStatusConfig: Record<string, { label: string; dotColor: string; bgColor: string; icon: any }> = {
+    'LIKED': { label: "Polubiony", dotColor: "bg-pink-500", bgColor: "bg-pink-500/20", icon: null },
+    'MAIN': { label: "Glowny", dotColor: "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]", bgColor: "bg-amber-500/20", icon: Star },
+    'VARIANT': { label: "Wariant", dotColor: "bg-blue-500", bgColor: "bg-blue-500/20", icon: Layers },
+    'APPROVED': { label: "Zatwierdzony", dotColor: "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]", bgColor: "bg-emerald-500/20", icon: CheckCircle },
+    'REJECTED': { label: "Odrzucony", dotColor: "bg-red-500", bgColor: "bg-red-500/20", icon: XCircle }
+};
+
+// Fulfillment status configuration (for approved products)
 const statusConfig: Record<string, { label: string; dotColor: string }> = {
-    'TO_ORDER': { label: "Do zamówienia", dotColor: "bg-[#E8B491] shadow-[0_0_8px_rgba(232,180,145,0.4)]" },
-    'ORDERED': { label: "Zamówione", dotColor: "bg-[#91A3E8] shadow-[0_0_8px_rgba(145,163,232,0.4)]" },
+    'TO_ORDER': { label: "Do zamowienia", dotColor: "bg-[#E8B491] shadow-[0_0_8px_rgba(232,180,145,0.4)]" },
+    'ORDERED': { label: "Zamowione", dotColor: "bg-[#91A3E8] shadow-[0_0_8px_rgba(145,163,232,0.4)]" },
+    'PAID': { label: "Oplacone", dotColor: "bg-[#B291E8] shadow-[0_0_8px_rgba(178,145,232,0.4)]" },
     'DELIVERED': { label: "Dostarczone", dotColor: "bg-[#91E8B2] shadow-[0_0_8px_rgba(145,232,178,0.5)]" },
-    'PAID': { label: "Opłacone", dotColor: "bg-[#B291E8] shadow-[0_0_8px_rgba(178,145,232,0.4)]" },
-    'RETURNED': { label: "Zwrócone", dotColor: "bg-[#E89191] shadow-[0_0_8px_rgba(232,145,145,0.4)]" }
+    'RETURNED': { label: "Zwrocone", dotColor: "bg-[#E89191] shadow-[0_0_8px_rgba(232,145,145,0.4)]" }
 };
 
 const statusOptions = Object.entries(statusConfig).map(([value, config]) => ({
@@ -41,6 +52,12 @@ const statusOptions = Object.entries(statusConfig).map(([value, config]) => ({
     label: config.label,
     dotColor: config.dotColor
 }));
+
+// Only MAIN and VARIANT for room selection
+const planningOptions = [
+    { value: 'MAIN', label: 'Glowny', dotColor: planningStatusConfig.MAIN.dotColor },
+    { value: 'VARIANT', label: 'Wariant', dotColor: planningStatusConfig.VARIANT.dotColor }
+];
 
 // Status Dropdown Component
 function StatusDropdown({
@@ -112,6 +129,97 @@ function StatusDropdown({
                             )}
                         </button>
                     ))}
+                </div>
+            )}
+        </div>
+    );
+}
+
+// Planning Status Dropdown Component (Main/Variant)
+function PlanningStatusDropdown({
+    currentStatus,
+    onStatusChange,
+    disabled
+}: {
+    currentStatus: string;
+    onStatusChange: (status: string) => void;
+    disabled?: boolean;
+}) {
+    const [isOpen, setIsOpen] = useState(false);
+    const dropdownRef = useRef<HTMLDivElement>(null);
+    const statusInfo = planningStatusConfig[currentStatus] || planningStatusConfig['VARIANT'];
+    const IconComponent = statusInfo.icon;
+
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setIsOpen(false);
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    // Don't allow changing if approved or rejected
+    if (currentStatus === 'APPROVED' || currentStatus === 'REJECTED') {
+        return (
+            <div className="flex items-center gap-2">
+                {IconComponent && <IconComponent className="w-4 h-4 text-current" />}
+                <span className={`w-2.5 h-2.5 rounded-full ${statusInfo.dotColor}`}></span>
+                <span className="text-[#F3F3F3]">{statusInfo.label}</span>
+            </div>
+        );
+    }
+
+    return (
+        <div className="relative" ref={dropdownRef}>
+            <button
+                onClick={(e) => {
+                    e.stopPropagation();
+                    if (!disabled) setIsOpen(!isOpen);
+                }}
+                disabled={disabled}
+                className={cn(
+                    "flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity",
+                    disabled && "opacity-50 cursor-not-allowed"
+                )}
+            >
+                {IconComponent && <IconComponent className="w-4 h-4" />}
+                <span className={`w-2.5 h-2.5 rounded-full ${statusInfo.dotColor}`}></span>
+                <span className="text-[#F3F3F3]">{statusInfo.label}</span>
+            </button>
+
+            {isOpen && (
+                <div className="fixed w-48 bg-[#1B1B1B] border border-white/10 rounded-lg shadow-2xl py-1"
+                    style={{
+                        zIndex: 9999,
+                        transform: 'translateY(-100%) translateY(-8px)'
+                    }}
+                >
+                    {planningOptions.map((option) => {
+                        const OptionIcon = planningStatusConfig[option.value]?.icon;
+                        return (
+                            <button
+                                key={option.value}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onStatusChange(option.value);
+                                    setIsOpen(false);
+                                }}
+                                className={cn(
+                                    "w-full flex items-center gap-2 px-3 py-2.5 hover:bg-[#232323] transition-colors text-left",
+                                    currentStatus === option.value && "bg-[#232323]"
+                                )}
+                            >
+                                {OptionIcon && <OptionIcon className="w-4 h-4" />}
+                                <span className={`w-2.5 h-2.5 rounded-full ${option.dotColor}`}></span>
+                                <span className="text-[#F3F3F3] text-sm">{option.label}</span>
+                                {currentStatus === option.value && (
+                                    <Check className="w-4 h-4 text-white ml-auto" />
+                                )}
+                            </button>
+                        );
+                    })}
                 </div>
             )}
         </div>
@@ -266,14 +374,61 @@ function ProductEditSidebar({
                         </Button>
                     )}
 
-                    {/* Status */}
+                    {/* Planning Status (Main/Variant) */}
                     <div className="space-y-2">
-                        <label className="text-sm text-muted-foreground">Status</label>
-                        <StatusDropdown
-                            currentStatus={product.status}
-                            onStatusChange={handleStatusChange}
+                        <label className="text-sm text-muted-foreground">Typ produktu</label>
+                        <PlanningStatusDropdown
+                            currentStatus={product.planningStatus}
+                            onStatusChange={async (status) => {
+                                const result = await updateProduct(product.id, { planningStatus: status as any });
+                                if (result.success) onUpdate();
+                            }}
                         />
                     </div>
+
+                    {/* Approve/Reject Buttons - only for MAIN products that are not yet approved/rejected */}
+                    {(product.planningStatus === 'MAIN' || product.planningStatus === 'VARIANT') && (
+                        <div className="flex gap-2">
+                            <Button
+                                onClick={async () => {
+                                    const result = await approveProduct(product.id);
+                                    if (result.success) {
+                                        onUpdate();
+                                        onClose();
+                                    }
+                                }}
+                                className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white"
+                            >
+                                <CheckCircle className="w-4 h-4 mr-2" />
+                                Zatwierdz
+                            </Button>
+                            <Button
+                                onClick={async () => {
+                                    const result = await rejectProduct(product.id);
+                                    if (result.success) {
+                                        onUpdate();
+                                        onClose();
+                                    }
+                                }}
+                                variant="secondary"
+                                className="flex-1 bg-red-600/20 hover:bg-red-600/30 text-red-400 border-red-600/30"
+                            >
+                                <XCircle className="w-4 h-4 mr-2" />
+                                Odrzuc
+                            </Button>
+                        </div>
+                    )}
+
+                    {/* Fulfillment Status - only for APPROVED products */}
+                    {product.planningStatus === 'APPROVED' && (
+                        <div className="space-y-2">
+                            <label className="text-sm text-muted-foreground">Status realizacji</label>
+                            <StatusDropdown
+                                currentStatus={product.status}
+                                onStatusChange={handleStatusChange}
+                            />
+                        </div>
+                    )}
 
                     {/* Name */}
                     <div className="space-y-2">
@@ -446,13 +601,28 @@ export const ProductGrid = React.memo(function ProductGrid({ products, onAddProd
         );
     }
 
+    const handlePlanningStatusChange = async (productId: string, newStatus: string) => {
+        try {
+            const result = await updateProduct(productId, { planningStatus: newStatus as any });
+            if (result.success) {
+                router.refresh();
+            }
+        } catch (error) {
+            console.error("Error updating planning status:", error);
+        }
+    };
+
     return (
         <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 gap-3 p-6 pt-2">
                 {products.map((product) => {
-                    const statusInfo = statusConfig[product.status] || statusConfig['TO_ORDER'];
+                    const planningInfo = planningStatusConfig[product.planningStatus] || planningStatusConfig['VARIANT'];
+                    const fulfillmentInfo = statusConfig[product.status] || statusConfig['TO_ORDER'];
+                    const PlanningIcon = planningInfo.icon;
                     const price = Number(product.price).toLocaleString('pl-PL');
                     const isDeleting = deletingId === product.id;
+                    const isApproved = product.planningStatus === 'APPROVED';
+                    const isRejected = product.planningStatus === 'REJECTED';
 
                     return (
                         <div
@@ -460,17 +630,27 @@ export const ProductGrid = React.memo(function ProductGrid({ products, onAddProd
                             onClick={() => handleProductClick(product)}
                             className={cn(
                                 "bg-[#151515] group rounded-xl overflow-hidden cursor-pointer flex flex-col h-full hover:ring-1 hover:ring-white/10 transition-all",
-                                isDeleting && "opacity-50 pointer-events-none"
+                                isDeleting && "opacity-50 pointer-events-none",
+                                isRejected && "opacity-60"
                             )}
                         >
                             {/* Image Area */}
                             <div className="aspect-square bg-white relative flex items-center justify-center overflow-hidden">
-                                {/* Overlay Controls */}
+                                {/* Planning Status Badge */}
                                 <div className="absolute top-2 left-2 z-10">
-                                    <div className="w-5 h-5 rounded border border-gray-300 bg-white flex items-center justify-center cursor-pointer hover:border-black transition-colors">
-                                        {product.isInCart && <Check className="w-3 h-3 text-black" />}
+                                    <div className={cn(
+                                        "flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium",
+                                        planningInfo.bgColor,
+                                        product.planningStatus === 'MAIN' && "text-amber-400",
+                                        product.planningStatus === 'VARIANT' && "text-blue-400",
+                                        product.planningStatus === 'APPROVED' && "text-emerald-400",
+                                        product.planningStatus === 'REJECTED' && "text-red-400"
+                                    )}>
+                                        {PlanningIcon && <PlanningIcon className="w-3 h-3" />}
+                                        {planningInfo.label}
                                     </div>
                                 </div>
+                                {/* Overlay Controls */}
                                 <div className="absolute top-2 right-2 flex gap-1 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
                                     <button
                                         onClick={(e) => {
@@ -478,7 +658,7 @@ export const ProductGrid = React.memo(function ProductGrid({ products, onAddProd
                                             handleDelete(product.id);
                                         }}
                                         className="w-6 h-6 rounded-full bg-white shadow-sm flex items-center justify-center hover:bg-red-50"
-                                        title="Usuń produkt"
+                                        title="Usun produkt"
                                     >
                                         {isDeleting ? (
                                             <Loader2 className="w-3 h-3 text-red-500 animate-spin" />
@@ -493,7 +673,7 @@ export const ProductGrid = React.memo(function ProductGrid({ products, onAddProd
                                             rel="noopener noreferrer"
                                             onClick={(e) => e.stopPropagation()}
                                             className="w-6 h-6 rounded-full bg-white shadow-sm flex items-center justify-center hover:bg-gray-50"
-                                            title="Otwórz w sklepie"
+                                            title="Otworz w sklepie"
                                         >
                                             <ExternalLink className="w-3 h-3 text-black" />
                                         </a>
@@ -528,21 +708,37 @@ export const ProductGrid = React.memo(function ProductGrid({ products, onAddProd
                                 <div className="mt-auto">
                                     <div className="flex justify-between items-end text-sm mb-2">
                                         <span className="text-muted-foreground">{product.quantity} szt.</span>
-                                        <span className="text-white font-medium text-base">{price} zł</span>
+                                        <span className="text-white font-medium text-base">{price} zl</span>
                                     </div>
 
-                                    {/* Status with Dropdown */}
+                                    {/* Planning Status or Fulfillment Status */}
                                     <div
                                         className="flex items-center gap-2 text-sm pt-2 border-t border-white/5"
                                         onClick={(e) => e.stopPropagation()}
                                     >
-                                        <span className="text-muted-foreground">Status</span>
-                                        <div className="ml-auto">
-                                            <StatusDropdown
-                                                currentStatus={product.status}
-                                                onStatusChange={(status) => handleStatusChange(product.id, status)}
-                                            />
-                                        </div>
+                                        {isApproved ? (
+                                            // Show fulfillment status for approved products
+                                            <>
+                                                <span className="text-muted-foreground">Realizacja</span>
+                                                <div className="ml-auto">
+                                                    <StatusDropdown
+                                                        currentStatus={product.status}
+                                                        onStatusChange={(status) => handleStatusChange(product.id, status)}
+                                                    />
+                                                </div>
+                                            </>
+                                        ) : (
+                                            // Show planning status selector for non-approved products
+                                            <>
+                                                <span className="text-muted-foreground">Typ</span>
+                                                <div className="ml-auto">
+                                                    <PlanningStatusDropdown
+                                                        currentStatus={product.planningStatus}
+                                                        onStatusChange={(status) => handlePlanningStatusChange(product.id, status)}
+                                                    />
+                                                </div>
+                                            </>
+                                        )}
                                     </div>
                                 </div>
                             </div>

@@ -851,3 +851,60 @@ export async function uploadRoomCoverImage(roomId: string, formData: FormData) {
         throw error
     }
 }
+
+/**
+ * Get all rooms for the active project
+ */
+export async function getActiveProjectRooms() {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user?.email) {
+        return []
+    }
+
+    const profile = await prisma.profile.findUnique({
+        where: { email: user.email }
+    })
+
+    if (!profile) {
+        return []
+    }
+
+    // Get active project ID from cookies
+    const cookies = await import('next/headers').then(m => m.cookies())
+    const activeProjectId = cookies.get('activeProjectId')?.value
+
+    if (!activeProjectId) {
+        return []
+    }
+
+    // Verify project ownership
+    const project = await prisma.project.findFirst({
+        where: {
+            id: activeProjectId,
+            designerId: profile.id
+        }
+    })
+
+    if (!project) {
+        return []
+    }
+
+    const rooms = await prisma.room.findMany({
+        where: {
+            projectId: activeProjectId
+        },
+        select: {
+            id: true,
+            name: true,
+            type: true,
+            coverImage: true
+        },
+        orderBy: {
+            name: 'asc'
+        }
+    })
+
+    return rooms
+}

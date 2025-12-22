@@ -34,6 +34,7 @@ interface Product {
     quantity: number;
     paidAmount: any;
     isInCart: boolean;
+    planningStatus: string;
     status: string;
 }
 

@@ -2,16 +2,17 @@
 
 import React, { useState, useEffect, use } from "react";
 import Link from "next/link";
-import { Search, Plus, MoreHorizontal, ArrowUpRight, Share2, Printer, ChevronDown, Loader2, Trash2, Package, ExternalLink } from "lucide-react";
+import { Search, Plus, Share2, Printer, ChevronDown, Loader2, Trash2, Package, ExternalLink, Home, Heart, MoveRight } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { cn } from "@/lib/utils";
 import { getWishlistById } from "@/app/actions/wishlists";
-import { deleteProduct, updateProduct } from "@/app/actions/products";
+import { deleteProduct, moveProductToRoom } from "@/app/actions/products";
+import { getActiveProjectRooms } from "@/app/actions/rooms";
 import { AddProductModal } from "@/components/modals/AddProductModal";
 import { useRouter } from "next/navigation";
-import { ProductStatus } from "@prisma/client";
+import { ProductPlanningStatus } from "@prisma/client";
 
 interface ProductItem {
     id: string;
@@ -22,7 +23,7 @@ interface ProductItem {
     imageUrl: string | null;
     price: any;
     quantity: number;
-    status: ProductStatus;
+    planningStatus: ProductPlanningStatus;
     createdAt: Date;
 }
 
@@ -32,15 +33,12 @@ interface WishlistData {
     productItems: ProductItem[];
 }
 
-const statusConfig: Record<ProductStatus, { label: string; dotColor: string }> = {
-    TO_ORDER: { label: "Do zamówienia", dotColor: "bg-[#E8B491] shadow-[0_0_8px_rgba(232,180,145,0.4)]" },
-    ORDERED: { label: "Zamówione", dotColor: "bg-[#91A3E8] shadow-[0_0_8px_rgba(145,163,232,0.4)]" },
-    DELIVERED: { label: "Dostarczone", dotColor: "bg-[#91E8B2] shadow-[0_0_8px_rgba(145,232,178,0.5)]" },
-    PAID: { label: "Opłacone", dotColor: "bg-[#B291E8] shadow-[0_0_8px_rgba(178,145,232,0.4)]" },
-    RETURNED: { label: "Zwrócone", dotColor: "bg-[#E89191] shadow-[0_0_8px_rgba(232,145,145,0.4)]" },
-};
-
-const allStatuses: ProductStatus[] = ["TO_ORDER", "ORDERED", "DELIVERED", "PAID", "RETURNED"];
+interface Room {
+    id: string;
+    name: string;
+    type: string;
+    coverImage: string | null;
+}
 
 export default function WishlistDetailsPage({ params }: { params: Promise<{ id: string }> }) {
     const resolvedParams = use(params);
@@ -50,11 +48,14 @@ export default function WishlistDetailsPage({ params }: { params: Promise<{ id: 
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const [deletingProductId, setDeletingProductId] = useState<string | null>(null);
-    const [editingStatusId, setEditingStatusId] = useState<string | null>(null);
-    const [savingStatusId, setSavingStatusId] = useState<string | null>(null);
+    const [movingProductId, setMovingProductId] = useState<string | null>(null);
+    const [rooms, setRooms] = useState<Room[]>([]);
+    const [showMoveModal, setShowMoveModal] = useState(false);
+    const [selectedProductForMove, setSelectedProductForMove] = useState<string | null>(null);
 
     useEffect(() => {
         loadWishlist();
+        loadRooms();
     }, [resolvedParams.id]);
 
     const loadWishlist = async () => {
@@ -66,8 +67,13 @@ export default function WishlistDetailsPage({ params }: { params: Promise<{ id: 
         setIsLoading(false);
     };
 
+    const loadRooms = async () => {
+        const roomsData = await getActiveProjectRooms();
+        setRooms(roomsData);
+    };
+
     const handleDeleteProduct = async (productId: string) => {
-        if (!confirm("Czy na pewno chcesz usunąć ten produkt?")) return;
+        if (!confirm("Czy na pewno chcesz usunac ten produkt?")) return;
 
         setDeletingProductId(productId);
         const result = await deleteProduct(productId);
@@ -77,23 +83,20 @@ export default function WishlistDetailsPage({ params }: { params: Promise<{ id: 
         setDeletingProductId(null);
     };
 
-    const handleStatusChange = async (productId: string, newStatus: ProductStatus) => {
-        setSavingStatusId(productId);
-        const result = await updateProduct(productId, { status: newStatus });
+    const handleMoveToRoom = async (productId: string, roomId: string) => {
+        setMovingProductId(productId);
+        const result = await moveProductToRoom(productId, roomId);
         if (result.success) {
-            // Update local state
-            setWishlist(prev => {
-                if (!prev) return prev;
-                return {
-                    ...prev,
-                    productItems: prev.productItems.map(p =>
-                        p.id === productId ? { ...p, status: newStatus } : p
-                    ),
-                };
-            });
+            await loadWishlist();
+            setShowMoveModal(false);
+            setSelectedProductForMove(null);
         }
-        setSavingStatusId(null);
-        setEditingStatusId(null);
+        setMovingProductId(null);
+    };
+
+    const openMoveModal = (productId: string) => {
+        setSelectedProductForMove(productId);
+        setShowMoveModal(true);
     };
 
     const filteredProducts = wishlist?.productItems.filter(p =>
@@ -196,10 +199,8 @@ export default function WishlistDetailsPage({ params }: { params: Promise<{ id: 
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
                         {filteredProducts.map((p) => {
-                            const statusInfo = statusConfig[p.status];
                             const isDeleting = deletingProductId === p.id;
-                            const isEditingStatus = editingStatusId === p.id;
-                            const isSavingStatus = savingStatusId === p.id;
+                            const isMoving = movingProductId === p.id;
                             const priceValue = Number(p.price);
 
                             return (
@@ -207,22 +208,31 @@ export default function WishlistDetailsPage({ params }: { params: Promise<{ id: 
                                     key={p.id}
                                     className={cn(
                                         "bg-[#151515] group rounded-xl overflow-hidden cursor-pointer flex flex-col h-full hover:ring-1 hover:ring-white/10 transition-all",
-                                        isDeleting && "opacity-50 pointer-events-none"
+                                        (isDeleting || isMoving) && "opacity-50 pointer-events-none"
                                     )}
                                 >
                                     {/* Image Area */}
                                     <div className="aspect-square bg-white relative flex items-center justify-center overflow-hidden">
-                                        {/* Overlay Controls */}
+                                        {/* Status Badge */}
                                         <div className="absolute top-2 left-2 z-10">
-                                            <div className="w-5 h-5 rounded border border-gray-300 bg-white flex items-center justify-center cursor-pointer hover:border-black transition-colors">
-                                                {/* Checkbox */}
+                                            <div className="flex items-center gap-1 px-2 py-1 bg-pink-500/90 rounded-full text-white text-xs font-medium">
+                                                <Heart className="w-3 h-3 fill-current" />
+                                                Polubione
                                             </div>
                                         </div>
+                                        {/* Overlay Controls */}
                                         <div className="absolute top-2 right-2 flex gap-1 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <button
+                                                onClick={() => openMoveModal(p.id)}
+                                                className="w-6 h-6 rounded-full bg-white shadow-sm flex items-center justify-center hover:bg-blue-50"
+                                                title="Przenies do pomieszczenia"
+                                            >
+                                                <MoveRight className="w-3 h-3 text-blue-500" />
+                                            </button>
                                             <button
                                                 onClick={() => handleDeleteProduct(p.id)}
                                                 className="w-6 h-6 rounded-full bg-white shadow-sm flex items-center justify-center hover:bg-red-50"
-                                                title="Usuń produkt"
+                                                title="Usun produkt"
                                             >
                                                 {isDeleting ? (
                                                     <Loader2 className="w-3 h-3 text-red-500 animate-spin" />
@@ -236,7 +246,7 @@ export default function WishlistDetailsPage({ params }: { params: Promise<{ id: 
                                                     target="_blank"
                                                     rel="noopener noreferrer"
                                                     className="w-6 h-6 rounded-full bg-white shadow-sm flex items-center justify-center hover:bg-gray-50"
-                                                    title="Otwórz w sklepie"
+                                                    title="Otworz w sklepie"
                                                 >
                                                     <ExternalLink className="w-3 h-3 text-black" />
                                                 </a>
@@ -273,44 +283,18 @@ export default function WishlistDetailsPage({ params }: { params: Promise<{ id: 
                                             <div className="flex justify-between items-end text-sm mb-2">
                                                 <span className="text-muted-foreground">{p.quantity} szt.</span>
                                                 <span className="text-white font-medium text-base">
-                                                    {priceValue.toLocaleString('pl-PL')} zł
+                                                    {priceValue.toLocaleString('pl-PL')} zl
                                                 </span>
                                             </div>
 
-                                            <div className="flex items-center gap-2 text-sm pt-2 border-t border-white/5">
-                                                <span className="text-muted-foreground">Status</span>
-                                                {isEditingStatus ? (
-                                                    <div className="flex flex-wrap gap-1 ml-auto">
-                                                        {allStatuses.map((status) => (
-                                                            <button
-                                                                key={status}
-                                                                onClick={() => handleStatusChange(p.id, status)}
-                                                                disabled={isSavingStatus}
-                                                                className={cn(
-                                                                    "px-2 py-1 rounded text-xs transition-colors",
-                                                                    p.status === status
-                                                                        ? "bg-white/20 text-white"
-                                                                        : "bg-[#252525] text-muted-foreground hover:bg-[#303030] hover:text-white"
-                                                                )}
-                                                            >
-                                                                {statusConfig[status].label}
-                                                            </button>
-                                                        ))}
-                                                    </div>
-                                                ) : (
-                                                    <div
-                                                        className="flex items-center gap-2 ml-auto cursor-pointer hover:opacity-80"
-                                                        onClick={() => setEditingStatusId(p.id)}
-                                                    >
-                                                        {isSavingStatus ? (
-                                                            <Loader2 className="w-2.5 h-2.5 animate-spin" />
-                                                        ) : (
-                                                            <span className={`w-2.5 h-2.5 rounded-full ${statusInfo.dotColor}`}></span>
-                                                        )}
-                                                        <span className="text-[#F3F3F3]">{statusInfo.label}</span>
-                                                    </div>
-                                                )}
-                                            </div>
+                                            {/* Move to room button */}
+                                            <button
+                                                onClick={() => openMoveModal(p.id)}
+                                                className="w-full flex items-center justify-center gap-2 text-sm pt-2 mt-2 border-t border-white/5 text-muted-foreground hover:text-white transition-colors"
+                                            >
+                                                <Home className="w-4 h-4" />
+                                                Przenies do pomieszczenia
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -338,6 +322,73 @@ export default function WishlistDetailsPage({ params }: { params: Promise<{ id: 
                 wishlistId={wishlist.id}
                 onSuccess={loadWishlist}
             />
+
+            {/* Move to Room Modal */}
+            {showMoveModal && (
+                <>
+                    <div
+                        className="fixed inset-0 bg-black/50 z-50"
+                        onClick={() => {
+                            setShowMoveModal(false);
+                            setSelectedProductForMove(null);
+                        }}
+                    />
+                    <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 bg-[#151515] rounded-2xl p-6 w-full max-w-md shadow-xl border border-white/10">
+                        <h3 className="text-lg font-semibold text-white mb-4">Przenies do pomieszczenia</h3>
+
+                        {rooms.length === 0 ? (
+                            <div className="text-center py-8">
+                                <Home className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+                                <p className="text-muted-foreground mb-4">Brak pomieszczen w projekcie</p>
+                                <Link href="/rooms">
+                                    <Button>Utworz pomieszczenie</Button>
+                                </Link>
+                            </div>
+                        ) : (
+                            <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                                {rooms.map((room) => (
+                                    <button
+                                        key={room.id}
+                                        onClick={() => selectedProductForMove && handleMoveToRoom(selectedProductForMove, room.id)}
+                                        disabled={movingProductId !== null}
+                                        className="w-full flex items-center gap-3 p-3 rounded-xl bg-[#1B1B1B] hover:bg-[#252525] transition-colors text-left"
+                                    >
+                                        {room.coverImage ? (
+                                            <img src={room.coverImage} alt={room.name} className="w-12 h-12 rounded-lg object-cover" />
+                                        ) : (
+                                            <div className="w-12 h-12 rounded-lg bg-[#252525] flex items-center justify-center">
+                                                <Home className="w-5 h-5 text-muted-foreground" />
+                                            </div>
+                                        )}
+                                        <div className="flex-1">
+                                            <p className="text-white font-medium">{room.name}</p>
+                                            <p className="text-sm text-muted-foreground capitalize">{room.type.toLowerCase().replace('_', ' ')}</p>
+                                        </div>
+                                        {movingProductId === selectedProductForMove ? (
+                                            <Loader2 className="w-5 h-5 text-muted-foreground animate-spin" />
+                                        ) : (
+                                            <MoveRight className="w-5 h-5 text-muted-foreground" />
+                                        )}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+
+                        <div className="mt-4 pt-4 border-t border-white/10">
+                            <Button
+                                variant="secondary"
+                                className="w-full"
+                                onClick={() => {
+                                    setShowMoveModal(false);
+                                    setSelectedProductForMove(null);
+                                }}
+                            >
+                                Anuluj
+                            </Button>
+                        </div>
+                    </div>
+                </>
+            )}
         </div>
     );
 }

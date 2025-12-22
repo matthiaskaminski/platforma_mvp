@@ -46,11 +46,21 @@ enum RoomType {
   OTHER    @map("other")
 }
 
+// Product planning status (lifecycle)
+enum ProductPlanningStatus {
+  LIKED         @map("liked")
+  MAIN          @map("main")
+  VARIANT       @map("variant")
+  APPROVED      @map("approved")
+  REJECTED      @map("rejected")
+}
+
+// Product fulfillment status (after approval)
 enum ProductStatus {
   TO_ORDER      @map("to_order")
   ORDERED       @map("ordered")
-  DELIVERED     @map("delivered")
   PAID          @map("paid")
+  DELIVERED     @map("delivered")
   RETURNED      @map("returned")
 }
 
@@ -220,8 +230,10 @@ model ProductItem {
   quantity    Int      @default(1)
   paidAmount  Decimal  @default(0) @map("paid_amount") @db.Decimal(12, 2)
 
-  isInCart    Boolean  @default(false) @map("is_in_cart")
+  planningStatus ProductPlanningStatus @default(LIKED) @map("planning_status")
   status      ProductStatus @default(TO_ORDER)
+  isInCart    Boolean  @default(false) @map("is_in_cart")
+
   notes       String?
 
   createdAt   DateTime @default(now()) @map("created_at")
@@ -229,6 +241,7 @@ model ProductItem {
 
   @@index([wishlistId])
   @@index([roomId])
+  @@index([planningStatus])
   @@map("product_items")
 }
 
