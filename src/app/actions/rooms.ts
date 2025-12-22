@@ -880,7 +880,7 @@ export async function getActiveProjectRooms() {
 
     // Get active project ID from cookies
     const cookies = await import('next/headers').then(m => m.cookies())
-    const activeProjectId = cookies.get('activeProjectId')?.value
+    const activeProjectId = cookies.get('active-project-id')?.value
 
     if (!activeProjectId) {
         return []

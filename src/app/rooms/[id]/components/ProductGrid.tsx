@@ -147,7 +147,9 @@ function PlanningStatusDropdown({
 }) {
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
-    const statusInfo = planningStatusConfig[currentStatus] || planningStatusConfig['VARIANT'];
+    // If product is LIKED in room, treat it as VARIANT (LIKED should not exist in rooms)
+    const effectiveStatus = currentStatus === 'LIKED' ? 'VARIANT' : currentStatus;
+    const statusInfo = planningStatusConfig[effectiveStatus] || planningStatusConfig['VARIANT'];
 
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
@@ -160,7 +162,7 @@ function PlanningStatusDropdown({
     }, []);
 
     // Don't allow changing if approved or rejected
-    if (currentStatus === 'APPROVED' || currentStatus === 'REJECTED') {
+    if (effectiveStatus === 'APPROVED' || effectiveStatus === 'REJECTED') {
         return (
             <div className="flex items-center gap-2">
                 <span className={`w-2.5 h-2.5 rounded-full ${statusInfo.dotColor}`}></span>
@@ -187,12 +189,7 @@ function PlanningStatusDropdown({
             </button>
 
             {isOpen && (
-                <div className="fixed w-48 bg-[#1B1B1B] border border-white/10 rounded-lg shadow-2xl py-1"
-                    style={{
-                        zIndex: 9999,
-                        transform: 'translateY(-100%) translateY(-8px)'
-                    }}
-                >
+                <div className="absolute bottom-full right-0 mb-2 w-48 bg-[#1B1B1B] border border-white/10 rounded-lg shadow-2xl py-1 z-50">
                     {planningOptions.map((option) => (
                         <button
                             key={option.value}
@@ -203,12 +200,12 @@ function PlanningStatusDropdown({
                             }}
                             className={cn(
                                 "w-full flex items-center gap-2 px-3 py-2.5 hover:bg-[#232323] transition-colors text-left",
-                                currentStatus === option.value && "bg-[#232323]"
+                                effectiveStatus === option.value && "bg-[#232323]"
                             )}
                         >
                             <span className={`w-2.5 h-2.5 rounded-full ${option.dotColor}`}></span>
                             <span className="text-[#F3F3F3] text-sm">{option.label}</span>
-                            {currentStatus === option.value && (
+                            {effectiveStatus === option.value && (
                                 <Check className="w-4 h-4 text-white ml-auto" />
                             )}
                         </button>
