@@ -44,6 +44,7 @@ export function CreateRoomModal({ isOpen, onClose, projectId }: CreateRoomModalP
     const [selectedType, setSelectedType] = useState<RoomType>('LIVING');
     const [selectedStatus, setSelectedStatus] = useState<RoomStatus>('NOT_STARTED');
     const [area, setArea] = useState('');
+    const [hasBudgetLimit, setHasBudgetLimit] = useState(false);
     const [budget, setBudget] = useState('');
     const [floorNumber, setFloorNumber] = useState('');
     const [coverImage, setCoverImage] = useState<File | null>(null);
@@ -122,8 +123,8 @@ export function CreateRoomModal({ isOpen, onClose, projectId }: CreateRoomModalP
                 }
             }
 
-            // Budget: only set if provided and > 0, otherwise leave undefined (no room limit)
-            const budgetValue = budget ? parseFloat(budget) : 0;
+            // Budget: only set if checkbox is checked and value > 0
+            const budgetValue = hasBudgetLimit && budget ? parseFloat(budget) : 0;
 
             await createRoom({
                 projectId,
@@ -140,6 +141,7 @@ export function CreateRoomModal({ isOpen, onClose, projectId }: CreateRoomModalP
             setSelectedType('LIVING');
             setSelectedStatus('NOT_STARTED');
             setArea('');
+            setHasBudgetLimit(false);
             setBudget('');
             setFloorNumber('');
             setCoverImage(null);
@@ -254,8 +256,8 @@ export function CreateRoomModal({ isOpen, onClose, projectId }: CreateRoomModalP
                         </div>
                     </div>
 
-                    {/* Area, Budget & Floor */}
-                    <div className="grid grid-cols-3 gap-4">
+                    {/* Area & Floor */}
+                    <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-medium mb-2">
                                 Metraż (m²)
@@ -271,22 +273,6 @@ export function CreateRoomModal({ isOpen, onClose, projectId }: CreateRoomModalP
                         </div>
                         <div>
                             <label className="block text-sm font-medium mb-2">
-                                Budżet (PLN)
-                            </label>
-                            <Input
-                                type="number"
-                                step="100"
-                                min="0"
-                                value={budget}
-                                onChange={(e) => setBudget(e.target.value)}
-                                placeholder="Brak"
-                            />
-                            <p className="text-xs text-muted-foreground mt-1">
-                                Opcjonalne - bez limitu
-                            </p>
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium mb-2">
                                 Piętro
                             </label>
                             <Input
@@ -298,6 +284,45 @@ export function CreateRoomModal({ isOpen, onClose, projectId }: CreateRoomModalP
                                 placeholder="0"
                             />
                         </div>
+                    </div>
+
+                    {/* Budget Limit Option */}
+                    <div>
+                        <label
+                            className="flex items-center gap-3 cursor-pointer group"
+                            onClick={() => setHasBudgetLimit(!hasBudgetLimit)}
+                        >
+                            <div className={cn(
+                                "w-5 h-5 rounded border-2 flex items-center justify-center transition-all",
+                                hasBudgetLimit
+                                    ? "bg-white border-white"
+                                    : "border-white/20 group-hover:border-white/40"
+                            )}>
+                                {hasBudgetLimit && (
+                                    <svg className="w-3 h-3 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                )}
+                            </div>
+                            <span className="text-sm font-medium">Określ budżet dla tego pomieszczenia</span>
+                        </label>
+
+                        {hasBudgetLimit && (
+                            <div className="mt-3 pl-8">
+                                <Input
+                                    type="number"
+                                    step="100"
+                                    min="1"
+                                    value={budget}
+                                    onChange={(e) => setBudget(e.target.value)}
+                                    placeholder="Wpisz kwotę w PLN"
+                                    autoFocus
+                                />
+                                <p className="text-xs text-muted-foreground mt-1">
+                                    Maksymalny budżet dla tego pomieszczenia
+                                </p>
+                            </div>
+                        )}
                     </div>
 
                     {/* Cover Image Upload */}
