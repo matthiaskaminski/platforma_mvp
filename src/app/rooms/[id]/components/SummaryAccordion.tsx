@@ -8,7 +8,9 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 
 interface ProjectSummary {
-    budgetGoal: any;
+    budgetGoal: any;  // Room-specific budget (can be null)
+    projectBudget?: any;  // Project total budget for percentage calculation
+    hasRoomBudget?: boolean;  // Flag to know if room has its own budget
     rooms: {
         productItems: {
             price: any;
@@ -47,7 +49,11 @@ export function SummaryAccordion({ projectSummary }: SummaryAccordionProps) {
                 services: 0,
                 total: 0,
                 budgetGoal: 0,
-                percentage: 0
+                projectBudget: 0,
+                hasRoomBudget: false,
+                remaining: 0,
+                percentage: 0,
+                projectPercentage: 0
             };
         }
 
@@ -75,26 +81,35 @@ export function SummaryAccordion({ projectSummary }: SummaryAccordionProps) {
 
         const total = products + materials + services;
         const budgetGoal = Number(projectSummary.budgetGoal) || 0;
-        const remaining = budgetGoal - total;
-        const percentage = budgetGoal > 0 ? Math.round((total / budgetGoal) * 100) : 0;
+        const projectBudget = Number(projectSummary.projectBudget) || 0;
+        const hasRoomBudget = projectSummary.hasRoomBudget ?? (budgetGoal > 0);
+
+        // If room has its own budget, calculate remaining and percentage based on room budget
+        // Otherwise, calculate percentage based on project budget
+        const remaining = hasRoomBudget && budgetGoal > 0 ? Math.max(0, budgetGoal - total) : 0;
+        const percentage = hasRoomBudget && budgetGoal > 0 ? Math.round((total / budgetGoal) * 100) : 0;
+        const projectPercentage = projectBudget > 0 ? Math.round((total / projectBudget) * 100) : 0;
 
         return {
             products,
             materials,
             services,
-            remaining: remaining > 0 ? remaining : 0,
+            remaining,
             total,
             budgetGoal,
-            percentage
+            projectBudget,
+            hasRoomBudget,
+            percentage,
+            projectPercentage
         };
     }, [projectSummary]);
 
-    // Prepare chart data
+    // Prepare chart data - only show "Pozostało" if room has its own budget
     const budgetData = [
         { name: "Produkty", value: budget.products, color: "#F3F3F3" },
         { name: "Materiały", value: budget.materials, color: "#6E6E6E" },
         { name: "Usługi", value: budget.services, color: "#2F2F2F" },
-        { name: "Pozostało", value: budget.remaining, color: "#232323" },
+        ...(budget.hasRoomBudget ? [{ name: "Pozostało", value: budget.remaining, color: "#232323" }] : []),
     ].filter(item => item.value && item.value > 0); // Only show categories with values
 
     // Format currency
@@ -211,7 +226,7 @@ export function SummaryAccordion({ projectSummary }: SummaryAccordionProps) {
                                                 { label: "Produkty", val: budget.products, color: "bg-[#F3F3F3]" },
                                                 { label: "Materiały", val: budget.materials, color: "bg-[#6E6E6E]" },
                                                 { label: "Usługi", val: budget.services, color: "bg-[#2F2F2F]" },
-                                                { label: "Pozostało", val: budget.remaining, color: "bg-[#232323]" },
+                                                ...(budget.hasRoomBudget ? [{ label: "Pozostało", val: budget.remaining, color: "bg-[#232323]" }] : []),
                                             ].filter(item => item.val && item.val > 0).map((item) => (
                                                 <div key={item.label} className="flex justify-between items-center text-sm">
                                                     <div className="flex items-center gap-2">
@@ -248,8 +263,13 @@ export function SummaryAccordion({ projectSummary }: SummaryAccordionProps) {
                                                     </Pie>
                                                 </PieChart>
                                             </ResponsiveContainer>
-                                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                                <span className="text-[28px] font-bold text-white">{budget.percentage}%</span>
+                                            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                                                <span className="text-[28px] font-bold text-white">
+                                                    {budget.hasRoomBudget ? budget.percentage : budget.projectPercentage}%
+                                                </span>
+                                                {!budget.hasRoomBudget && budget.projectBudget > 0 && (
+                                                    <span className="text-xs text-muted-foreground">budżetu projektu</span>
+                                                )}
                                             </div>
                                         </div>
                                     )}

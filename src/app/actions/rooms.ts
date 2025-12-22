@@ -708,6 +708,7 @@ export async function getProjectSummary(projectId: string) {
  * Get room summary (budget and tasks for specific room)
  * Budget estymacyjny = sum of MAIN products only
  * Budget rzeczywisty = sum of APPROVED products only
+ * If room has no budget, show % of project budget
  */
 export async function getRoomSummary(roomId: string) {
     const supabase = await createClient()
@@ -725,7 +726,7 @@ export async function getRoomSummary(roomId: string) {
         return null
     }
 
-    // Get room with products and tasks
+    // Get room with products, tasks and project budget
     const room = await prisma.room.findFirst({
         where: {
             id: roomId,
@@ -735,7 +736,12 @@ export async function getRoomSummary(roomId: string) {
         },
         select: {
             id: true,
-            budgetAllocated: true,  // Room-specific budget
+            budgetAllocated: true,  // Room-specific budget (optional)
+            project: {
+                select: {
+                    budgetGoal: true  // Project total budget
+                }
+            },
             productItems: {
                 select: {
                     price: true,
@@ -772,9 +778,11 @@ export async function getRoomSummary(roomId: string) {
     // Filter products for estimated budget (only MAIN products)
     const mainProducts = room.productItems.filter(p => p.planningStatus === 'MAIN');
 
-    // Transform to match expected format - use room's budget, not project's
+    // Return room budget if set, otherwise return project budget for percentage calculation
     return {
-        budgetGoal: room.budgetAllocated,  // Room-specific budget
+        budgetGoal: room.budgetAllocated,  // Room-specific budget (can be null)
+        projectBudget: room.project.budgetGoal,  // Project total budget for percentage
+        hasRoomBudget: room.budgetAllocated !== null,  // Flag to know if room has its own budget
         rooms: [{ productItems: mainProducts }],  // Only MAIN products for budget calculation
         allProducts: room.productItems,  // All products for reference
         tasks: room.tasks
