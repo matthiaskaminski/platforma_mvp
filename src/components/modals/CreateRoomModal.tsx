@@ -122,12 +122,15 @@ export function CreateRoomModal({ isOpen, onClose, projectId }: CreateRoomModalP
                 }
             }
 
+            // Budget: only set if provided and > 0, otherwise leave undefined (no room limit)
+            const budgetValue = budget ? parseFloat(budget) : 0;
+
             await createRoom({
                 projectId,
                 name: finalName,
                 type: selectedType,
                 area: area ? parseFloat(area) : undefined,
-                budgetAllocated: budget ? parseFloat(budget) : undefined,
+                budgetAllocated: budgetValue > 0 ? budgetValue : undefined,
                 floorNumber: floorNumber ? parseInt(floorNumber) : undefined,
                 coverImage: imageUrl,
             });
@@ -276,8 +279,11 @@ export function CreateRoomModal({ isOpen, onClose, projectId }: CreateRoomModalP
                                 min="0"
                                 value={budget}
                                 onChange={(e) => setBudget(e.target.value)}
-                                placeholder="0"
+                                placeholder="Brak"
                             />
+                            <p className="text-xs text-muted-foreground mt-1">
+                                Opcjonalne - bez limitu
+                            </p>
                         </div>
                         <div>
                             <label className="block text-sm font-medium mb-2">

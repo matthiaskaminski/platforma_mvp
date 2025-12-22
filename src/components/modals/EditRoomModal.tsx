@@ -146,12 +146,15 @@ export function EditRoomModal({ isOpen, onClose, room }: EditRoomModalProps) {
                 imageUrl = undefined;
             }
 
+            // Budget: only set if provided and > 0, otherwise null (no room limit)
+            const budgetValue = budget ? parseFloat(budget) : 0;
+
             await updateRoom(room.id, {
                 name: name.trim(),
                 type: selectedType,
                 status: selectedStatus,
                 area: area ? parseFloat(area) : undefined,
-                budgetAllocated: budget ? parseFloat(budget) : undefined,
+                budgetAllocated: budgetValue > 0 ? budgetValue : null,  // null to remove budget
                 floorNumber: floorNumber ? parseInt(floorNumber) : undefined,
                 coverImage: imageUrl,
             });
@@ -288,8 +291,11 @@ export function EditRoomModal({ isOpen, onClose, room }: EditRoomModalProps) {
                                 min="0"
                                 value={budget}
                                 onChange={(e) => setBudget(e.target.value)}
-                                placeholder="0"
+                                placeholder="Brak"
                             />
+                            <p className="text-xs text-muted-foreground mt-1">
+                                Opcjonalne - bez limitu
+                            </p>
                         </div>
                         <div>
                             <label className="block text-sm font-medium mb-2">

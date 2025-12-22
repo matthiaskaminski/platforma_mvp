@@ -73,7 +73,7 @@ export async function updateRoom(roomId: string, data: {
     status?: RoomStatus
     area?: number
     floorNumber?: number
-    budgetAllocated?: number
+    budgetAllocated?: number | null  // null to remove budget limit
     coverImage?: string
 }) {
     const supabase = await createClient()
@@ -778,11 +778,15 @@ export async function getRoomSummary(roomId: string) {
     // Filter products for estimated budget (only MAIN products)
     const mainProducts = room.productItems.filter(p => p.planningStatus === 'MAIN');
 
+    // Check if room has its own budget (not null AND greater than 0)
+    const roomBudgetValue = Number(room.budgetAllocated) || 0;
+    const hasRoomBudget = room.budgetAllocated !== null && roomBudgetValue > 0;
+
     // Return room budget if set, otherwise return project budget for percentage calculation
     return {
         budgetGoal: room.budgetAllocated,  // Room-specific budget (can be null)
         projectBudget: room.project.budgetGoal,  // Project total budget for percentage
-        hasRoomBudget: room.budgetAllocated !== null,  // Flag to know if room has its own budget
+        hasRoomBudget,  // Flag to know if room has its own budget (not null AND > 0)
         rooms: [{ productItems: mainProducts }],  // Only MAIN products for budget calculation
         allProducts: room.productItems,  // All products for reference
         tasks: room.tasks
