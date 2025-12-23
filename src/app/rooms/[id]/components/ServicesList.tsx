@@ -1,11 +1,11 @@
 "use client";
 
 import React, { useState } from "react";
-import { Package, Users, Plus, Trash2, Check, Loader2, ExternalLink, Clock, Wrench } from "lucide-react";
+import { Package, Users, Plus, Trash2, Check, Loader2, ExternalLink, Clock, Wrench, Pencil, X, Undo2 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
-import { deleteService, approveService } from "@/app/actions/services";
+import { deleteService, approveService, revokeServiceApproval, updateService } from "@/app/actions/services";
 import { useRouter } from "next/navigation";
 
 interface ServiceItem {
@@ -63,6 +63,8 @@ export function ServicesList({ services, onAddService }: ServicesListProps) {
     const router = useRouter();
     const [deletingId, setDeletingId] = useState<string | null>(null);
     const [approvingId, setApprovingId] = useState<string | null>(null);
+    const [revokingId, setRevokingId] = useState<string | null>(null);
+    const [editingId, setEditingId] = useState<string | null>(null);
 
     const handleDelete = async (id: string) => {
         if (!confirm("Czy na pewno chcesz usunąć tę usługę?")) return;
@@ -82,6 +84,17 @@ export function ServicesList({ services, onAddService }: ServicesListProps) {
             router.refresh();
         }
         setApprovingId(null);
+    };
+
+    const handleRevokeApproval = async (id: string) => {
+        if (!confirm("Czy na pewno chcesz cofnąć zatwierdzenie tej usługi? Status zostanie zmieniony na 'Planowane'.")) return;
+
+        setRevokingId(id);
+        const result = await revokeServiceApproval(id);
+        if (result.success) {
+            router.refresh();
+        }
+        setRevokingId(null);
     };
 
     const formatCurrency = (value: number) => {
@@ -130,8 +143,13 @@ export function ServicesList({ services, onAddService }: ServicesListProps) {
                                 service={service}
                                 onDelete={handleDelete}
                                 onApprove={handleApprove}
+                                onRevokeApproval={handleRevokeApproval}
+                                onEdit={() => setEditingId(service.id)}
                                 isDeleting={deletingId === service.id}
                                 isApproving={approvingId === service.id}
+                                isRevoking={revokingId === service.id}
+                                isEditing={editingId === service.id}
+                                onCancelEdit={() => setEditingId(null)}
                                 formatCurrency={formatCurrency}
                             />
                         ))}
@@ -154,8 +172,13 @@ export function ServicesList({ services, onAddService }: ServicesListProps) {
                                 service={service}
                                 onDelete={handleDelete}
                                 onApprove={handleApprove}
+                                onRevokeApproval={handleRevokeApproval}
+                                onEdit={() => setEditingId(service.id)}
                                 isDeleting={deletingId === service.id}
                                 isApproving={approvingId === service.id}
+                                isRevoking={revokingId === service.id}
+                                isEditing={editingId === service.id}
+                                onCancelEdit={() => setEditingId(null)}
                                 formatCurrency={formatCurrency}
                             />
                         ))}
@@ -171,12 +194,18 @@ interface ServiceCardProps {
     service: ServiceItem;
     onDelete: (id: string) => void;
     onApprove: (id: string) => void;
+    onRevokeApproval: (id: string) => void;
+    onEdit: () => void;
     isDeleting: boolean;
     isApproving: boolean;
+    isRevoking: boolean;
+    isEditing: boolean;
+    onCancelEdit: () => void;
     formatCurrency: (value: number) => string;
 }
 
-function ServiceCard({ service, onDelete, onApprove, isDeleting, isApproving, formatCurrency }: ServiceCardProps) {
+function ServiceCard({ service, onDelete, onApprove, onRevokeApproval, onEdit, isDeleting, isApproving, isRevoking, isEditing, onCancelEdit, formatCurrency }: ServiceCardProps) {
+    const router = useRouter();
     const isMaterial = service.category === "MATERIAL";
     const statusInfo = planningStatusConfig[service.planningStatus] || planningStatusConfig['DRAFT'];
     const fulfillmentStatus = service.planningStatus === "APPROVED"
@@ -184,6 +213,182 @@ function ServiceCard({ service, onDelete, onApprove, isDeleting, isApproving, fo
             ? materialStatusLabels[service.materialStatus || 'TO_ORDER']
             : laborStatusLabels[service.laborStatus || 'TO_ORDER'])
         : null;
+
+    // Edit form state
+    const [editForm, setEditForm] = useState({
+        name: service.name || '',
+        subcontractor: service.subcontractor || '',
+        price: service.price.toString(),
+        quantity: service.quantity?.toString() || '',
+        unit: service.unit || '',
+        scope: service.scope || '',
+        duration: service.duration || '',
+        materialType: service.materialType || '',
+        url: service.url || '',
+        notes: service.notes || ''
+    });
+    const [isSaving, setIsSaving] = useState(false);
+
+    const handleSaveEdit = async () => {
+        setIsSaving(true);
+        try {
+            const updateData: any = {
+                price: parseFloat(editForm.price) || 0,
+                url: editForm.url || null,
+                notes: editForm.notes || null
+            };
+
+            if (isMaterial) {
+                updateData.name = editForm.name;
+                updateData.quantity = editForm.quantity ? parseFloat(editForm.quantity) : null;
+                updateData.unit = editForm.unit || null;
+                updateData.materialType = editForm.materialType || null;
+            } else {
+                updateData.subcontractor = editForm.subcontractor;
+                updateData.scope = editForm.scope || null;
+                updateData.duration = editForm.duration || null;
+            }
+
+            const result = await updateService(service.id, updateData);
+            if (result.success) {
+                router.refresh();
+                onCancelEdit();
+            }
+        } catch (error) {
+            console.error('Error updating service:', error);
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    if (isEditing) {
+        return (
+            <Card className="overflow-hidden flex flex-col p-4 gap-3">
+                <div className="flex items-center justify-between mb-2">
+                    <h4 className="font-medium text-white">Edytuj {isMaterial ? 'materiał' : 'robociznę'}</h4>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0"
+                        onClick={onCancelEdit}
+                    >
+                        <X className="w-4 h-4" />
+                    </Button>
+                </div>
+
+                <div className="space-y-3">
+                    {isMaterial ? (
+                        <>
+                            <input
+                                type="text"
+                                placeholder="Nazwa"
+                                value={editForm.name}
+                                onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                                className="w-full bg-[#1B1B1B] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder:text-muted-foreground focus:outline-none focus:border-white/20"
+                            />
+                            <input
+                                type="text"
+                                placeholder="Typ materiału"
+                                value={editForm.materialType}
+                                onChange={(e) => setEditForm({ ...editForm, materialType: e.target.value })}
+                                className="w-full bg-[#1B1B1B] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder:text-muted-foreground focus:outline-none focus:border-white/20"
+                            />
+                            <div className="flex gap-2">
+                                <input
+                                    type="number"
+                                    placeholder="Ilość"
+                                    value={editForm.quantity}
+                                    onChange={(e) => setEditForm({ ...editForm, quantity: e.target.value })}
+                                    className="flex-1 bg-[#1B1B1B] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder:text-muted-foreground focus:outline-none focus:border-white/20"
+                                />
+                                <input
+                                    type="text"
+                                    placeholder="Jednostka"
+                                    value={editForm.unit}
+                                    onChange={(e) => setEditForm({ ...editForm, unit: e.target.value })}
+                                    className="w-24 bg-[#1B1B1B] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder:text-muted-foreground focus:outline-none focus:border-white/20"
+                                />
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            <input
+                                type="text"
+                                placeholder="Podwykonawca"
+                                value={editForm.subcontractor}
+                                onChange={(e) => setEditForm({ ...editForm, subcontractor: e.target.value })}
+                                className="w-full bg-[#1B1B1B] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder:text-muted-foreground focus:outline-none focus:border-white/20"
+                            />
+                            <input
+                                type="text"
+                                placeholder="Zakres prac"
+                                value={editForm.scope}
+                                onChange={(e) => setEditForm({ ...editForm, scope: e.target.value })}
+                                className="w-full bg-[#1B1B1B] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder:text-muted-foreground focus:outline-none focus:border-white/20"
+                            />
+                            <input
+                                type="text"
+                                placeholder="Czas trwania"
+                                value={editForm.duration}
+                                onChange={(e) => setEditForm({ ...editForm, duration: e.target.value })}
+                                className="w-full bg-[#1B1B1B] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder:text-muted-foreground focus:outline-none focus:border-white/20"
+                            />
+                        </>
+                    )}
+
+                    <input
+                        type="number"
+                        placeholder="Cena"
+                        value={editForm.price}
+                        onChange={(e) => setEditForm({ ...editForm, price: e.target.value })}
+                        className="w-full bg-[#1B1B1B] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder:text-muted-foreground focus:outline-none focus:border-white/20"
+                    />
+
+                    <input
+                        type="url"
+                        placeholder="Link URL"
+                        value={editForm.url}
+                        onChange={(e) => setEditForm({ ...editForm, url: e.target.value })}
+                        className="w-full bg-[#1B1B1B] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder:text-muted-foreground focus:outline-none focus:border-white/20"
+                    />
+
+                    <textarea
+                        placeholder="Notatki"
+                        value={editForm.notes}
+                        onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
+                        rows={2}
+                        className="w-full bg-[#1B1B1B] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder:text-muted-foreground focus:outline-none focus:border-white/20 resize-none"
+                    />
+                </div>
+
+                <div className="flex gap-2 mt-2">
+                    <Button
+                        size="sm"
+                        className="flex-1 h-9 bg-[#91E8B2]/10 hover:bg-[#91E8B2]/20 text-[#91E8B2]"
+                        onClick={handleSaveEdit}
+                        disabled={isSaving}
+                    >
+                        {isSaving ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                            <>
+                                <Check className="w-4 h-4 mr-1" />
+                                Zapisz
+                            </>
+                        )}
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className="flex-1 h-9 bg-[#1B1B1B] hover:bg-[#252525]"
+                        onClick={onCancelEdit}
+                    >
+                        Anuluj
+                    </Button>
+                </div>
+            </Card>
+        );
+    }
 
     return (
         <Card className={cn(
@@ -243,15 +448,42 @@ function ServiceCard({ service, onDelete, onApprove, isDeleting, isApproving, fo
                     <Button
                         variant="ghost"
                         size="sm"
-                        className="flex-1 h-8 text-xs bg-[#1B1B1B] hover:bg-[#252525]"
+                        className="h-8 px-2 bg-[#1B1B1B] hover:bg-[#252525]"
                         onClick={() => window.open(service.url!, '_blank')}
                     >
-                        <ExternalLink className="w-3 h-3 mr-1" />
-                        Link
+                        <ExternalLink className="w-3 h-3" />
                     </Button>
                 )}
 
-                {service.planningStatus !== "APPROVED" && (
+                {/* Edit button */}
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 px-2 bg-[#1B1B1B] hover:bg-[#252525] text-muted-foreground hover:text-white"
+                    onClick={onEdit}
+                >
+                    <Pencil className="w-3 h-3" />
+                </Button>
+
+                {service.planningStatus === "APPROVED" ? (
+                    // Revoke approval button for approved services
+                    <Button
+                        size="sm"
+                        className="flex-1 h-8 text-xs bg-[#E8B491]/10 hover:bg-[#E8B491]/20 text-[#E8B491]"
+                        onClick={() => onRevokeApproval(service.id)}
+                        disabled={isRevoking}
+                    >
+                        {isRevoking ? (
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                        ) : (
+                            <>
+                                <Undo2 className="w-3 h-3 mr-1" />
+                                Cofnij
+                            </>
+                        )}
+                    </Button>
+                ) : (
+                    // Approve button for non-approved services
                     <Button
                         size="sm"
                         className="flex-1 h-8 text-xs bg-[#91E8B2]/10 hover:bg-[#91E8B2]/20 text-[#91E8B2]"

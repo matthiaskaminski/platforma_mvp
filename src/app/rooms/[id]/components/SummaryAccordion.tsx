@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
-import { ChevronDown, ListTodo, Plus, Wrench } from "lucide-react";
+import { ChevronDown, ListTodo, Plus } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -125,17 +125,20 @@ export function SummaryAccordion({ projectSummary }: SummaryAccordionProps) {
         };
     }, [projectSummary]);
 
-    // Get services data
-    const servicesApproved = (projectSummary?.services?.materialApproved || 0) + (projectSummary?.services?.laborApproved || 0);
+    // Get services data - suma wszystkich usług (planowanych + zatwierdzonych) - budżet estymacyjny
+    const servicesTotal = (projectSummary?.services?.materialPlanned || 0) +
+                          (projectSummary?.services?.materialApproved || 0) +
+                          (projectSummary?.services?.laborPlanned || 0) +
+                          (projectSummary?.services?.laborApproved || 0);
 
-    // Prepare chart data - current room colored, other rooms gray, services green, remaining dark gray
+    // Prepare chart data - current room colored, other rooms gray, services gray, remaining dark gray
     const budgetData = useMemo(() => {
         const projectBudget = Number(projectSummary?.projectBudget) || 0;
         const roomsTotal = roomsBreakdown.reduce((sum, r) => sum + r.spent, 0);
-        const totalSpent = roomsTotal + servicesApproved;
+        const totalSpent = roomsTotal + servicesTotal;
         const remaining = Math.max(0, projectBudget - totalSpent);
 
-        if (roomsBreakdown.length > 0 || servicesApproved > 0) {
+        if (roomsBreakdown.length > 0 || servicesTotal > 0) {
             // Find current room and calculate other rooms total
             const currentRoom = roomsBreakdown.find(r => r.id === currentRoomId);
             const otherRoomsTotal = roomsBreakdown
@@ -165,12 +168,12 @@ export function SummaryAccordion({ projectSummary }: SummaryAccordionProps) {
                 });
             }
 
-            // Services - green
-            if (servicesApproved > 0) {
+            // Services - gray (budżet estymacyjny)
+            if (servicesTotal > 0) {
                 data.push({
                     name: "Usługi",
-                    value: servicesApproved,
-                    color: "#91E8B2",
+                    value: servicesTotal,
+                    color: "#6E6E6E",
                     isCurrentRoom: false
                 });
             }
@@ -188,7 +191,7 @@ export function SummaryAccordion({ projectSummary }: SummaryAccordionProps) {
             return data;
         }
         return [];
-    }, [roomsBreakdown, projectSummary?.projectBudget, currentRoomId, servicesApproved]);
+    }, [roomsBreakdown, projectSummary?.projectBudget, currentRoomId, servicesTotal]);
 
     // Format currency
     const formatCurrency = (value: number) => {
@@ -230,7 +233,7 @@ export function SummaryAccordion({ projectSummary }: SummaryAccordionProps) {
     const topTasks = projectSummary?.tasks.slice(0, 2) || [];
 
     // Calculate total spent for Łącznie (rooms + services)
-    const totalSpent = roomsBreakdown.reduce((sum, r) => sum + r.spent, 0) + servicesApproved;
+    const totalSpent = roomsBreakdown.reduce((sum, r) => sum + r.spent, 0) + servicesTotal;
 
     return (
         <div className="bg-[#151515] rounded-2xl overflow-hidden shrink-0">
@@ -327,40 +330,24 @@ export function SummaryAccordion({ projectSummary }: SummaryAccordionProps) {
                                             )}
                                         </div>
 
-                                        {/* Services Summary */}
-                                        {servicesApproved > 0 && (
-                                            <div className="pt-4 mt-4 border-t border-white/10">
-                                                <div className="flex items-center gap-2 mb-3">
-                                                    <Wrench className="w-4 h-4 text-muted-foreground" />
-                                                    <span className="text-[14px] text-muted-foreground font-medium">Usługi (zatwierdzone)</span>
+                                        {/* Services Summary - jedna pozycja dla wszystkich usług */}
+                                        {servicesTotal > 0 && (
+                                            <div className="flex items-center justify-between mt-4">
+                                                <div className="flex items-center gap-3">
+                                                    <span
+                                                        className="w-3.5 h-3.5 rounded-full flex-shrink-0"
+                                                        style={{ backgroundColor: "#6E6E6E" }}
+                                                    />
+                                                    <span className="text-[15px] text-[#E5E5E5]">Usługi</span>
                                                 </div>
-                                                {projectSummary?.services?.materialApproved && projectSummary.services.materialApproved > 0 && (
-                                                    <div className="flex items-center justify-between mb-2">
-                                                        <div className="flex items-center gap-3">
-                                                            <span className="w-3.5 h-3.5 rounded-full flex-shrink-0 bg-[#91E8B2]" />
-                                                            <span className="text-[14px] text-[#A5A5A5]">Materiały</span>
-                                                        </div>
-                                                        <span className="text-[14px] text-[#91E8B2] font-medium tabular-nums">
-                                                            {formatCurrency(projectSummary.services.materialApproved)}
-                                                        </span>
-                                                    </div>
-                                                )}
-                                                {projectSummary?.services?.laborApproved && projectSummary.services.laborApproved > 0 && (
-                                                    <div className="flex items-center justify-between">
-                                                        <div className="flex items-center gap-3">
-                                                            <span className="w-3.5 h-3.5 rounded-full flex-shrink-0 bg-[#91E8B2]" />
-                                                            <span className="text-[14px] text-[#A5A5A5]">Robocizna</span>
-                                                        </div>
-                                                        <span className="text-[14px] text-[#91E8B2] font-medium tabular-nums">
-                                                            {formatCurrency(projectSummary.services.laborApproved)}
-                                                        </span>
-                                                    </div>
-                                                )}
+                                                <span className="text-[15px] text-[#E5E5E5] font-medium tabular-nums">
+                                                    {formatCurrency(servicesTotal)}
+                                                </span>
                                             </div>
                                         )}
 
                                         {/* Total - Łącznie */}
-                                        {(roomsBreakdown.length > 0 || servicesApproved > 0) && (
+                                        {(roomsBreakdown.length > 0 || servicesTotal > 0) && (
                                             <div className="flex items-center justify-between pt-4 mt-4 border-t border-white/10">
                                                 <span className="text-[15px] text-[#E5E5E5] font-semibold">Łącznie</span>
                                                 <span className="text-[15px] text-[#E5E5E5] font-semibold tabular-nums">

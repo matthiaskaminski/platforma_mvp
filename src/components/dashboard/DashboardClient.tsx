@@ -203,7 +203,11 @@ export default function DashboardClient({ user, project, stats, recentProducts =
 
     // Dynamic Budget Data - podział według pomieszczeń + usługi
     const roomBreakdown = stats?.budget?.roomBreakdown || [];
-    const servicesTotal = (stats?.budget?.services?.materialApproved || 0) + (stats?.budget?.services?.laborApproved || 0);
+    // Suma wszystkich usług (planowanych + zatwierdzonych) - budżet estymacyjny
+    const servicesTotal = (stats?.budget?.services?.materialPlanned || 0) +
+                          (stats?.budget?.services?.materialApproved || 0) +
+                          (stats?.budget?.services?.laborPlanned || 0) +
+                          (stats?.budget?.services?.laborApproved || 0);
 
     const budgetData = roomBreakdown.length > 0 || servicesTotal > 0
         ? [
@@ -212,11 +216,11 @@ export default function DashboardClient({ user, project, stats, recentProducts =
                 value: room.spent,
                 color: getRoomColor(index)
             })),
-            // Dodaj usługi jako osobną kategorię
+            // Dodaj usługi jako osobną kategorię - szary kolor
             ...(servicesTotal > 0 ? [{
                 name: "Usługi",
                 value: servicesTotal,
-                color: "#91E8B2" // Zielony kolor dla usług
+                color: "#6E6E6E" // Szary kolor dla usług
             }] : []),
             // Dodaj "Pozostało" jeśli jest różnica
             ...(stats.budget.remaining > 0 ? [{
@@ -612,34 +616,24 @@ export default function DashboardClient({ user, project, stats, recentProducts =
                                     )}
                                 </div>
 
-                                {/* Services Summary */}
-                                {stats.budget.services && (stats.budget.services.materialApproved > 0 || stats.budget.services.laborApproved > 0) && (
-                                    <div className="pt-4 mt-4 border-t border-white/10">
-                                        <div className="flex items-center gap-2 mb-3">
-                                            <Wrench className="w-4 h-4 text-muted-foreground" />
-                                            <span className="text-[14px] text-muted-foreground font-medium">Usługi (zatwierdzone)</span>
+                                {/* Services Summary - jedna pozycja dla wszystkich usług */}
+                                {servicesTotal > 0 && (
+                                    <div className="flex items-center justify-between mt-5">
+                                        <div className="flex items-center gap-3">
+                                            <span
+                                                className="w-3.5 h-3.5 rounded-full flex-shrink-0"
+                                                style={{ backgroundColor: "#6E6E6E" }}
+                                            />
+                                            <span className="text-[15px] text-[#E5E5E5]">Usługi</span>
                                         </div>
-                                        {stats.budget.services.materialApproved > 0 && (
-                                            <div className="flex items-center justify-between mb-2">
-                                                <span className="text-[14px] text-[#A5A5A5]">Materiały</span>
-                                                <span className="text-[14px] text-[#91E8B2] font-medium tabular-nums">
-                                                    {stats.budget.services.materialApproved.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł
-                                                </span>
-                                            </div>
-                                        )}
-                                        {stats.budget.services.laborApproved > 0 && (
-                                            <div className="flex items-center justify-between">
-                                                <span className="text-[14px] text-[#A5A5A5]">Robocizna</span>
-                                                <span className="text-[14px] text-[#91E8B2] font-medium tabular-nums">
-                                                    {stats.budget.services.laborApproved.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł
-                                                </span>
-                                            </div>
-                                        )}
+                                        <span className="text-[15px] text-[#E5E5E5] font-medium tabular-nums">
+                                            {servicesTotal.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł
+                                        </span>
                                     </div>
                                 )}
 
                                 {/* Total - Łącznie */}
-                                {(roomBreakdown.length > 0 || (stats.budget.services && (stats.budget.services.materialApproved > 0 || stats.budget.services.laborApproved > 0))) && (
+                                {(roomBreakdown.length > 0 || servicesTotal > 0) && (
                                     <div className="flex items-center justify-between pt-4 mt-4 border-t border-white/10">
                                         <span className="text-[15px] text-[#E5E5E5] font-semibold">Łącznie</span>
                                         <span className="text-[15px] text-[#E5E5E5] font-semibold tabular-nums">

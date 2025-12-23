@@ -251,6 +251,24 @@ export async function approveService(id: string) {
     }
 }
 
+// Revoke approval of a service (change back to PLANNED)
+export async function revokeServiceApproval(id: string) {
+    try {
+        const service = await prisma.serviceItem.update({
+            where: { id },
+            data: {
+                planningStatus: ServicePlanningStatus.PLANNED
+            }
+        });
+
+        revalidatePath('/services');
+        return { success: true, data: service };
+    } catch (error) {
+        console.error("Error revoking service approval:", error);
+        return { success: false, error: "Failed to revoke service approval" };
+    }
+}
+
 // Get services summary for budget calculation
 export async function getServicesSummary(projectId: string) {
     try {
