@@ -19,7 +19,8 @@ import {
     Image as ImageIcon,
     MonitorPlay,
     Archive,
-    PanelLeft
+    PanelLeft,
+    Wrench
 } from "lucide-react";
 import { ProjectSwitcher } from "./ProjectSwitcher";
 import { UserMenu } from "./UserMenu";
@@ -76,6 +77,7 @@ export function Sidebar({
             items: [
                 { name: "Szukaj produktów", icon: Search, href: "/products/search" },
                 { name: "Wishlisty", icon: Heart, href: "/wishlists" },
+                { name: "Usługi", icon: Wrench, href: "/services" },
                 { name: "Koszyk", icon: ShoppingCart, href: "/cart" },
             ],
         },

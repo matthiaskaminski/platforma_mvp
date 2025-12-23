@@ -801,6 +801,36 @@ export async function getRoomSummary(roomId: string) {
         }
     })
 
+    // Get services for the project
+    const projectServices = await prisma.serviceItem.findMany({
+        where: {
+            projectId: room.project.id
+        },
+        select: {
+            category: true,
+            planningStatus: true,
+            price: true,
+            roomId: true
+        }
+    })
+
+    // Calculate services budget
+    let materialPlanned = 0;
+    let materialApproved = 0;
+    let laborPlanned = 0;
+    let laborApproved = 0;
+
+    projectServices.forEach(service => {
+        const price = Number(service.price) || 0;
+        if (service.category === 'MATERIAL') {
+            if (service.planningStatus === 'PLANNED') materialPlanned += price;
+            if (service.planningStatus === 'APPROVED') materialApproved += price;
+        } else if (service.category === 'LABOR') {
+            if (service.planningStatus === 'PLANNED') laborPlanned += price;
+            if (service.planningStatus === 'APPROVED') laborApproved += price;
+        }
+    });
+
     // Calculate spent for each room
     const roomsBreakdown = allProjectRooms.map(r => {
         const spent = r.productItems.reduce((sum, item) => {
@@ -832,7 +862,8 @@ export async function getRoomSummary(roomId: string) {
         tasks: room.tasks,
         currentRoomId: roomId,
         currentRoomName: room.name,
-        roomsBreakdown  // All rooms with their spent amounts
+        roomsBreakdown,  // All rooms with their spent amounts
+        services: { materialPlanned, materialApproved, laborPlanned, laborApproved }  // Services budget
     }
 }
 

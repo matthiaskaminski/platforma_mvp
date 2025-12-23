@@ -97,7 +97,8 @@ export default async function DashboardPage() {
     budget: {
       spent: 0, planned: 0, total: 0, remaining: 0,
       breakdown: { materials: 0, furniture: 0, labor: 0 },
-      roomBreakdown: [] as { id: string; name: string; spent: number }[]
+      roomBreakdown: [] as { id: string; name: string; spent: number }[],
+      services: { materialPlanned: 0, materialApproved: 0, laborPlanned: 0, laborApproved: 0 }
     },
     daysConfig: { start: new Date(), end: new Date() },
     activeTasks: 0,
@@ -182,7 +183,8 @@ export default async function DashboardPage() {
       interactionsData,
       roomProductsData,
       wishlistProductsData,
-      visualizationsData
+      visualizationsData,
+      servicesData
     ] = await Promise.all([
       // 1. Stats Counts
       Promise.all([
@@ -228,11 +230,41 @@ export default async function DashboardPage() {
           coverImage: true
         },
         take: 4
+      }),
+      // 7. Services - for budget calculation
+      prisma.serviceItem.findMany({
+        where: { projectId: project.id },
+        select: {
+          category: true,
+          planningStatus: true,
+          price: true
+        }
       })
     ])
 
     const [tasksCount, doneTasks] = statsCounts;
     const [surveyCount, moodboardCount, messagesCount] = interactionsData;
+
+    // Calculate services budget
+    let materialPlanned = 0;
+    let materialApproved = 0;
+    let laborPlanned = 0;
+    let laborApproved = 0;
+
+    servicesData.forEach(service => {
+      const price = Number(service.price) || 0;
+      if (service.category === 'MATERIAL') {
+        if (service.planningStatus === 'PLANNED') materialPlanned += price;
+        if (service.planningStatus === 'APPROVED') materialApproved += price;
+      } else if (service.category === 'LABOR') {
+        if (service.planningStatus === 'PLANNED') laborPlanned += price;
+        if (service.planningStatus === 'APPROVED') laborApproved += price;
+      }
+    });
+
+    // Add approved services to spent budget
+    const servicesApprovedTotal = materialApproved + laborApproved;
+    const servicesPlannedTotal = materialPlanned + laborPlanned;
 
     recentTasks = recentTasksData;
 
@@ -247,14 +279,19 @@ export default async function DashboardPage() {
     const floorsCount = project.floorsCount || 0
     const roomsCount = project.rooms.length
 
+    // Include services in total budget calculations
+    const totalSpent = spent + servicesApprovedTotal;
+    const totalPlanned = planned + servicesPlannedTotal + servicesApprovedTotal;
+
     stats = {
       budget: {
-        spent,
-        planned,
+        spent: totalSpent,
+        planned: totalPlanned,
         total: totalBudget,
-        remaining: totalBudget - spent,
+        remaining: totalBudget - totalSpent,
         breakdown: { materials, furniture, labor },
-        roomBreakdown
+        roomBreakdown,
+        services: { materialPlanned, materialApproved, laborPlanned, laborApproved }
       },
       daysConfig: {
         start: project.startDate || new Date(),

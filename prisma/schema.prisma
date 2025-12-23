@@ -64,6 +64,40 @@ enum ProductStatus {
   RETURNED      @map("returned")
 }
 
+// Service category type
+enum ServiceCategory {
+  MATERIAL      @map("material")
+  LABOR         @map("labor")
+}
+
+// Service planning status (lifecycle)
+enum ServicePlanningStatus {
+  DRAFT         @map("draft")       // Draft - not in budget
+  PLANNED       @map("planned")     // Planned - in estimated budget
+  APPROVED      @map("approved")    // Approved - in real budget
+  REJECTED      @map("rejected")    // Rejected
+}
+
+// Material fulfillment status (after approval)
+enum MaterialStatus {
+  TO_ORDER        @map("to_order")        // To order
+  ORDERED         @map("ordered")         // Ordered
+  TO_PAY          @map("to_pay")          // To pay
+  PAID            @map("paid")            // Paid
+  ADVANCE_PAID    @map("advance_paid")    // Advance paid
+  RECEIVED        @map("received")        // Received
+  COMPLETED       @map("completed")       // Completed
+}
+
+// Labor fulfillment status (after approval)
+enum LaborStatus {
+  TO_ORDER        @map("to_order")        // To order
+  ORDERED         @map("ordered")         // Ordered
+  PAID            @map("paid")            // Paid
+  IN_PROGRESS     @map("in_progress")     // In progress
+  COMPLETED       @map("completed")       // Completed
+}
+
 enum RoomStatus {
   NOT_STARTED @map("not_started")
   IN_PROGRESS @map("in_progress")
@@ -164,6 +198,7 @@ model Project {
   tasks       Task[]      @relation("ProjectTasks")
   documents   Document[]  @relation("ProjectDocuments")
   calendarEvents CalendarEvent[]
+  serviceItems ServiceItem[]
 
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
@@ -191,6 +226,7 @@ model Room {
   tasks       Task[]      @relation("RoomTasks")
   sprints     Sprint[]    @relation("RoomSprints")
   notes       Note[]
+  serviceItems ServiceItem[]
 
   @@index([projectId])
   @@map("rooms")
@@ -401,4 +437,45 @@ model GalleryImage {
   createdAt DateTime @default(now()) @map("created_at")
   @@index([roomId])
   @@map("gallery_images")
+}
+
+// Services - Materials and Labor
+model ServiceItem {
+  id            String   @id @default(uuid()) @db.Uuid
+  projectId     String   @map("project_id") @db.Uuid
+  project       Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  roomId        String?  @map("room_id") @db.Uuid
+  room          Room?    @relation(fields: [roomId], references: [id], onDelete: SetNull)
+
+  // Common fields
+  category      ServiceCategory @default(MATERIAL)
+  planningStatus ServicePlanningStatus @default(DRAFT) @map("planning_status")
+
+  // Material specific fields
+  name          String?          // Material name
+  unit          String?          // Unit (e.g. m2, pcs, kg)
+  quantity      Float?           // Quantity
+  price         Decimal @default(0) @db.Decimal(12, 2)  // Total price
+  imageUrl      String?  @map("image_url")
+  url           String?          // Product link
+  materialType  String?  @map("material_type")  // Material type
+  materialStatus MaterialStatus? @default(TO_ORDER) @map("material_status")
+
+  // Labor specific fields
+  subcontractor String?          // Subcontractor
+  scope         String?          // Work scope
+  duration      String?          // Duration
+  laborStatus   LaborStatus? @default(TO_ORDER) @map("labor_status")
+
+  notes         String?
+
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@index([projectId])
+  @@index([roomId])
+  @@index([category])
+  @@index([planningStatus])
+  @@map("service_items")
 }

@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { ArrowUpRight, ChevronLeft, ChevronRight, ClipboardList, Palette, Image as ImageIcon, X, Calendar, Trash2 } from "lucide-react";
+import { ArrowUpRight, ChevronLeft, ChevronRight, ClipboardList, Palette, Image as ImageIcon, X, Calendar, Trash2, Wrench } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent, DragStartEvent, DragOverlay, defaultDropAnimationSideEffects, DropAnimation } from '@dnd-kit/core';
@@ -85,6 +85,7 @@ interface DashboardClientProps {
             spent: number; planned: number; total: number; remaining: number
             breakdown?: { materials: number; furniture: number; labor: number }
             roomBreakdown?: { id: string; name: string; spent: number }[] // Budżet według pomieszczeń
+            services?: { materialPlanned: number; materialApproved: number; laborPlanned: number; laborApproved: number }
         }
         daysConfig: { start: Date; end: Date }
         activeTasks: number
@@ -200,15 +201,23 @@ export default function DashboardClient({ user, project, stats, recentProducts =
 
     const allStatuses = ["TODO", "IN_PROGRESS", "DONE"] as const;
 
-    // Dynamic Budget Data - podział według pomieszczeń
+    // Dynamic Budget Data - podział według pomieszczeń + usługi
     const roomBreakdown = stats?.budget?.roomBreakdown || [];
-    const budgetData = roomBreakdown.length > 0
+    const servicesTotal = (stats?.budget?.services?.materialApproved || 0) + (stats?.budget?.services?.laborApproved || 0);
+
+    const budgetData = roomBreakdown.length > 0 || servicesTotal > 0
         ? [
             ...roomBreakdown.map((room, index) => ({
                 name: room.name,
                 value: room.spent,
                 color: getRoomColor(index)
             })),
+            // Dodaj usługi jako osobną kategorię
+            ...(servicesTotal > 0 ? [{
+                name: "Usługi",
+                value: servicesTotal,
+                color: "#91E8B2" // Zielony kolor dla usług
+            }] : []),
             // Dodaj "Pozostało" jeśli jest różnica
             ...(stats.budget.remaining > 0 ? [{
                 name: "Pozostało",
@@ -603,8 +612,34 @@ export default function DashboardClient({ user, project, stats, recentProducts =
                                     )}
                                 </div>
 
+                                {/* Services Summary */}
+                                {stats.budget.services && (stats.budget.services.materialApproved > 0 || stats.budget.services.laborApproved > 0) && (
+                                    <div className="pt-4 mt-4 border-t border-white/10">
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <Wrench className="w-4 h-4 text-muted-foreground" />
+                                            <span className="text-[14px] text-muted-foreground font-medium">Usługi (zatwierdzone)</span>
+                                        </div>
+                                        {stats.budget.services.materialApproved > 0 && (
+                                            <div className="flex items-center justify-between mb-2">
+                                                <span className="text-[14px] text-[#A5A5A5]">Materiały</span>
+                                                <span className="text-[14px] text-[#91E8B2] font-medium tabular-nums">
+                                                    {stats.budget.services.materialApproved.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł
+                                                </span>
+                                            </div>
+                                        )}
+                                        {stats.budget.services.laborApproved > 0 && (
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-[14px] text-[#A5A5A5]">Robocizna</span>
+                                                <span className="text-[14px] text-[#91E8B2] font-medium tabular-nums">
+                                                    {stats.budget.services.laborApproved.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
                                 {/* Total - Łącznie */}
-                                {roomBreakdown.length > 0 && (
+                                {(roomBreakdown.length > 0 || (stats.budget.services && (stats.budget.services.materialApproved > 0 || stats.budget.services.laborApproved > 0))) && (
                                     <div className="flex items-center justify-between pt-4 mt-4 border-t border-white/10">
                                         <span className="text-[15px] text-[#E5E5E5] font-semibold">Łącznie</span>
                                         <span className="text-[15px] text-[#E5E5E5] font-semibold tabular-nums">
