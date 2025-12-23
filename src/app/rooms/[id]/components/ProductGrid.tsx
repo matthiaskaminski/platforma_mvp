@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { Check, Package, Plus, Trash2, Loader2, ExternalLink, X, RefreshCw, StickyNote, CheckCircle, XCircle } from "lucide-react";
+import { Check, Package, Plus, Trash2, Loader2, ExternalLink, X, RefreshCw, StickyNote, CheckCircle, XCircle, AlertTriangle } from "lucide-react";
 import { deleteProduct, updateProduct, refreshProduct, approveProduct, rejectProduct } from "@/app/actions/products";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -376,39 +376,6 @@ function ProductEditSidebar({
                         />
                     </div>
 
-                    {/* Approve/Reject Buttons - only for MAIN products that are not yet approved/rejected */}
-                    {(product.planningStatus === 'MAIN' || product.planningStatus === 'VARIANT') && (
-                        <div className="flex gap-2">
-                            <Button
-                                onClick={async () => {
-                                    const result = await approveProduct(product.id);
-                                    if (result.success) {
-                                        onUpdate();
-                                        onClose();
-                                    }
-                                }}
-                                className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white"
-                            >
-                                <CheckCircle className="w-4 h-4 mr-2" />
-                                Zatwierdz
-                            </Button>
-                            <Button
-                                onClick={async () => {
-                                    const result = await rejectProduct(product.id);
-                                    if (result.success) {
-                                        onUpdate();
-                                        onClose();
-                                    }
-                                }}
-                                variant="secondary"
-                                className="flex-1 bg-red-600/20 hover:bg-red-600/30 text-red-400 border-red-600/30"
-                            >
-                                <XCircle className="w-4 h-4 mr-2" />
-                                Odrzuc
-                            </Button>
-                        </div>
-                    )}
-
                     {/* Fulfillment Status - only for APPROVED products */}
                     {product.planningStatus === 'APPROVED' && (
                         <div className="space-y-2">
@@ -530,11 +497,181 @@ function ProductEditSidebar({
     );
 }
 
+// Approval Confirmation Modal
+function ApprovalConfirmModal({
+    isOpen,
+    onClose,
+    onConfirm,
+    selectedCount,
+    isApproving
+}: {
+    isOpen: boolean;
+    onClose: () => void;
+    onConfirm: () => void;
+    selectedCount: number;
+    isApproving: boolean;
+}) {
+    if (!isOpen) return null;
+
+    return (
+        <>
+            {/* Overlay */}
+            <div
+                className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] animate-in fade-in duration-200"
+                onClick={onClose}
+            />
+
+            {/* Modal */}
+            <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-[#151515] rounded-2xl shadow-2xl z-[60] animate-in fade-in zoom-in-95 duration-200 border border-white/10">
+                {/* Header */}
+                <div className="flex items-center gap-3 p-6 border-b border-white/10">
+                    <div className="p-2 bg-emerald-500/20 rounded-lg">
+                        <CheckCircle className="w-5 h-5 text-emerald-500" />
+                    </div>
+                    <h2 className="text-xl font-semibold">Zatwierdz produkty</h2>
+                </div>
+
+                {/* Content */}
+                <div className="p-6">
+                    <div className="flex items-start gap-3 p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg mb-4">
+                        <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                        <div>
+                            <p className="text-white font-medium mb-1">Uwaga!</p>
+                            <p className="text-sm text-muted-foreground">
+                                Zatwierdzenie {selectedCount > 1 ? `${selectedCount} produktow` : 'produktu'} spowoduje:
+                            </p>
+                        </div>
+                    </div>
+
+                    <ul className="space-y-2 text-sm text-muted-foreground ml-4">
+                        <li className="flex items-center gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                            Przeniesienie do zakladki Koszyk
+                        </li>
+                        <li className="flex items-center gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                            Wliczenie do rzeczywistego budzetu
+                        </li>
+                        <li className="flex items-center gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                            Blokade edycji z widoku pomieszczenia
+                        </li>
+                    </ul>
+                </div>
+
+                {/* Footer */}
+                <div className="flex justify-end gap-3 p-6 border-t border-white/10">
+                    <Button
+                        variant="secondary"
+                        onClick={onClose}
+                        disabled={isApproving}
+                        className="bg-[#232323] hover:bg-[#2a2a2a]"
+                    >
+                        Anuluj
+                    </Button>
+                    <Button
+                        onClick={onConfirm}
+                        disabled={isApproving}
+                        className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                    >
+                        {isApproving ? (
+                            <>
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                Zatwierdzanie...
+                            </>
+                        ) : (
+                            <>
+                                <CheckCircle className="w-4 h-4 mr-2" />
+                                Zatwierdz {selectedCount > 1 ? `(${selectedCount})` : ''}
+                            </>
+                        )}
+                    </Button>
+                </div>
+            </div>
+        </>
+    );
+}
+
 export const ProductGrid = React.memo(function ProductGrid({ products, onAddProduct }: ProductGridProps) {
     const router = useRouter();
     const [deletingId, setDeletingId] = useState<string | null>(null);
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
     const [sidebarOpen, setSidebarOpen] = useState(false);
+
+    // Selection state
+    const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
+    const [showApprovalModal, setShowApprovalModal] = useState(false);
+    const [isApproving, setIsApproving] = useState(false);
+
+    // Toggle product selection
+    const toggleProductSelection = (productId: string, e: React.MouseEvent) => {
+        e.stopPropagation();
+        setSelectedProducts(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(productId)) {
+                newSet.delete(productId);
+            } else {
+                newSet.add(productId);
+            }
+            return newSet;
+        });
+    };
+
+    // Select all products (only MAIN and VARIANT, not already approved/rejected)
+    const selectAllProducts = () => {
+        const selectableIds = products
+            .filter(p => p.planningStatus === 'MAIN' || p.planningStatus === 'VARIANT')
+            .map(p => p.id);
+        setSelectedProducts(new Set(selectableIds));
+    };
+
+    // Deselect all
+    const deselectAllProducts = () => {
+        setSelectedProducts(new Set());
+    };
+
+    // Handle bulk approval
+    const handleBulkApprove = async () => {
+        setIsApproving(true);
+        try {
+            const approvalPromises = Array.from(selectedProducts).map(id => approveProduct(id));
+            const results = await Promise.all(approvalPromises);
+
+            const allSuccessful = results.every(r => r.success);
+            if (allSuccessful) {
+                setSelectedProducts(new Set());
+                setShowApprovalModal(false);
+                router.refresh();
+            } else {
+                alert('Niektore produkty nie zostaly zatwierdzone');
+            }
+        } catch (error) {
+            console.error("Error approving products:", error);
+            alert('Blad podczas zatwierdzania produktow');
+        } finally {
+            setIsApproving(false);
+        }
+    };
+
+    // Handle bulk delete
+    const handleBulkDelete = async () => {
+        if (!confirm(`Czy na pewno chcesz usunac zaznaczone produkty (${selectedProducts.size})?`)) return;
+
+        try {
+            const deletePromises = Array.from(selectedProducts).map(id => deleteProduct(id));
+            const results = await Promise.all(deletePromises);
+
+            const allSuccessful = results.every(r => r.success);
+            if (allSuccessful) {
+                setSelectedProducts(new Set());
+                router.refresh();
+            } else {
+                alert('Niektore produkty nie zostaly usuniete');
+            }
+        } catch (error) {
+            console.error("Error deleting products:", error);
+        }
+    };
 
     const handleDelete = async (productId: string) => {
         if (!confirm("Czy na pewno chcesz usunąć ten produkt?")) return;
@@ -612,35 +749,66 @@ export const ProductGrid = React.memo(function ProductGrid({ products, onAddProd
                     const isDeleting = deletingId === product.id;
                     const isApproved = product.planningStatus === 'APPROVED';
                     const isRejected = product.planningStatus === 'REJECTED';
+                    const isSelected = selectedProducts.has(product.id);
+                    const canSelect = !isApproved && !isRejected;
 
                     return (
                         <div
                             key={product.id}
-                            onClick={() => handleProductClick(product)}
+                            onClick={() => !isApproved ? handleProductClick(product) : null}
                             className={cn(
-                                "bg-[#151515] group rounded-xl overflow-hidden cursor-pointer flex flex-col h-full hover:ring-1 hover:ring-white/10 transition-all",
+                                "bg-[#151515] group rounded-xl overflow-hidden flex flex-col h-full transition-all",
                                 isDeleting && "opacity-50 pointer-events-none",
-                                isRejected && "opacity-60"
+                                isRejected && "opacity-60",
+                                isApproved && "opacity-70 cursor-default",
+                                !isApproved && "cursor-pointer hover:ring-1 hover:ring-white/10",
+                                isSelected && "ring-2 ring-blue-500"
                             )}
                         >
                             {/* Image Area */}
                             <div className="aspect-square bg-white relative flex items-center justify-center overflow-hidden">
-                                {/* Overlay Controls */}
-                                <div className="absolute top-2 right-2 flex gap-1 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+                                {/* Selection Checkbox - top left, always visible for selectable products */}
+                                {canSelect && (
                                     <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleDelete(product.id);
-                                        }}
-                                        className="w-6 h-6 rounded-full bg-white shadow-sm flex items-center justify-center hover:bg-red-50"
-                                        title="Usun produkt"
-                                    >
-                                        {isDeleting ? (
-                                            <Loader2 className="w-3 h-3 text-red-500 animate-spin" />
-                                        ) : (
-                                            <Trash2 className="w-3 h-3 text-red-500" />
+                                        onClick={(e) => toggleProductSelection(product.id, e)}
+                                        className={cn(
+                                            "absolute top-2 left-2 z-20 w-6 h-6 rounded border-2 flex items-center justify-center transition-all",
+                                            isSelected
+                                                ? "bg-blue-500 border-blue-500 text-white"
+                                                : "bg-white/90 border-gray-300 hover:border-gray-400 opacity-0 group-hover:opacity-100"
                                         )}
+                                        style={isSelected ? { opacity: 1 } : undefined}
+                                    >
+                                        {isSelected && <Check className="w-4 h-4" />}
                                     </button>
+                                )}
+
+                                {/* Approved badge overlay */}
+                                {isApproved && (
+                                    <div className="absolute top-2 left-2 z-20 bg-emerald-500 text-white text-xs font-medium px-2 py-1 rounded-full flex items-center gap-1">
+                                        <CheckCircle className="w-3 h-3" />
+                                        Zatwierdzony
+                                    </div>
+                                )}
+
+                                {/* Overlay Controls - top right */}
+                                <div className="absolute top-2 right-2 flex gap-1 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    {!isApproved && (
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleDelete(product.id);
+                                            }}
+                                            className="w-6 h-6 rounded-full bg-white shadow-sm flex items-center justify-center hover:bg-red-50"
+                                            title="Usun produkt"
+                                        >
+                                            {isDeleting ? (
+                                                <Loader2 className="w-3 h-3 text-red-500 animate-spin" />
+                                            ) : (
+                                                <Trash2 className="w-3 h-3 text-red-500" />
+                                            )}
+                                        </button>
+                                    )}
                                     {product.url && (
                                         <a
                                             href={product.url}
@@ -661,7 +829,10 @@ export const ProductGrid = React.memo(function ProductGrid({ products, onAddProd
                                     <img
                                         src={product.imageUrl}
                                         alt={product.name}
-                                        className="w-full h-full object-contain mix-blend-multiply p-4"
+                                        className={cn(
+                                            "w-full h-full object-contain mix-blend-multiply p-4",
+                                            isApproved && "grayscale-[30%]"
+                                        )}
                                         onError={(e) => {
                                             (e.target as HTMLImageElement).style.display = 'none';
                                         }}
@@ -734,6 +905,60 @@ export const ProductGrid = React.memo(function ProductGrid({ products, onAddProd
                     </div>
                 )}
             </div>
+
+            {/* Bottom Selection Toolbar */}
+            {selectedProducts.size > 0 && (
+                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-[#1B1B1B] border border-white/10 rounded-xl shadow-2xl px-6 py-4 flex items-center gap-4">
+                    <span className="text-sm text-white">
+                        Zaznaczono: <span className="font-semibold">{selectedProducts.size}</span>
+                    </span>
+                    <div className="h-6 w-px bg-white/10" />
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={selectAllProducts}
+                        className="h-8"
+                    >
+                        Zaznacz wszystko
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowApprovalModal(true)}
+                        className="h-8 text-emerald-400 hover:text-emerald-300"
+                    >
+                        <CheckCircle className="w-4 h-4 mr-2" />
+                        Reczne zatwierdzenie
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleBulkDelete}
+                        className="h-8 text-red-400 hover:text-red-300"
+                    >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Usun
+                    </Button>
+                    <div className="h-6 w-px bg-white/10" />
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={deselectAllProducts}
+                        className="h-8"
+                    >
+                        <X className="w-4 h-4" />
+                    </Button>
+                </div>
+            )}
+
+            {/* Approval Confirmation Modal */}
+            <ApprovalConfirmModal
+                isOpen={showApprovalModal}
+                onClose={() => setShowApprovalModal(false)}
+                onConfirm={handleBulkApprove}
+                selectedCount={selectedProducts.size}
+                isApproving={isApproving}
+            />
 
             {/* Product Edit Sidebar */}
             <ProductEditSidebar

@@ -347,15 +347,15 @@ export const TasksList = React.memo(function TasksList({
     // Empty state
     if (sprints.length === 0 && tasks.length === 0) {
         return (
-            <div className="flex flex-col items-center justify-center h-full p-6">
+            <div className="flex-1 flex flex-col items-center justify-center h-full p-6">
                 <Clock className="w-8 h-8 mb-3 text-muted-foreground" />
-                <p className="text-base text-muted-foreground mb-4">Brak sprintów i zadań w tym pomieszczeniu</p>
+                <p className="text-base text-muted-foreground mb-4">Brak sprintow i zadan w tym pomieszczeniu</p>
             </div>
         );
     }
 
     return (
-        <>
+        <div className="flex-1 flex flex-col relative">
             <div className="flex-1 overflow-y-auto no-scrollbar pb-10">
                 <div className="px-6 py-6 space-y-6">
                     {sprints.length === 0 ? (
@@ -1033,13 +1033,13 @@ export const TasksList = React.memo(function TasksList({
                                     onClick={() => handleDeleteSprint(selectedSprintDetails.id)}
                                 >
                                     <Trash2 className="w-4 h-4 mr-2" />
-                                    Usuń sprint
+                                    Usun sprint
                                 </Button>
                             </div>
                         </div>
                     </div>
                 )}
             </div>
-        </>
+        </div>
     );
 });
