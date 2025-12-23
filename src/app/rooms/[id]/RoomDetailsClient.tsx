@@ -314,7 +314,17 @@ export default function RoomDetailsClient({ roomData, products, tasks, budgetIte
                     {/* Toolbar */}
                     <div className="py-4 px-6 flex flex-col sm:flex-row items-center justify-between gap-4 shrink-0">
                         <div className="flex items-center gap-2 text-sm font-medium w-full sm:w-auto">
-                            {activeTab === "Produkty" ? (
+                            {/* Filtruj i Sortuj - zawsze widoczne */}
+                            <Button variant="ghost" className="flex items-center gap-1 text-muted-foreground hover:text-white transition-colors h-[40px] px-3 rounded-lg hover:bg-white/5">Filtruj <ChevronDown className="w-3 h-3" /></Button>
+                            <Button variant="ghost" className="flex items-center gap-1 text-muted-foreground hover:text-white transition-colors h-[40px] px-3 rounded-lg hover:bg-white/5">Sortuj <ChevronDown className="w-3 h-3" /></Button>
+
+                            {/* Separator */}
+                            {activeTab === "Produkty" && (
+                                <div className="h-6 w-px bg-white/10 mx-2" />
+                            )}
+
+                            {/* Przyciski filtrowania produktów - tylko dla zakładki Produkty */}
+                            {activeTab === "Produkty" && (
                                 <>
                                     <button
                                         onClick={() => setProductFilter('all')}
@@ -367,11 +377,6 @@ export default function RoomDetailsClient({ roomData, products, tasks, budgetIte
                                             {notApprovedCount}
                                         </span>
                                     </button>
-                                </>
-                            ) : (
-                                <>
-                                    <Button variant="ghost" className="flex items-center gap-1 text-muted-foreground hover:text-white transition-colors h-[48px] px-3 rounded-lg hover:bg-white/5">Filtruj <ChevronDown className="w-3 h-3" /></Button>
-                                    <Button variant="ghost" className="flex items-center gap-1 text-muted-foreground hover:text-white transition-colors h-[48px] px-3 rounded-lg hover:bg-white/5">Sortuj <ChevronDown className="w-3 h-3" /></Button>
                                 </>
                             )}
                         </div>
