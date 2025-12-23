@@ -336,10 +336,11 @@ export async function getRoomBudget(roomId: string) {
         return []
     }
 
-    // Fetch products with necessary budget fields
+    // Fetch only MAIN products for budget (they are counted in budget)
     const products = await prisma.productItem.findMany({
         where: {
-            roomId: roomId
+            roomId: roomId,
+            planningStatus: 'MAIN'  // Only MAIN products count towards budget
         },
         select: {
             id: true,
