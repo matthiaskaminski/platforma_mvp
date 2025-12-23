@@ -47,7 +47,9 @@ export default async function RoomsPage() {
                         },
                         productItems: {
                             select: {
-                                paidAmount: true
+                                price: true,
+                                quantity: true,
+                                planningStatus: true
                             }
                         }
                     },
@@ -75,7 +77,9 @@ export default async function RoomsPage() {
                         },
                         productItems: {
                             select: {
-                                paidAmount: true
+                                price: true,
+                                quantity: true,
+                                planningStatus: true
                             }
                         }
                     },
@@ -92,8 +96,10 @@ export default async function RoomsPage() {
 
     // 4. Transform Data for Client Component
     const roomsData = project.rooms.map(room => {
-        // Calculate spent budget (now only fetching paidAmount field)
-        const spent = room.productItems.reduce((acc, item) => acc + (Number(item.paidAmount) || 0), 0)
+        // Calculate spent budget - sum of price * quantity for MAIN products only
+        const spent = room.productItems
+            .filter(item => item.planningStatus === 'MAIN')
+            .reduce((acc, item) => acc + (Number(item.price) || 0) * (item.quantity || 1), 0)
 
         // Status mapping
         const statusMap: Record<string, string> = {

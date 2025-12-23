@@ -104,13 +104,27 @@ export function SummaryAccordion({ projectSummary }: SummaryAccordionProps) {
         };
     }, [projectSummary]);
 
-    // Prepare chart data - only show "Pozostało" if room has its own budget
-    const budgetData = [
-        { name: "Produkty", value: budget.products, color: "#F3F3F3" },
-        { name: "Materiały", value: budget.materials, color: "#6E6E6E" },
-        { name: "Usługi", value: budget.services, color: "#2F2F2F" },
-        ...(budget.hasRoomBudget ? [{ name: "Pozostało", value: budget.remaining, color: "#232323" }] : []),
-    ].filter(item => item.value && item.value > 0); // Only show categories with values
+    // Prepare chart data
+    // If room has its own budget: show spent categories + remaining room budget
+    // If no room budget: show spent categories as part of project budget (remaining = project budget - room total)
+    const budgetData = useMemo(() => {
+        if (budget.hasRoomBudget) {
+            // Room has its own budget - show categories + remaining from room budget
+            return [
+                { name: "Produkty", value: budget.products, color: "#F3F3F3" },
+                { name: "Materiały", value: budget.materials, color: "#6E6E6E" },
+                { name: "Usługi", value: budget.services, color: "#2F2F2F" },
+                { name: "Pozostało", value: budget.remaining, color: "#232323" },
+            ].filter(item => item.value && item.value > 0);
+        } else {
+            // No room budget - show room's share of project budget
+            const projectRemaining = Math.max(0, budget.projectBudget - budget.total);
+            return [
+                { name: "To pomieszczenie", value: budget.total, color: "#F3F3F3" },
+                { name: "Pozostały budżet", value: projectRemaining, color: "#232323" },
+            ].filter(item => item.value && item.value > 0);
+        }
+    }, [budget]);
 
     // Format currency
     const formatCurrency = (value: number) => {
