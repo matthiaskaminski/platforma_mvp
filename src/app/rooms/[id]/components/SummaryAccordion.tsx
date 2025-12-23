@@ -119,30 +119,56 @@ export function SummaryAccordion({ projectSummary }: SummaryAccordionProps) {
         };
     }, [projectSummary]);
 
-    // Prepare chart data - using rooms breakdown like dashboard
+    // Prepare chart data - current room colored, other rooms gray, remaining dark gray
     const budgetData = useMemo(() => {
         if (roomsBreakdown.length > 0) {
             const projectBudget = Number(projectSummary?.projectBudget) || 0;
             const totalSpent = roomsBreakdown.reduce((sum, r) => sum + r.spent, 0);
             const remaining = Math.max(0, projectBudget - totalSpent);
 
-            return [
-                ...roomsBreakdown.map((room, index) => ({
-                    name: room.name,
-                    value: room.spent,
-                    color: getRoomColor(index),
-                    isCurrentRoom: room.isCurrentRoom
-                })),
-                ...(remaining > 0 ? [{
+            // Find current room and calculate other rooms total
+            const currentRoom = roomsBreakdown.find(r => r.id === currentRoomId);
+            const otherRoomsTotal = roomsBreakdown
+                .filter(r => r.id !== currentRoomId)
+                .reduce((sum, r) => sum + r.spent, 0);
+
+            const data = [];
+
+            // Current room - with color
+            if (currentRoom && currentRoom.spent > 0) {
+                const currentRoomIndex = roomsBreakdown.findIndex(r => r.id === currentRoomId);
+                data.push({
+                    name: currentRoom.name,
+                    value: currentRoom.spent,
+                    color: getRoomColor(currentRoomIndex >= 0 ? currentRoomIndex : 0),
+                    isCurrentRoom: true
+                });
+            }
+
+            // Other rooms combined - gray
+            if (otherRoomsTotal > 0) {
+                data.push({
+                    name: "Inne pomieszczenia",
+                    value: otherRoomsTotal,
+                    color: "#6E6E6E",
+                    isCurrentRoom: false
+                });
+            }
+
+            // Remaining budget - dark gray
+            if (remaining > 0) {
+                data.push({
                     name: "Pozostało",
                     value: remaining,
                     color: "#232323",
                     isCurrentRoom: false
-                }] : [])
-            ].filter(item => item.value > 0);
+                });
+            }
+
+            return data;
         }
         return [];
-    }, [roomsBreakdown, projectSummary?.projectBudget]);
+    }, [roomsBreakdown, projectSummary?.projectBudget, currentRoomId]);
 
     // Format currency
     const formatCurrency = (value: number) => {

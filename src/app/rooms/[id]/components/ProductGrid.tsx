@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
-import { Check, Package, Plus, Trash2, Loader2, ExternalLink, X, RefreshCw, StickyNote, CheckCircle, XCircle, AlertTriangle } from "lucide-react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
+import { Check, Package, Plus, Trash2, Loader2, ExternalLink, X, RefreshCw, StickyNote, CheckCircle, XCircle, AlertTriangle, Filter } from "lucide-react";
 import { deleteProduct, updateProduct, refreshProduct, approveProduct, rejectProduct } from "@/app/actions/products";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -592,16 +592,40 @@ function ApprovalConfirmModal({
     );
 }
 
+// Filter type
+type ProductFilterType = 'all' | 'approved' | 'not_approved';
+
+const filterOptions: { value: ProductFilterType; label: string }[] = [
+    { value: 'all', label: 'Wszystkie' },
+    { value: 'approved', label: 'Zatwierdzone' },
+    { value: 'not_approved', label: 'Bez zatwierdzonych' }
+];
+
 export const ProductGrid = React.memo(function ProductGrid({ products, onAddProduct }: ProductGridProps) {
     const router = useRouter();
     const [deletingId, setDeletingId] = useState<string | null>(null);
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
+    // Filter state
+    const [productFilter, setProductFilter] = useState<ProductFilterType>('all');
+
     // Selection state
     const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
     const [showApprovalModal, setShowApprovalModal] = useState(false);
     const [isApproving, setIsApproving] = useState(false);
+
+    // Filter products based on selected filter
+    const filteredProducts = useMemo(() => {
+        switch (productFilter) {
+            case 'approved':
+                return products.filter(p => p.planningStatus === 'APPROVED');
+            case 'not_approved':
+                return products.filter(p => p.planningStatus !== 'APPROVED');
+            default:
+                return products;
+        }
+    }, [products, productFilter]);
 
     // Toggle product selection
     const toggleProductSelection = (productId: string, e: React.MouseEvent) => {
@@ -710,6 +734,7 @@ export const ProductGrid = React.memo(function ProductGrid({ products, onAddProd
         }
     };
 
+    // Empty state when no products at all
     if (products.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center h-full p-6">
@@ -728,6 +753,10 @@ export const ProductGrid = React.memo(function ProductGrid({ products, onAddProd
         );
     }
 
+    // Count for filter badges
+    const approvedCount = products.filter(p => p.planningStatus === 'APPROVED').length;
+    const notApprovedCount = products.filter(p => p.planningStatus !== 'APPROVED').length;
+
     const handlePlanningStatusChange = async (productId: string, newStatus: string) => {
         try {
             const result = await updateProduct(productId, { planningStatus: newStatus as any });
@@ -741,8 +770,54 @@ export const ProductGrid = React.memo(function ProductGrid({ products, onAddProd
 
     return (
         <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 gap-3 p-6 pt-2">
-                {products.map((product) => {
+            {/* Filter Bar */}
+            <div className="flex items-center gap-2 px-6 py-3 border-b border-white/5">
+                <Filter className="w-4 h-4 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground mr-2">Filtruj:</span>
+                {filterOptions.map((option) => {
+                    const count = option.value === 'all'
+                        ? products.length
+                        : option.value === 'approved'
+                            ? approvedCount
+                            : notApprovedCount;
+                    return (
+                        <button
+                            key={option.value}
+                            onClick={() => setProductFilter(option.value)}
+                            className={cn(
+                                "px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2",
+                                productFilter === option.value
+                                    ? "bg-white text-black"
+                                    : "bg-[#232323] text-muted-foreground hover:text-white hover:bg-[#2a2a2a]"
+                            )}
+                        >
+                            {option.label}
+                            <span className={cn(
+                                "text-xs px-1.5 py-0.5 rounded-full min-w-[20px] text-center",
+                                productFilter === option.value
+                                    ? "bg-black/10 text-black/70"
+                                    : "bg-white/10 text-white/50"
+                            )}>
+                                {count}
+                            </span>
+                        </button>
+                    );
+                })}
+            </div>
+
+            {/* Empty state when filter returns no results */}
+            {filteredProducts.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16">
+                    <Package className="w-10 h-10 mb-3 text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground">
+                        {productFilter === 'approved'
+                            ? 'Brak zatwierdzonych produktów'
+                            : 'Brak produktów bez zatwierdzenia'}
+                    </p>
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 gap-3 p-6 pt-4">
+                    {filteredProducts.map((product) => {
                     const planningInfo = planningStatusConfig[product.planningStatus] || planningStatusConfig['VARIANT'];
                     const fulfillmentInfo = statusConfig[product.status] || statusConfig['TO_ORDER'];
                     const price = Number(product.price).toLocaleString('pl-PL');
@@ -893,18 +968,19 @@ export const ProductGrid = React.memo(function ProductGrid({ products, onAddProd
                 })}
 
                 {/* Add Product Card */}
-                {onAddProduct && (
-                    <div
-                        onClick={onAddProduct}
-                        className="bg-[#151515] rounded-xl border-2 border-dashed border-white/5 flex flex-col items-center justify-center cursor-pointer hover:bg-white/5 hover:border-white/10 transition-all min-h-[300px] group text-muted-foreground hover:text-white"
-                    >
-                        <div className="w-12 h-12 rounded-full bg-[#1B1B1B] flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                            <Plus className="w-6 h-6" />
+                    {onAddProduct && (
+                        <div
+                            onClick={onAddProduct}
+                            className="bg-[#151515] rounded-xl border-2 border-dashed border-white/5 flex flex-col items-center justify-center cursor-pointer hover:bg-white/5 hover:border-white/10 transition-all min-h-[300px] group text-muted-foreground hover:text-white"
+                        >
+                            <div className="w-12 h-12 rounded-full bg-[#1B1B1B] flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                                <Plus className="w-6 h-6" />
+                            </div>
+                            <span className="font-medium">Dodaj produkt</span>
                         </div>
-                        <span className="font-medium">Dodaj produkt</span>
-                    </div>
-                )}
-            </div>
+                    )}
+                </div>
+            )}
 
             {/* Bottom Selection Toolbar */}
             {selectedProducts.size > 0 && (
