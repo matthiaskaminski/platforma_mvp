@@ -40,6 +40,7 @@ export interface CreateProductData {
     quantity?: number;
     wishlistId?: string;
     roomId?: string;
+    planningStatus?: 'LIKED' | 'MAIN' | 'VARIANT';
 }
 
 // Helper to extract price from text - improved version
@@ -549,10 +550,15 @@ export async function createProduct(data: CreateProductData) {
     }
 
     try {
-        // Determine planning status based on destination
-        const planningStatus = data.wishlistId
-            ? ProductPlanningStatus.LIKED
-            : ProductPlanningStatus.VARIANT; // Default to variant when added directly to room
+        // Determine planning status: use provided value, or default based on destination
+        let planningStatus: ProductPlanningStatus;
+        if (data.planningStatus) {
+            planningStatus = ProductPlanningStatus[data.planningStatus];
+        } else {
+            planningStatus = data.wishlistId
+                ? ProductPlanningStatus.LIKED
+                : ProductPlanningStatus.VARIANT; // Default to variant when added directly to room
+        }
 
         const product = await prisma.productItem.create({
             data: {

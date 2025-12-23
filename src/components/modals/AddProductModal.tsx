@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { scrapeProductFromUrl, createProduct, ScrapedProductData } from "@/app/actions/products";
 import { useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 interface AddProductModalProps {
     isOpen: boolean;
@@ -32,6 +33,7 @@ export function AddProductModal({ isOpen, onClose, wishlistId, roomId, onSuccess
     const [category, setCategory] = useState("");
     const [quantity, setQuantity] = useState("1");
     const [productUrl, setProductUrl] = useState("");
+    const [productType, setProductType] = useState<'MAIN' | 'VARIANT'>('MAIN');
 
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -48,6 +50,7 @@ export function AddProductModal({ isOpen, onClose, wishlistId, roomId, onSuccess
             setCategory("");
             setQuantity("1");
             setProductUrl("");
+            setProductType('MAIN');
         }
     }, [isOpen]);
 
@@ -109,6 +112,8 @@ export function AddProductModal({ isOpen, onClose, wishlistId, roomId, onSuccess
                 quantity: parseInt(quantity) || 1,
                 wishlistId,
                 roomId,
+                // Only set planningStatus when adding to room, otherwise LIKED for wishlist
+                planningStatus: roomId ? productType : 'LIKED',
             });
 
             if (result.success) {
@@ -367,6 +372,49 @@ export function AddProductModal({ isOpen, onClose, wishlistId, roomId, onSuccess
                                     />
                                 </div>
                             </div>
+
+                            {/* Product Type - only show when adding to room */}
+                            {roomId && (
+                                <div>
+                                    <label className="block text-sm font-medium mb-3">
+                                        Typ produktu
+                                    </label>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <button
+                                            type="button"
+                                            onClick={() => setProductType('MAIN')}
+                                            className={cn(
+                                                "flex items-center gap-3 p-4 rounded-xl transition-all text-left",
+                                                productType === 'MAIN'
+                                                    ? "bg-amber-500/20 ring-1 ring-amber-500/50"
+                                                    : "bg-[#1B1B1B] hover:bg-[#252525]"
+                                            )}
+                                        >
+                                            <span className="w-3 h-3 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]"></span>
+                                            <div>
+                                                <p className="font-medium text-white">Główny</p>
+                                                <p className="text-xs text-muted-foreground">Wliczany do budżetu</p>
+                                            </div>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setProductType('VARIANT')}
+                                            className={cn(
+                                                "flex items-center gap-3 p-4 rounded-xl transition-all text-left",
+                                                productType === 'VARIANT'
+                                                    ? "bg-blue-500/20 ring-1 ring-blue-500/50"
+                                                    : "bg-[#1B1B1B] hover:bg-[#252525]"
+                                            )}
+                                        >
+                                            <span className="w-3 h-3 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.4)]"></span>
+                                            <div>
+                                                <p className="font-medium text-white">Wariant</p>
+                                                <p className="text-xs text-muted-foreground">Alternatywa</p>
+                                            </div>
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
 
                             {error && (
                                 <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm">
