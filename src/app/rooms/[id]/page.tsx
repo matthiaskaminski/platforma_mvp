@@ -1,5 +1,6 @@
 import { getRoomById, getRoomProducts, getRoomTasks, getRoomBudget, getRoomGallery, getRoomNotes, getRoomSummary, getProjectDocuments, getProjectHistory } from '@/app/actions/rooms';
 import { getSprintsForRoom, getProjectSprints } from '@/app/actions/sprints';
+import { getServicesForRoom } from '@/app/actions/services';
 import { redirect } from 'next/navigation';
 import RoomDetailsClient from './RoomDetailsClient';
 
@@ -18,7 +19,7 @@ export default async function RoomDetailsPage({ params }: { params: Promise<{ id
     }
 
     // Then fetch all other data in parallel
-    const [products, tasks, budgetItems, galleryImages, notes, documents, history, roomSummary, roomSprints, allProjectSprints] = await Promise.all([
+    const [products, tasks, budgetItems, galleryImages, notes, documents, history, roomSummary, roomSprints, allProjectSprints, roomServices] = await Promise.all([
         getRoomProducts(id),
         getRoomTasks(id),
         getRoomBudget(id),
@@ -28,7 +29,8 @@ export default async function RoomDetailsPage({ params }: { params: Promise<{ id
         getProjectHistory(room.project.id),
         getRoomSummary(id),  // Changed from getProjectSummary - now uses room-specific data
         getSprintsForRoom(id),
-        getProjectSprints(room.project.id)
+        getProjectSprints(room.project.id),
+        getServicesForRoom(id)
     ]);
 
     // Map status for client
@@ -52,5 +54,5 @@ export default async function RoomDetailsPage({ params }: { params: Promise<{ id
         projectCoverImage: room.project.coverImage,
     };
 
-    return <RoomDetailsClient key={room.id} roomData={roomData} products={products} tasks={tasks} budgetItems={budgetItems} galleryImages={galleryImages} notes={notes} documents={documents} history={history} projectSummary={roomSummary} sprints={roomSprints} allProjectSprints={allProjectSprints} />;
+    return <RoomDetailsClient key={room.id} roomData={roomData} products={products} tasks={tasks} budgetItems={budgetItems} galleryImages={galleryImages} notes={notes} documents={documents} history={history} projectSummary={roomSummary} sprints={roomSprints} allProjectSprints={allProjectSprints} services={roomServices} />;
 }

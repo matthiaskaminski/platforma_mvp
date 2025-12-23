@@ -296,6 +296,53 @@ export async function getServicesSummary(projectId: string) {
     }
 }
 
+// Get services for a specific room
+export async function getServicesForRoom(roomId: string) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user?.email) {
+        return [];
+    }
+
+    try {
+        const profile = await prisma.profile.findUnique({
+            where: { email: user.email }
+        });
+
+        if (!profile) {
+            return [];
+        }
+
+        // Verify room ownership through project
+        const room = await prisma.room.findFirst({
+            where: {
+                id: roomId,
+                project: {
+                    designerId: profile.id
+                }
+            }
+        });
+
+        if (!room) {
+            return [];
+        }
+
+        const services = await prisma.serviceItem.findMany({
+            where: { roomId },
+            orderBy: { createdAt: 'desc' }
+        });
+
+        return services.map(s => ({
+            ...s,
+            price: Number(s.price)
+        }));
+    } catch (error) {
+        console.error("Error fetching room services:", error);
+        return [];
+    }
+}
+
 // Get rooms for dropdown
 export async function getRoomsForProject() {
     const supabase = await createClient();

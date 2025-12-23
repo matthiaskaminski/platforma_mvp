@@ -2,7 +2,7 @@
 
 import React, { useState, useRef } from "react";
 import {
-    Plus, LayoutGrid, MoreHorizontal, Trash2, Settings, ChevronDown, Printer, Download, Upload
+    Plus, LayoutGrid, MoreHorizontal, Trash2, Settings, ChevronDown, Printer, Download, Upload, Package, Users
 } from "lucide-react";
 import { RoomStatsDnD } from "./components/RoomStatsDnD";
 import { SummaryAccordion } from "./components/SummaryAccordion";
@@ -13,6 +13,7 @@ import { BudgetList } from "./components/BudgetList";
 import { GalleryGrid } from "./components/GalleryGrid";
 import { NotesList } from "./components/NotesList";
 import { HistoryList } from "./components/HistoryList";
+import { ServicesList } from "./components/ServicesList";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { uploadRoomCoverImage } from "@/app/actions/rooms";
@@ -92,6 +93,26 @@ interface HistoryItem {
     icon: string;
 }
 
+interface ServiceItem {
+    id: string;
+    category: "MATERIAL" | "LABOR";
+    planningStatus: "DRAFT" | "PLANNED" | "APPROVED" | "REJECTED";
+    name: string | null;
+    unit: string | null;
+    quantity: number | null;
+    price: number;
+    imageUrl: string | null;
+    url: string | null;
+    materialType: string | null;
+    materialStatus: string | null;
+    subcontractor: string | null;
+    scope: string | null;
+    duration: string | null;
+    laborStatus: string | null;
+    notes: string | null;
+    createdAt: Date;
+}
+
 interface Sprint {
     id: string;
     name: string;
@@ -161,18 +182,20 @@ interface RoomDetailsClientProps {
     projectSummary: ProjectSummary | null;
     sprints: Sprint[];
     allProjectSprints: AllProjectSprint[];
+    services: ServiceItem[];
 }
 
 // Product filter type
 type ProductFilterType = 'all' | 'approved' | 'not_approved';
 
-export default function RoomDetailsClient({ roomData, products, tasks, budgetItems, galleryImages, notes, documents, history, projectSummary, sprints, allProjectSprints }: RoomDetailsClientProps) {
+export default function RoomDetailsClient({ roomData, products, tasks, budgetItems, galleryImages, notes, documents, history, projectSummary, sprints, allProjectSprints, services }: RoomDetailsClientProps) {
     const [activeTab, setActiveTab] = useState("Produkty");
     const [isUploading, setIsUploading] = useState(false);
     const [isSprintModalOpen, setIsSprintModalOpen] = useState(false);
     const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
     const [isProductModalOpen, setIsProductModalOpen] = useState(false);
     const [productFilter, setProductFilter] = useState<ProductFilterType>('all');
+    const [addServiceCategory, setAddServiceCategory] = useState<"MATERIAL" | "LABOR" | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const router = useRouter();
 
@@ -294,7 +317,7 @@ export default function RoomDetailsClient({ roomData, products, tasks, budgetIte
                     {/* Tabs Header */}
                     <div className="pt-2 shrink-0 relative px-6">
                         <div className="flex items-center gap-8 text-sm font-medium text-muted-foreground overflow-x-auto no-scrollbar border-b border-white/5">
-                            {["Produkty", "Zadania", "Dokumenty", "Budżet", "Galeria", "Notatki", "Historia"].map((tab) => (
+                            {["Produkty", "Usługi", "Zadania", "Dokumenty", "Budżet", "Galeria", "Notatki", "Historia"].map((tab) => (
                                 <button
                                     key={tab}
                                     onClick={() => setActiveTab(tab)}
@@ -431,6 +454,25 @@ export default function RoomDetailsClient({ roomData, products, tasks, budgetIte
                                 <Button className="flex items-center gap-2 bg-[#232323] hover:bg-[#2a2a2a] text-white px-5 py-3 rounded-lg text-sm font-medium transition-colors whitespace-nowrap shadow-sm min-h-[48px]">
                                     <Plus className="w-5 h-5" /> Dodaj notatkę
                                 </Button>
+                            ) : activeTab === "Usługi" ? (
+                                <>
+                                    <Button
+                                        onClick={() => setAddServiceCategory("MATERIAL")}
+                                        className="flex items-center gap-2 bg-[#232323] hover:bg-[#2a2a2a] text-white px-5 py-3 rounded-lg text-sm font-medium transition-colors whitespace-nowrap shadow-sm min-h-[48px]"
+                                    >
+                                        <Plus className="w-5 h-5" />
+                                        <Package className="w-4 h-4" />
+                                        Dodaj materiał
+                                    </Button>
+                                    <Button
+                                        onClick={() => setAddServiceCategory("LABOR")}
+                                        className="flex items-center gap-2 bg-[#232323] hover:bg-[#2a2a2a] text-white px-5 py-3 rounded-lg text-sm font-medium transition-colors whitespace-nowrap shadow-sm min-h-[48px]"
+                                    >
+                                        <Plus className="w-5 h-5" />
+                                        <Users className="w-4 h-4" />
+                                        Dodaj robociznę
+                                    </Button>
+                                </>
                             ) : activeTab === "Galeria" || activeTab === "Historia" ? (
                                 <Button className="flex items-center gap-2 bg-[#1B1B1B] hover:bg-[#232323] text-muted-foreground hover:text-white px-5 py-3 rounded-lg text-sm font-medium transition-colors min-h-[48px]">
                                     <MoreHorizontal className="w-5 h-5" /> Opcje
@@ -463,6 +505,8 @@ export default function RoomDetailsClient({ roomData, products, tasks, budgetIte
                         <div className="flex-1 overflow-y-auto no-scrollbar">
                             <ProductGrid products={products} onAddProduct={() => setIsProductModalOpen(true)} filter={productFilter} />
                         </div>
+                    ) : activeTab === "Usługi" ? (
+                        <ServicesList services={services} onAddService={(category) => setAddServiceCategory(category)} />
                     ) : activeTab === "Zadania" ? (
                         <TasksList
                             tasks={tasks}
