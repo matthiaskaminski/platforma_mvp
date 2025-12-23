@@ -62,6 +62,21 @@ function SortableTile({ id, tile }: { id: string, tile: any }) {
     );
 }
 
+// Stonowane kolory dla pomieszczeń - przypisywane cyklicznie
+export const ROOM_COLORS = [
+    '#5C7A6F', // stonowany zielony
+    '#7A5C6F', // stonowany fioletowy
+    '#6F7A5C', // oliwkowy
+    '#5C6F7A', // stalowy niebieski
+    '#7A6F5C', // beżowy/brązowy
+    '#6F5C7A', // lawendowy
+    '#5C7A7A', // morski
+    '#7A5C5C', // różowo-brązowy
+];
+
+// Funkcja pomocnicza do pobrania koloru dla pomieszczenia
+export const getRoomColor = (index: number) => ROOM_COLORS[index % ROOM_COLORS.length];
+
 interface DashboardClientProps {
     user: any
     project: any
@@ -69,6 +84,7 @@ interface DashboardClientProps {
         budget: {
             spent: number; planned: number; total: number; remaining: number
             breakdown?: { materials: number; furniture: number; labor: number }
+            roomBreakdown?: { id: string; name: string; spent: number }[] // Budżet według pomieszczeń
         }
         daysConfig: { start: Date; end: Date }
         activeTasks: number
@@ -184,12 +200,27 @@ export default function DashboardClient({ user, project, stats, recentProducts =
 
     const allStatuses = ["TODO", "IN_PROGRESS", "DONE"] as const;
 
-    // Dynamic Budget Data
-    const budgetData = [
-        { name: "Wydano", value: stats?.budget?.spent || 0, color: "#E5E5E5" },
-        { name: "Planowane", value: stats?.budget?.planned || 0, color: "#6E6E6E" },
-        { name: "Pozostało", value: stats?.budget?.remaining || 0, color: "#232323" },
-    ];
+    // Dynamic Budget Data - podział według pomieszczeń
+    const roomBreakdown = stats?.budget?.roomBreakdown || [];
+    const budgetData = roomBreakdown.length > 0
+        ? [
+            ...roomBreakdown.map((room, index) => ({
+                name: room.name,
+                value: room.spent,
+                color: getRoomColor(index)
+            })),
+            // Dodaj "Pozostało" jeśli jest różnica
+            ...(stats.budget.remaining > 0 ? [{
+                name: "Pozostało",
+                value: stats.budget.remaining,
+                color: "#232323"
+            }] : [])
+        ].filter(item => item.value > 0)
+        : [
+            { name: "Wydano", value: stats?.budget?.spent || 0, color: "#E5E5E5" },
+            { name: "Planowane", value: stats?.budget?.planned || 0, color: "#6E6E6E" },
+            { name: "Pozostało", value: stats?.budget?.remaining || 0, color: "#232323" },
+        ];
 
     // Update tiles with real data if project exists
     // Update tiles with real data if project exists
@@ -571,41 +602,38 @@ export default function DashboardClient({ user, project, stats, recentProducts =
                                 </div>
                             </div>
 
-                            {/* Categories */}
+                            {/* Categories - Pomieszczenia */}
                             <div className="flex-1 w-full flex flex-col justify-center gap-5">
-                                <div className="flex flex-col gap-4">
-                                    {/* Kategoria 1 - Materiały */}
-                                    <div>
-                                        <div className="flex justify-between text-[14px] mb-1.5">
-                                            <span className="text-[#E5E5E5] font-medium">Materiały budowlane</span>
-                                            <span className="text-[#6E6E6E]">{Math.round((breakdown.materials / stats.budget.total) * 100) || 0}%</span>
-                                        </div>
-                                        <div className="h-2.5 w-full bg-[#1B1B1B] rounded-full overflow-hidden border-none">
-                                            <div style={{ width: `${(breakdown.materials / maxVal) * 100}%` }} className="h-full bg-[#E5E5E5] rounded-full"></div>
-                                        </div>
-                                    </div>
+                                <div className="flex flex-col gap-3 max-h-[180px] overflow-y-auto no-scrollbar pr-1">
+                                    {roomBreakdown.length > 0 ? (
+                                        roomBreakdown.map((room, index) => {
+                                            const percentage = stats.budget.total > 0
+                                                ? Math.round((room.spent / stats.budget.total) * 100)
+                                                : 0;
+                                            const maxSpent = Math.max(...roomBreakdown.map(r => r.spent), 1);
+                                            const barWidth = (room.spent / maxSpent) * 100;
+                                            const color = getRoomColor(index);
 
-                                    {/* Kategoria 2 - Meble */}
-                                    <div>
-                                        <div className="flex justify-between text-[14px] mb-1.5">
-                                            <span className="text-[#E5E5E5] font-medium">Meble i dekoracje</span>
-                                            <span className="text-[#6E6E6E]">{Math.round((breakdown.furniture / stats.budget.total) * 100) || 0}%</span>
+                                            return (
+                                                <div key={room.id}>
+                                                    <div className="flex justify-between text-[14px] mb-1.5">
+                                                        <span className="text-[#E5E5E5] font-medium truncate mr-2">{room.name}</span>
+                                                        <span className="text-[#6E6E6E] shrink-0">{percentage}%</span>
+                                                    </div>
+                                                    <div className="h-2.5 w-full bg-[#1B1B1B] rounded-full overflow-hidden border-none">
+                                                        <div
+                                                            style={{ width: `${barWidth}%`, backgroundColor: color }}
+                                                            className="h-full rounded-full"
+                                                        ></div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })
+                                    ) : (
+                                        <div className="text-[14px] text-muted-foreground text-center py-4">
+                                            Brak pomieszczeń z produktami
                                         </div>
-                                        <div className="h-2.5 w-full bg-[#1B1B1B] rounded-full overflow-hidden border-none">
-                                            <div style={{ width: `${(breakdown.furniture / maxVal) * 100}%` }} className="h-full bg-[#6E6E6E] rounded-full"></div>
-                                        </div>
-                                    </div>
-
-                                    {/* Kategoria 3 - Robocizna */}
-                                    <div>
-                                        <div className="flex justify-between text-[14px] mb-1.5">
-                                            <span className="text-[#E5E5E5] font-medium">Robocizna</span>
-                                            <span className="text-[#6E6E6E]">{Math.round((breakdown.labor / stats.budget.total) * 100) || 0}%</span>
-                                        </div>
-                                        <div className="h-2.5 w-full bg-[#1B1B1B] rounded-full overflow-hidden border-none">
-                                            <div style={{ width: `${(breakdown.labor / maxVal) * 100}%` }} className="h-full bg-[#232323] rounded-full"></div>
-                                        </div>
-                                    </div>
+                                    )}
                                 </div>
 
                                 {/* Invoices Status */}
@@ -688,7 +716,7 @@ export default function DashboardClient({ user, project, stats, recentProducts =
                                         return (
                                             <div
                                                 key={task.id || index}
-                                                className="flex-1 flex flex-col justify-between p-3 bg-secondary/30 hover:bg-[#232323] transition-colors cursor-pointer rounded-lg"
+                                                className="flex-1 flex flex-col justify-between p-3 bg-[#1B1B1B] hover:bg-[#232323] transition-colors cursor-pointer rounded-lg"
                                                 onClick={() => openTaskDetails(task)}
                                             >
                                                 <h4 className="text-[14px] font-medium mb-2 truncate">{task.title}</h4>
@@ -704,7 +732,7 @@ export default function DashboardClient({ user, project, stats, recentProducts =
                                         );
                                     } else {
                                         return (
-                                            <div key={`placeholder-${index}`} className="flex-1 flex items-center justify-center p-3 bg-secondary/20 rounded-lg">
+                                            <div key={`placeholder-${index}`} className="flex-1 flex items-center justify-center p-3 bg-[#1B1B1B] rounded-lg">
                                                 <span className="text-[14px] text-muted-foreground">Brak zadania</span>
                                             </div>
                                         );
@@ -726,7 +754,7 @@ export default function DashboardClient({ user, project, stats, recentProducts =
                                     { name: "Moodboardy", value: interactions.moodboards, icon: ImageIcon },
                                     { name: "Wiadomości", value: interactions.messages, icon: ClipboardList }
                                 ].map((item, i) => (
-                                    <div key={i} className={`flex-1 flex flex-col justify-between p-3 bg-secondary/30 hover:bg-[#232323] transition-colors cursor-pointer rounded-xl`}>
+                                    <div key={i} className={`flex-1 flex flex-col justify-between p-3 bg-[#1B1B1B] hover:bg-[#232323] transition-colors cursor-pointer rounded-xl`}>
                                         <div className="flex justify-between items-center mb-1">
                                             <div className="flex items-center gap-2">
                                                 <item.icon className="w-5 h-5 text-muted-foreground" />

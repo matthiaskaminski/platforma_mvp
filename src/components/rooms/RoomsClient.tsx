@@ -11,6 +11,7 @@ import { CreateRoomModal, getRoomTypeLabel } from "@/components/modals/CreateRoo
 import { EditRoomModal } from "@/components/modals/EditRoomModal";
 import { deleteRoom } from "@/app/actions/rooms";
 import { RoomType, RoomStatus } from "@prisma/client";
+import { getRoomColor } from "@/components/dashboard/DashboardClient";
 
 // Mock Data for fallback
 const PLACEHOLDER_IMG = "https://zotnacipqsjewlzofpga.supabase.co/storage/v1/object/public/Liru/526585939_1355299613265765_6668356102677043657_n.jpg";
@@ -120,7 +121,7 @@ export default function RoomsClient({ rooms: initialRooms, projectId, projectBud
                 "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 xl:grid-rows-2 gap-3 w-full flex-1 min-h-0 overflow-y-auto pr-1",
                 rooms.length === 0 && "flex items-center justify-center"
             )}>
-                {rooms.length > 0 ? rooms.map((room) => {
+                {rooms.length > 0 ? rooms.map((room, roomIndex) => {
                     const Icon = iconMap[room.type] || Armchair;
                     // Safe status fallback
                     const configKey = (room.status in statusConfig) ? room.status as keyof typeof statusConfig : 'not_started';
@@ -129,12 +130,18 @@ export default function RoomsClient({ rooms: initialRooms, projectId, projectBud
                     // Calculate percentage of project budget this room represents
                     const projectPercentage = projectBudget > 0 ? (room.spent / projectBudget) * 100 : 0;
 
+                    // Get unique color for this room
+                    const roomColor = getRoomColor(roomIndex);
+
                     return (
                         <Card key={room.id} className="overflow-hidden flex flex-col p-4 gap-5 group hover:border-white/10 transition-colors w-full min-h-[400px]">
                             {/* Header Row */}
                             <div className="flex items-start justify-between">
                                 <div className="flex items-center gap-4">
-                                    <div className="p-3 bg-[#1B1B1B] rounded-xl text-[#6E6E6E]">
+                                    <div
+                                        className="p-3 rounded-xl text-white"
+                                        style={{ backgroundColor: roomColor }}
+                                    >
                                         <Icon className="w-6 h-6" />
                                     </div>
                                     <div>

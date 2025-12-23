@@ -96,7 +96,8 @@ export default async function DashboardPage() {
   let stats = {
     budget: {
       spent: 0, planned: 0, total: 0, remaining: 0,
-      breakdown: { materials: 0, furniture: 0, labor: 0 }
+      breakdown: { materials: 0, furniture: 0, labor: 0 },
+      roomBreakdown: [] as { id: string; name: string; spent: number }[]
     },
     daysConfig: { start: new Date(), end: new Date() },
     activeTasks: 0,
@@ -141,10 +142,30 @@ export default async function DashboardPage() {
       else furniture += cost // Default fallback
     }
 
-    // Process products from rooms
+    // Process products from rooms and calculate room breakdown
+    const roomBreakdownMap = new Map<string, { id: string; name: string; spent: number }>();
+
     project.rooms.forEach(room => {
-      room.productItems.forEach(processProduct)
-    })
+      let roomSpent = 0;
+      room.productItems.forEach(item => {
+        processProduct(item);
+        // Calculate room-specific spent (price * quantity for MAIN products)
+        if (item.planningStatus === 'MAIN') {
+          roomSpent += Number(item.price) * item.quantity;
+        }
+      });
+
+      if (roomSpent > 0) {
+        roomBreakdownMap.set(room.id, {
+          id: room.id,
+          name: room.name,
+          spent: roomSpent
+        });
+      }
+    });
+
+    const roomBreakdown = Array.from(roomBreakdownMap.values())
+      .sort((a, b) => b.spent - a.spent); // Sortuj od największych wydatków
 
     // Get wishlist products for budget calculation
     const wishlistProducts = await prisma.productItem.findMany({
@@ -232,7 +253,8 @@ export default async function DashboardPage() {
         planned,
         total: totalBudget,
         remaining: totalBudget - spent,
-        breakdown: { materials, furniture, labor }
+        breakdown: { materials, furniture, labor },
+        roomBreakdown
       },
       daysConfig: {
         start: project.startDate || new Date(),
