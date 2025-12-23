@@ -737,9 +737,11 @@ export async function getRoomSummary(roomId: string) {
         },
         select: {
             id: true,
+            name: true,
             budgetAllocated: true,  // Room-specific budget (optional)
             project: {
                 select: {
+                    id: true,
                     budgetGoal: true  // Project total budget
                 }
             },
@@ -776,6 +778,43 @@ export async function getRoomSummary(roomId: string) {
         return null
     }
 
+    // Get all rooms in the project for budget breakdown
+    const allProjectRooms = await prisma.room.findMany({
+        where: {
+            projectId: room.project.id
+        },
+        select: {
+            id: true,
+            name: true,
+            productItems: {
+                where: {
+                    planningStatus: 'MAIN'
+                },
+                select: {
+                    price: true,
+                    quantity: true
+                }
+            }
+        },
+        orderBy: {
+            name: 'asc'
+        }
+    })
+
+    // Calculate spent for each room
+    const roomsBreakdown = allProjectRooms.map(r => {
+        const spent = r.productItems.reduce((sum, item) => {
+            return sum + (Number(item.price) * item.quantity)
+        }, 0)
+        return {
+            id: r.id,
+            name: r.name,
+            spent,
+            isCurrentRoom: r.id === roomId
+        }
+    }).filter(r => r.spent > 0)
+    .sort((a, b) => b.spent - a.spent)
+
     // Filter products for estimated budget (only MAIN products)
     const mainProducts = room.productItems.filter(p => p.planningStatus === 'MAIN');
 
@@ -790,7 +829,10 @@ export async function getRoomSummary(roomId: string) {
         hasRoomBudget,  // Flag to know if room has its own budget (not null AND > 0)
         rooms: [{ productItems: mainProducts }],  // Only MAIN products for budget calculation
         allProducts: room.productItems,  // All products for reference
-        tasks: room.tasks
+        tasks: room.tasks,
+        currentRoomId: roomId,
+        currentRoomName: room.name,
+        roomsBreakdown  // All rooms with their spent amounts
     }
 }
 

@@ -6,11 +6,22 @@ import { ChevronDown, ListTodo, Plus } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { getRoomColor } from "@/components/dashboard/DashboardClient";
+
+interface RoomBreakdown {
+    id: string;
+    name: string;
+    spent: number;
+    isCurrentRoom: boolean;
+}
 
 interface ProjectSummary {
     budgetGoal: any;  // Room-specific budget (can be null)
     projectBudget?: any;  // Project total budget for percentage calculation
     hasRoomBudget?: boolean;  // Flag to know if room has its own budget
+    currentRoomId?: string;
+    currentRoomName?: string;
+    roomsBreakdown?: RoomBreakdown[];
     rooms: {
         productItems: {
             price: any;
@@ -39,6 +50,10 @@ const statusConfig: Record<string, { label: string; badgeStatus: "overdue" | "in
 
 export function SummaryAccordion({ projectSummary }: SummaryAccordionProps) {
     const [isOpen, setIsOpen] = useState(true);
+
+    // Get rooms breakdown data
+    const roomsBreakdown = projectSummary?.roomsBreakdown || [];
+    const currentRoomId = projectSummary?.currentRoomId;
 
     // Calculate budget data from project summary - memoized to avoid recalculation on every render
     const budget = useMemo(() => {
@@ -104,35 +119,34 @@ export function SummaryAccordion({ projectSummary }: SummaryAccordionProps) {
         };
     }, [projectSummary]);
 
-    // Prepare chart data
-    // If room has its own budget: show spent categories + remaining room budget
-    // If no room budget: show spent categories as part of project budget (remaining = project budget - room total)
+    // Prepare chart data - using rooms breakdown like dashboard
     const budgetData = useMemo(() => {
-        if (budget.hasRoomBudget) {
-            // Room has its own budget - show categories + remaining from room budget
+        if (roomsBreakdown.length > 0) {
+            const projectBudget = Number(projectSummary?.projectBudget) || 0;
+            const totalSpent = roomsBreakdown.reduce((sum, r) => sum + r.spent, 0);
+            const remaining = Math.max(0, projectBudget - totalSpent);
+
             return [
-                { name: "Produkty", value: budget.products, color: "#F3F3F3" },
-                { name: "Materiały", value: budget.materials, color: "#6E6E6E" },
-                { name: "Usługi", value: budget.services, color: "#2F2F2F" },
-                { name: "Pozostało", value: budget.remaining, color: "#232323" },
-            ].filter(item => item.value && item.value > 0);
-        } else {
-            // No room budget - show room's share of project budget
-            const projectRemaining = Math.max(0, budget.projectBudget - budget.total);
-            return [
-                { name: "To pomieszczenie", value: budget.total, color: "#F3F3F3" },
-                { name: "Pozostały budżet", value: projectRemaining, color: "#232323" },
-            ].filter(item => item.value && item.value > 0);
+                ...roomsBreakdown.map((room, index) => ({
+                    name: room.name,
+                    value: room.spent,
+                    color: getRoomColor(index),
+                    isCurrentRoom: room.isCurrentRoom
+                })),
+                ...(remaining > 0 ? [{
+                    name: "Pozostało",
+                    value: remaining,
+                    color: "#232323",
+                    isCurrentRoom: false
+                }] : [])
+            ].filter(item => item.value > 0);
         }
-    }, [budget]);
+        return [];
+    }, [roomsBreakdown, projectSummary?.projectBudget]);
 
     // Format currency
     const formatCurrency = (value: number) => {
-        return new Intl.NumberFormat('pl-PL', {
-            style: 'currency',
-            currency: 'PLN',
-            minimumFractionDigits: 2
-        }).format(value);
+        return value.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' zł';
     };
 
     // Format date
@@ -168,6 +182,9 @@ export function SummaryAccordion({ projectSummary }: SummaryAccordionProps) {
 
     // Get top 2 tasks
     const topTasks = projectSummary?.tasks.slice(0, 2) || [];
+
+    // Calculate total spent for Łącznie
+    const totalSpent = roomsBreakdown.reduce((sum, r) => sum + r.spent, 0);
 
     return (
         <div className="bg-[#151515] rounded-2xl overflow-hidden shrink-0">
@@ -231,45 +248,63 @@ export function SummaryAccordion({ projectSummary }: SummaryAccordionProps) {
 
                             {/* Right: Budget - Fills remaining space and height */}
                             <div className="flex-1 flex gap-6 justify-end min-w-0">
-                                <div className="flex gap-6 h-full w-full">
-                                    {/* List - Flexible */}
+                                <div className="flex gap-8 h-full w-full items-stretch">
+                                    {/* Room List - Like Dashboard */}
                                     <div className="flex-1 min-w-0 flex flex-col justify-center">
                                         <h3 className="text-sm font-medium text-muted-foreground mb-4">Budżet estymacyjny</h3>
-                                        <div className="space-y-3">
-                                            {[
-                                                { label: "Produkty", val: budget.products, color: "bg-[#F3F3F3]" },
-                                                { label: "Materiały", val: budget.materials, color: "bg-[#6E6E6E]" },
-                                                { label: "Usługi", val: budget.services, color: "bg-[#2F2F2F]" },
-                                                ...(budget.hasRoomBudget ? [{ label: "Pozostało", val: budget.remaining, color: "bg-[#232323]" }] : []),
-                                            ].filter(item => item.val && item.val > 0).map((item) => (
-                                                <div key={item.label} className="flex justify-between items-center text-sm">
-                                                    <div className="flex items-center gap-2">
-                                                        <div className={`w-3 h-2 rounded-full ${item.color}`}></div>
-                                                        <span className="text-muted-foreground">{item.label}</span>
-                                                    </div>
-                                                    <span className="font-medium text-white">{formatCurrency(item.val!)}</span>
+                                        <div className="flex flex-col gap-4 overflow-y-auto no-scrollbar pr-2">
+                                            {roomsBreakdown.length > 0 ? (
+                                                roomsBreakdown.map((room, index) => {
+                                                    const color = getRoomColor(index);
+                                                    const isCurrentRoomItem = room.id === currentRoomId;
+                                                    return (
+                                                        <div key={room.id} className="flex items-center justify-between">
+                                                            <div className="flex items-center gap-3">
+                                                                <span
+                                                                    className="w-3.5 h-3.5 rounded-full flex-shrink-0"
+                                                                    style={{ backgroundColor: color }}
+                                                                />
+                                                                <span className={`text-[15px] ${isCurrentRoomItem ? 'text-white font-semibold' : 'text-[#E5E5E5]'}`}>
+                                                                    {room.name}
+                                                                </span>
+                                                            </div>
+                                                            <span className={`text-[15px] tabular-nums ${isCurrentRoomItem ? 'text-white font-semibold' : 'text-[#E5E5E5] font-medium'}`}>
+                                                                {formatCurrency(room.spent)}
+                                                            </span>
+                                                        </div>
+                                                    );
+                                                })
+                                            ) : (
+                                                <div className="text-[14px] text-muted-foreground py-4">
+                                                    Brak pomieszczeń z produktami
                                                 </div>
-                                            ))}
-                                            <div className="pt-2 mt-2 border-t border-white/5 flex justify-between text-sm">
-                                                <span className="text-muted-foreground">Łącznie</span>
-                                                <span className="font-semibold text-white">{formatCurrency(budget.total)}</span>
-                                            </div>
+                                            )}
                                         </div>
+
+                                        {/* Total - Łącznie */}
+                                        {roomsBreakdown.length > 0 && (
+                                            <div className="flex items-center justify-between pt-4 mt-4 border-t border-white/10">
+                                                <span className="text-[15px] text-[#E5E5E5] font-semibold">Łącznie</span>
+                                                <span className="text-[15px] text-[#E5E5E5] font-semibold tabular-nums">
+                                                    {formatCurrency(totalSpent)}
+                                                </span>
+                                            </div>
+                                        )}
                                     </div>
 
-                                    {/* Chart */}
-                                    {budgetData.length > 0 && budget.total > 0 && (
-                                        <div className="w-[220px] h-[220px] relative shrink-0 self-center">
+                                    {/* Chart - Like Dashboard */}
+                                    {budgetData.length > 0 && (
+                                        <div className="aspect-square h-full max-h-[200px] relative shrink-0 self-center">
                                             <ResponsiveContainer width="100%" height="100%">
                                                 <PieChart>
                                                     <Pie
                                                         data={budgetData}
-                                                        innerRadius="75%"
-                                                        outerRadius="92%"
-                                                        paddingAngle={5}
+                                                        innerRadius="72%"
+                                                        outerRadius="90%"
+                                                        paddingAngle={4}
                                                         dataKey="value"
                                                         stroke="none"
-                                                        cornerRadius={4}
+                                                        cornerRadius={6}
                                                     >
                                                         {budgetData.map((entry, index) => (
                                                             <Cell key={`cell-${index}`} fill={entry.color} />
@@ -278,12 +313,10 @@ export function SummaryAccordion({ projectSummary }: SummaryAccordionProps) {
                                                 </PieChart>
                                             </ResponsiveContainer>
                                             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                                                <span className="text-[28px] font-bold text-white">
-                                                    {budget.hasRoomBudget ? budget.percentage : budget.projectPercentage}%
+                                                <span className="text-[24px] font-bold text-white">
+                                                    {budget.projectPercentage}%
                                                 </span>
-                                                {!budget.hasRoomBudget && budget.projectBudget > 0 && (
-                                                    <span className="text-xs text-muted-foreground">budżetu projektu</span>
-                                                )}
+                                                <span className="text-xs text-muted-foreground">budżetu projektu</span>
                                             </div>
                                         </div>
                                     )}
