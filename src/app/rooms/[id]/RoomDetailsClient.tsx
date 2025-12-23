@@ -163,14 +163,22 @@ interface RoomDetailsClientProps {
     allProjectSprints: AllProjectSprint[];
 }
 
+// Product filter type
+type ProductFilterType = 'all' | 'approved' | 'not_approved';
+
 export default function RoomDetailsClient({ roomData, products, tasks, budgetItems, galleryImages, notes, documents, history, projectSummary, sprints, allProjectSprints }: RoomDetailsClientProps) {
     const [activeTab, setActiveTab] = useState("Produkty");
     const [isUploading, setIsUploading] = useState(false);
     const [isSprintModalOpen, setIsSprintModalOpen] = useState(false);
     const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
     const [isProductModalOpen, setIsProductModalOpen] = useState(false);
+    const [productFilter, setProductFilter] = useState<ProductFilterType>('all');
     const fileInputRef = useRef<HTMLInputElement>(null);
     const router = useRouter();
+
+    // Product counts for filter badges
+    const approvedCount = products.filter(p => p.planningStatus === 'APPROVED').length;
+    const notApprovedCount = products.filter(p => p.planningStatus !== 'APPROVED').length;
 
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -305,9 +313,67 @@ export default function RoomDetailsClient({ roomData, products, tasks, budgetIte
 
                     {/* Toolbar */}
                     <div className="py-4 px-6 flex flex-col sm:flex-row items-center justify-between gap-4 shrink-0">
-                        <div className="flex items-center gap-4 text-sm font-medium text-muted-foreground w-full sm:w-auto">
-                            <Button variant="ghost" className="flex items-center gap-1 hover:text-white transition-colors h-[48px] px-3 rounded-lg hover:bg-white/5">Filtruj <ChevronDown className="w-3 h-3" /></Button>
-                            <Button variant="ghost" className="flex items-center gap-1 hover:text-white transition-colors h-[48px] px-3 rounded-lg hover:bg-white/5">Sortuj <ChevronDown className="w-3 h-3" /></Button>
+                        <div className="flex items-center gap-2 text-sm font-medium w-full sm:w-auto">
+                            {activeTab === "Produkty" ? (
+                                <>
+                                    <button
+                                        onClick={() => setProductFilter('all')}
+                                        className={`px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
+                                            productFilter === 'all'
+                                                ? "bg-white text-black"
+                                                : "bg-[#232323] text-muted-foreground hover:text-white hover:bg-[#2a2a2a]"
+                                        }`}
+                                    >
+                                        Wszystkie
+                                        <span className={`text-xs px-1.5 py-0.5 rounded-full min-w-[20px] text-center ${
+                                            productFilter === 'all'
+                                                ? "bg-black/10 text-black/70"
+                                                : "bg-white/10 text-white/50"
+                                        }`}>
+                                            {products.length}
+                                        </span>
+                                    </button>
+                                    <button
+                                        onClick={() => setProductFilter('approved')}
+                                        className={`px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
+                                            productFilter === 'approved'
+                                                ? "bg-white text-black"
+                                                : "bg-[#232323] text-muted-foreground hover:text-white hover:bg-[#2a2a2a]"
+                                        }`}
+                                    >
+                                        Zatwierdzone
+                                        <span className={`text-xs px-1.5 py-0.5 rounded-full min-w-[20px] text-center ${
+                                            productFilter === 'approved'
+                                                ? "bg-black/10 text-black/70"
+                                                : "bg-white/10 text-white/50"
+                                        }`}>
+                                            {approvedCount}
+                                        </span>
+                                    </button>
+                                    <button
+                                        onClick={() => setProductFilter('not_approved')}
+                                        className={`px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
+                                            productFilter === 'not_approved'
+                                                ? "bg-white text-black"
+                                                : "bg-[#232323] text-muted-foreground hover:text-white hover:bg-[#2a2a2a]"
+                                        }`}
+                                    >
+                                        Bez zatwierdzonych
+                                        <span className={`text-xs px-1.5 py-0.5 rounded-full min-w-[20px] text-center ${
+                                            productFilter === 'not_approved'
+                                                ? "bg-black/10 text-black/70"
+                                                : "bg-white/10 text-white/50"
+                                        }`}>
+                                            {notApprovedCount}
+                                        </span>
+                                    </button>
+                                </>
+                            ) : (
+                                <>
+                                    <Button variant="ghost" className="flex items-center gap-1 text-muted-foreground hover:text-white transition-colors h-[48px] px-3 rounded-lg hover:bg-white/5">Filtruj <ChevronDown className="w-3 h-3" /></Button>
+                                    <Button variant="ghost" className="flex items-center gap-1 text-muted-foreground hover:text-white transition-colors h-[48px] px-3 rounded-lg hover:bg-white/5">Sortuj <ChevronDown className="w-3 h-3" /></Button>
+                                </>
+                            )}
                         </div>
 
                         <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto no-scrollbar">
@@ -390,7 +456,7 @@ export default function RoomDetailsClient({ roomData, products, tasks, budgetIte
                     {/* Content Viewer */}
                     {activeTab === "Produkty" ? (
                         <div className="flex-1 overflow-y-auto no-scrollbar">
-                            <ProductGrid products={products} onAddProduct={() => setIsProductModalOpen(true)} />
+                            <ProductGrid products={products} onAddProduct={() => setIsProductModalOpen(true)} filter={productFilter} />
                         </div>
                     ) : activeTab === "Zadania" ? (
                         <TasksList
