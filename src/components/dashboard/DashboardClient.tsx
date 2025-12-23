@@ -62,16 +62,16 @@ function SortableTile({ id, tile }: { id: string, tile: any }) {
     );
 }
 
-// Stonowane kolory dla pomieszczeń - przypisywane cyklicznie
+// Kolory dla pomieszczeń - zgodne z designem
 export const ROOM_COLORS = [
-    '#5C7A6F', // stonowany zielony
-    '#7A5C6F', // stonowany fioletowy
-    '#6F7A5C', // oliwkowy
-    '#5C6F7A', // stalowy niebieski
-    '#7A6F5C', // beżowy/brązowy
-    '#6F5C7A', // lawendowy
-    '#5C7A7A', // morski
-    '#7A5C5C', // różowo-brązowy
+    '#C9A96E', // musztardowy/beżowy (Łazienka)
+    '#6B9B7A', // zielony (Kuchnia)
+    '#8B9BC9', // niebieski/fioletowy (Sypialnia)
+    '#C98BA3', // różowy (Salon)
+    '#9BC9B8', // miętowy
+    '#C9B88B', // piaskowy
+    '#A38BC9', // lawendowy
+    '#C98B8B', // koralowy
 ];
 
 // Funkcja pomocnicza do pobrania koloru dla pomieszczenia
@@ -574,19 +574,19 @@ export default function DashboardClient({ user, project, stats, recentProducts =
                         </div>
 
                         {/* Main Content: Chart + Room List */}
-                        <div className="flex gap-8 items-center flex-1 min-h-0">
-                            {/* Chart (Donut) - Left Side */}
-                            <div className="w-[200px] h-[200px] relative flex-shrink-0">
+                        <div className="flex gap-10 items-stretch flex-1 min-h-0">
+                            {/* Chart (Donut) - Left Side - Full Height */}
+                            <div className="aspect-square h-full max-h-[280px] relative flex-shrink-0">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <PieChart>
                                         <Pie
                                             data={budgetData}
-                                            innerRadius="70%"
-                                            outerRadius="95%"
-                                            paddingAngle={4}
+                                            innerRadius="68%"
+                                            outerRadius="92%"
+                                            paddingAngle={5}
                                             dataKey="value"
                                             stroke="none"
-                                            cornerRadius={6}
+                                            cornerRadius={10}
                                         >
                                             {budgetData.map((entry, index) => (
                                                 <Cell key={`cell-${index}`} fill={entry.color} />
@@ -595,8 +595,8 @@ export default function DashboardClient({ user, project, stats, recentProducts =
                                     </PieChart>
                                 </ResponsiveContainer>
                                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                                    <span className="text-[#6E6E6E] text-sm font-medium mb-1">Pozostało</span>
-                                    <span className="text-[22px] font-bold tracking-tight text-[#E5E5E5]">{formatMoney(stats.budget.remaining)}</span>
+                                    <span className="text-[#6E6E6E] text-base font-medium mb-1">Pozostało</span>
+                                    <span className="text-[26px] font-bold tracking-tight text-[#E5E5E5]">{formatMoney(stats.budget.remaining)}</span>
                                 </div>
                             </div>
 
