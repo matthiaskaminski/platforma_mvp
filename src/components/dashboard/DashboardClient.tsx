@@ -565,30 +565,28 @@ export default function DashboardClient({ user, project, stats, recentProducts =
                 {/* Column 2: Budget & Tasks/Interactions */}
                 <div className="xl:col-span-5 flex flex-col gap-3 h-full min-h-0">
 
-                    {/* Budget Widget - Redesigned V2 */}
+                    {/* Budget Widget - Redesigned V3 */}
                     <Card className="flex flex-col gap-4 relative overflow-hidden flex-1 min-h-0">
-                        <div className="absolute top-0 right-0 p-6 opacity-10 pointer-events-none"></div>
-
                         {/* Header: Title & Button */}
                         <div className="flex justify-between items-center shrink-0">
                             <h3 className="font-medium text-[20px]">Budżet</h3>
-                            <Button variant="secondary" size="sm" className="rounded-full h-auto py-1 px-3 border border-white/5 bg-[#232323] hover:bg-[#2a2a2a]">Planer</Button>
+                            <Button variant="secondary" size="sm" className="rounded-full h-auto py-1 px-3 border border-white/5 bg-[#232323] hover:bg-[#2a2a2a]">Zarządzaj</Button>
                         </div>
 
-                        {/* Main Content: Chart + Categories */}
-                        <div className="flex flex-col md:flex-row gap-6 items-center flex-1 min-h-0">
-                            {/* Chart (Donut) */}
-                            <div className="w-full md:w-5/12 h-full relative flex flex-col items-center justify-center shrink-0 min-h-[140px]">
+                        {/* Main Content: Chart + Room List */}
+                        <div className="flex gap-8 items-center flex-1 min-h-0">
+                            {/* Chart (Donut) - Left Side */}
+                            <div className="w-[200px] h-[200px] relative flex-shrink-0">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <PieChart>
                                         <Pie
-                                            data={budgetData} // TODO: Use real budget data for chart
-                                            innerRadius="75%"
-                                            outerRadius="92%"
-                                            paddingAngle={5}
+                                            data={budgetData}
+                                            innerRadius="70%"
+                                            outerRadius="95%"
+                                            paddingAngle={4}
                                             dataKey="value"
                                             stroke="none"
-                                            cornerRadius={8}
+                                            cornerRadius={6}
                                         >
                                             {budgetData.map((entry, index) => (
                                                 <Cell key={`cell-${index}`} fill={entry.color} />
@@ -597,81 +595,48 @@ export default function DashboardClient({ user, project, stats, recentProducts =
                                     </PieChart>
                                 </ResponsiveContainer>
                                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                                    <span className="text-[#6E6E6E] text-xs font-medium mb-0.5">Całkowity</span>
-                                    <span className="text-[20px] font-bold tracking-tight text-[#E5E5E5]">{formatMoney(stats.budget.total)}</span>
+                                    <span className="text-[#6E6E6E] text-sm font-medium mb-1">Pozostało</span>
+                                    <span className="text-[22px] font-bold tracking-tight text-[#E5E5E5]">{formatMoney(stats.budget.remaining)}</span>
                                 </div>
                             </div>
 
-                            {/* Categories - Pomieszczenia */}
-                            <div className="flex-1 w-full flex flex-col justify-center gap-5">
-                                <div className="flex flex-col gap-3 max-h-[180px] overflow-y-auto no-scrollbar pr-1">
+                            {/* Room List - Right Side */}
+                            <div className="flex-1 flex flex-col justify-center">
+                                <div className="flex flex-col gap-4 max-h-[180px] overflow-y-auto no-scrollbar pr-2">
                                     {roomBreakdown.length > 0 ? (
                                         roomBreakdown.map((room, index) => {
-                                            const percentage = stats.budget.total > 0
-                                                ? Math.round((room.spent / stats.budget.total) * 100)
-                                                : 0;
-                                            const maxSpent = Math.max(...roomBreakdown.map(r => r.spent), 1);
-                                            const barWidth = (room.spent / maxSpent) * 100;
                                             const color = getRoomColor(index);
-
                                             return (
-                                                <div key={room.id}>
-                                                    <div className="flex justify-between text-[14px] mb-1.5">
-                                                        <span className="text-[#E5E5E5] font-medium truncate mr-2">{room.name}</span>
-                                                        <span className="text-[#6E6E6E] shrink-0">{percentage}%</span>
+                                                <div key={room.id} className="flex items-center justify-between">
+                                                    <div className="flex items-center gap-3">
+                                                        <span
+                                                            className="w-3 h-3 rounded-full flex-shrink-0"
+                                                            style={{ backgroundColor: color }}
+                                                        />
+                                                        <span className="text-[15px] text-[#E5E5E5]">{room.name}</span>
                                                     </div>
-                                                    <div className="h-2.5 w-full bg-[#1B1B1B] rounded-full overflow-hidden border-none">
-                                                        <div
-                                                            style={{ width: `${barWidth}%`, backgroundColor: color }}
-                                                            className="h-full rounded-full"
-                                                        ></div>
-                                                    </div>
+                                                    <span className="text-[15px] text-[#E5E5E5] font-medium tabular-nums">
+                                                        {room.spent.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł
+                                                    </span>
                                                 </div>
                                             );
                                         })
                                     ) : (
-                                        <div className="text-[14px] text-muted-foreground text-center py-4">
+                                        <div className="text-[14px] text-muted-foreground py-4">
                                             Brak pomieszczeń z produktami
                                         </div>
                                     )}
                                 </div>
 
-                                {/* Invoices Status */}
-                                <div className="pt-2 flex items-center border-t border-white/5 mt-1">
-                                    <div className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
-                                        <span className="w-2.5 h-2.5 rounded-full bg-[#E8B491] shadow-[0_0_8px_rgba(232,180,145,0.4)]"></span>
-                                        <span className="text-[14px] font-medium text-[#E5E5E5]">2 nieopłacone faktury</span>
+                                {/* Total - Łącznie */}
+                                {roomBreakdown.length > 0 && (
+                                    <div className="flex items-center justify-between pt-4 mt-4 border-t border-white/10">
+                                        <span className="text-[15px] text-[#E5E5E5] font-semibold">Łącznie</span>
+                                        <span className="text-[15px] text-[#E5E5E5] font-semibold tabular-nums">
+                                            {stats.budget.spent.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł
+                                        </span>
                                     </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Footer Metrics (4 columns) */}
-                        <div className="grid grid-cols-4 gap-2 border-t border-white/5 pt-4">
-                            <div className="flex flex-col">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <div className="w-2 h-2 rounded-full bg-[#E5E5E5]"></div>
-                                    <span className="text-[14px] text-[#6E6E6E]">Wydano</span>
-                                </div>
-                                <span className="text-[16px] font-medium text-[#E5E5E5]">{formatMoney(stats.budget.spent)}</span>
-                            </div>
-                            <div className="flex flex-col border-l border-white/5 pl-2">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <div className="w-2 h-2 rounded-full bg-[#6E6E6E]"></div>
-                                    <span className="text-[14px] text-[#6E6E6E]">Planowane</span>
-                                </div>
-                                <span className="text-[16px] font-medium text-[#E5E5E5]">{formatMoney(stats.budget.planned)}</span>
-                            </div>
-                            <div className="flex flex-col border-l border-white/5 pl-2">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <div className="w-2 h-2 rounded-full bg-[#232323]"></div>
-                                    <span className="text-[14px] text-[#6E6E6E]">Pozostało</span>
-                                </div>
-                                <span className="text-[16px] font-bold text-[#E5E5E5]">{formatMoney(stats.budget.remaining)}</span>
-                            </div>
-                            <div className="flex flex-col border-l border-white/5 pl-2">
-                                <span className="text-[14px] text-[#6E6E6E] mb-1">Ten mies.</span>
-                                <span className="text-[16px] font-medium text-[#E5E5E5]">{formatMoney(0)}</span>
+                                )}
                             </div>
                         </div>
                     </Card>
