@@ -573,36 +573,11 @@ export default function DashboardClient({ user, project, stats, recentProducts =
                             <Button variant="secondary" size="sm" className="rounded-full h-auto py-1 px-3 border border-white/5 bg-[#232323] hover:bg-[#2a2a2a]">Zarządzaj</Button>
                         </div>
 
-                        {/* Main Content: Chart + Room List */}
-                        <div className="flex gap-10 items-stretch flex-1 min-h-0">
-                            {/* Chart (Donut) - Left Side - Full Height */}
-                            <div className="aspect-square h-full max-h-[280px] relative flex-shrink-0">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <PieChart>
-                                        <Pie
-                                            data={budgetData}
-                                            innerRadius="68%"
-                                            outerRadius="92%"
-                                            paddingAngle={5}
-                                            dataKey="value"
-                                            stroke="none"
-                                            cornerRadius={10}
-                                        >
-                                            {budgetData.map((entry, index) => (
-                                                <Cell key={`cell-${index}`} fill={entry.color} />
-                                            ))}
-                                        </Pie>
-                                    </PieChart>
-                                </ResponsiveContainer>
-                                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                                    <span className="text-[#6E6E6E] text-base font-medium mb-1">Pozostało</span>
-                                    <span className="text-[26px] font-bold tracking-tight text-[#E5E5E5]">{formatMoney(stats.budget.remaining)}</span>
-                                </div>
-                            </div>
-
-                            {/* Room List - Right Side */}
+                        {/* Main Content: Room List + Chart (swapped) */}
+                        <div className="flex gap-8 items-stretch flex-1 min-h-0">
+                            {/* Room List - Left Side */}
                             <div className="flex-1 flex flex-col justify-center">
-                                <div className="flex flex-col gap-4 max-h-[180px] overflow-y-auto no-scrollbar pr-2">
+                                <div className="flex flex-col gap-5 overflow-y-auto no-scrollbar pr-2">
                                     {roomBreakdown.length > 0 ? (
                                         roomBreakdown.map((room, index) => {
                                             const color = getRoomColor(index);
@@ -610,7 +585,7 @@ export default function DashboardClient({ user, project, stats, recentProducts =
                                                 <div key={room.id} className="flex items-center justify-between">
                                                     <div className="flex items-center gap-3">
                                                         <span
-                                                            className="w-3 h-3 rounded-full flex-shrink-0"
+                                                            className="w-3.5 h-3.5 rounded-full flex-shrink-0"
                                                             style={{ backgroundColor: color }}
                                                         />
                                                         <span className="text-[15px] text-[#E5E5E5]">{room.name}</span>
@@ -637,6 +612,31 @@ export default function DashboardClient({ user, project, stats, recentProducts =
                                         </span>
                                     </div>
                                 )}
+                            </div>
+
+                            {/* Chart (Donut) - Right Side - Full Height */}
+                            <div className="aspect-square h-full relative flex-shrink-0">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <PieChart>
+                                        <Pie
+                                            data={budgetData}
+                                            innerRadius="72%"
+                                            outerRadius="90%"
+                                            paddingAngle={4}
+                                            dataKey="value"
+                                            stroke="none"
+                                            cornerRadius={6}
+                                        >
+                                            {budgetData.map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={entry.color} />
+                                            ))}
+                                        </Pie>
+                                    </PieChart>
+                                </ResponsiveContainer>
+                                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                                    <span className="text-[#6E6E6E] text-base font-medium mb-1">Pozostało</span>
+                                    <span className="text-[24px] font-bold tracking-tight text-[#E5E5E5]">{formatMoney(stats.budget.remaining)}</span>
+                                </div>
                             </div>
                         </div>
                     </Card>
