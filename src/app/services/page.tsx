@@ -1,10 +1,31 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { Plus, Trash2, MoreHorizontal, Wrench, ChevronDown, Loader2, Package, Users, Check, Clock, FileText, ExternalLink, Edit3 } from "lucide-react";
+import {
+    Search,
+    ChevronDown,
+    Share2,
+    Printer,
+    Download,
+    LayoutGrid,
+    Hash,
+    Flame,
+    MoreVertical,
+    Package,
+    Users,
+    Plus,
+    Trash2,
+    Check,
+    Loader2,
+    ExternalLink,
+    Edit3,
+    FileText,
+    Clock,
+    Wrench
+} from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { Badge } from "@/components/ui/Badge";
+import { Input } from "@/components/ui/Input";
 import { cn } from "@/lib/utils";
 import { getServices, deleteService, approveService, getRoomsForProject } from "@/app/actions/services";
 import { AddServiceModal } from "./components/AddServiceModal";
@@ -14,7 +35,6 @@ interface ServiceItem {
     id: string;
     category: "MATERIAL" | "LABOR";
     planningStatus: "DRAFT" | "PLANNED" | "APPROVED" | "REJECTED";
-    // Material fields
     name: string | null;
     unit: string | null;
     quantity: number | null;
@@ -23,12 +43,10 @@ interface ServiceItem {
     url: string | null;
     materialType: string | null;
     materialStatus: string | null;
-    // Labor fields
     subcontractor: string | null;
     scope: string | null;
     duration: string | null;
     laborStatus: string | null;
-    // Common
     notes: string | null;
     createdAt: Date;
     room: { id: string; name: string } | null;
@@ -38,29 +56,29 @@ type CategoryFilter = "all" | "MATERIAL" | "LABOR";
 type StatusFilter = "all" | "DRAFT" | "PLANNED" | "APPROVED";
 
 // Status configurations
-const planningStatusConfig: Record<string, { label: string; badgeStatus: "not_started" | "in_progress" | "completed" }> = {
-    'DRAFT': { label: "Brudnopis", badgeStatus: "not_started" },
-    'PLANNED': { label: "Planowane", badgeStatus: "in_progress" },
-    'APPROVED': { label: "Zatwierdzone", badgeStatus: "completed" },
-    'REJECTED': { label: "Odrzucone", badgeStatus: "not_started" }
+const planningStatusConfig: Record<string, { label: string; dotColor: string }> = {
+    'DRAFT': { label: "Brudnopis", dotColor: "bg-[#6E6E6E]" },
+    'PLANNED': { label: "Planowane", dotColor: "bg-[#E8B491] shadow-[0_0_8px_rgba(232,180,145,0.4)]" },
+    'APPROVED': { label: "Zatwierdzone", dotColor: "bg-[#91E8B2] shadow-[0_0_8px_rgba(145,232,178,0.5)]" },
+    'REJECTED': { label: "Odrzucone", dotColor: "bg-red-500" }
 };
 
-const materialStatusConfig: Record<string, { label: string; color: string }> = {
-    'TO_ORDER': { label: "Do zamówienia", color: "text-yellow-400" },
-    'ORDERED': { label: "Zamówione", color: "text-blue-400" },
-    'TO_PAY': { label: "Do zapłaty", color: "text-orange-400" },
-    'PAID': { label: "Zapłacone", color: "text-green-400" },
-    'ADVANCE_PAID': { label: "Zaliczka wpłacona", color: "text-cyan-400" },
-    'RECEIVED': { label: "Odebrane", color: "text-purple-400" },
-    'COMPLETED': { label: "Zakończone", color: "text-gray-400" }
+const materialStatusConfig: Record<string, { label: string }> = {
+    'TO_ORDER': { label: "Do zamówienia" },
+    'ORDERED': { label: "Zamówione" },
+    'TO_PAY': { label: "Do zapłaty" },
+    'PAID': { label: "Zapłacone" },
+    'ADVANCE_PAID': { label: "Zaliczka" },
+    'RECEIVED': { label: "Odebrane" },
+    'COMPLETED': { label: "Zakończone" }
 };
 
-const laborStatusConfig: Record<string, { label: string; color: string }> = {
-    'TO_ORDER': { label: "Do zamówienia", color: "text-yellow-400" },
-    'ORDERED': { label: "Zamówione", color: "text-blue-400" },
-    'PAID': { label: "Zapłacone", color: "text-green-400" },
-    'IN_PROGRESS': { label: "W trakcie", color: "text-orange-400" },
-    'COMPLETED': { label: "Zakończone", color: "text-gray-400" }
+const laborStatusConfig: Record<string, { label: string }> = {
+    'TO_ORDER': { label: "Do zlecenia" },
+    'ORDERED': { label: "Zlecone" },
+    'PAID': { label: "Opłacone" },
+    'IN_PROGRESS': { label: "W trakcie" },
+    'COMPLETED': { label: "Zakończone" }
 };
 
 export default function ServicesPage() {
@@ -69,6 +87,7 @@ export default function ServicesPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [deletingId, setDeletingId] = useState<string | null>(null);
     const [approvingId, setApprovingId] = useState<string | null>(null);
+    const [searchQuery, setSearchQuery] = useState("");
 
     // Filters
     const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
@@ -128,13 +147,14 @@ export default function ServicesPage() {
         return services.filter(service => {
             if (categoryFilter !== "all" && service.category !== categoryFilter) return false;
             if (statusFilter !== "all" && service.planningStatus !== statusFilter) return false;
+            if (searchQuery) {
+                const query = searchQuery.toLowerCase();
+                const name = service.category === "MATERIAL" ? service.name : service.subcontractor;
+                if (!name?.toLowerCase().includes(query)) return false;
+            }
             return true;
         });
-    }, [services, categoryFilter, statusFilter]);
-
-    // Split by category
-    const materialServices = filteredServices.filter(s => s.category === "MATERIAL");
-    const laborServices = filteredServices.filter(s => s.category === "LABOR");
+    }, [services, categoryFilter, statusFilter, searchQuery]);
 
     // Calculate totals
     const totals = useMemo(() => {
@@ -154,7 +174,7 @@ export default function ServicesPage() {
     }, [services]);
 
     const formatCurrency = (value: number) => {
-        return value.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' zł';
+        return value.toLocaleString('pl-PL') + ' zł';
     };
 
     if (isLoading) {
@@ -166,201 +186,352 @@ export default function ServicesPage() {
     }
 
     return (
-        <div className="flex flex-col h-full animate-in fade-in duration-500 pb-0 overflow-hidden w-full">
-            {/* Header with totals */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-stretch gap-3 shrink-0 mb-3">
-                {/* Summary Cards */}
-                <div className="flex gap-3 flex-1">
-                    <Card className="flex-1 p-4 flex flex-col justify-center">
-                        <span className="text-sm text-muted-foreground mb-1">Budżet estymacyjny</span>
-                        <span className="text-xl font-bold text-white">{formatCurrency(totals.totalPlanned)}</span>
-                        <div className="flex gap-4 mt-2 text-sm">
-                            <span className="text-muted-foreground">Materiały: <span className="text-white">{formatCurrency(totals.materialPlanned)}</span></span>
-                            <span className="text-muted-foreground">Robocizna: <span className="text-white">{formatCurrency(totals.laborPlanned)}</span></span>
+        <div className="flex flex-col h-full w-full animate-in fade-in duration-500 overflow-hidden">
+
+            {/* Toolbar */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-stretch gap-3 shrink-0 mb-3 px-0 pt-2">
+                {/* Filter Bar */}
+                <Card className="flex-1 p-4 flex gap-4 items-center w-full md:w-auto overflow-x-auto no-scrollbar">
+                    <span className="text-[16px] font-medium text-[#DBDAD9] whitespace-nowrap px-2">Filtruj</span>
+
+                    <div className="flex gap-2 ml-auto">
+                        <div className="relative w-[250px] hidden md:block">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground z-10" />
+                            <Input
+                                placeholder="Szukaj usługi..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="bg-[#1B1B1B] border-transparent focus:border-white/10 h-[48px] pl-10 w-full"
+                            />
                         </div>
-                    </Card>
-                    <Card className="flex-1 p-4 flex flex-col justify-center">
-                        <span className="text-sm text-muted-foreground mb-1">Budżet rzeczywisty</span>
-                        <span className="text-xl font-bold text-[#91E8B2]">{formatCurrency(totals.totalApproved)}</span>
-                        <div className="flex gap-4 mt-2 text-sm">
-                            <span className="text-muted-foreground">Materiały: <span className="text-[#91E8B2]">{formatCurrency(totals.materialApproved)}</span></span>
-                            <span className="text-muted-foreground">Robocizna: <span className="text-[#91E8B2]">{formatCurrency(totals.laborApproved)}</span></span>
+
+                        {/* Category Filter */}
+                        <div className="flex bg-[#1B1B1B] rounded-lg p-1 h-[48px] items-center">
+                            <Button
+                                variant="ghost"
+                                className={cn(
+                                    "px-3 py-1.5 rounded-md text-sm font-medium transition-colors h-[40px]",
+                                    categoryFilter === "all" ? "bg-[#252525] text-white" : "text-muted-foreground hover:text-white"
+                                )}
+                                onClick={() => setCategoryFilter("all")}
+                            >
+                                Wszystkie
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                className={cn(
+                                    "px-3 py-1.5 rounded-md text-sm font-medium transition-colors h-[40px] flex items-center gap-1.5",
+                                    categoryFilter === "MATERIAL" ? "bg-[#252525] text-white" : "text-muted-foreground hover:text-white"
+                                )}
+                                onClick={() => setCategoryFilter("MATERIAL")}
+                            >
+                                <Package className="w-4 h-4" />
+                                Materiały
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                className={cn(
+                                    "px-3 py-1.5 rounded-md text-sm font-medium transition-colors h-[40px] flex items-center gap-1.5",
+                                    categoryFilter === "LABOR" ? "bg-[#252525] text-white" : "text-muted-foreground hover:text-white"
+                                )}
+                                onClick={() => setCategoryFilter("LABOR")}
+                            >
+                                <Users className="w-4 h-4" />
+                                Robocizna
+                            </Button>
                         </div>
-                    </Card>
-                </div>
 
-                {/* Filter & Add Buttons */}
-                <div className="flex gap-2 items-stretch">
-                    {/* Category Filter */}
-                    <div className="flex bg-[#151515] rounded-xl p-1 h-[80px] items-center">
-                        <Button
-                            variant="ghost"
-                            className={cn(
-                                "px-4 py-2 rounded-lg text-sm font-medium transition-colors",
-                                categoryFilter === "all" ? "bg-[#252525] text-white" : "text-muted-foreground hover:text-white"
-                            )}
-                            onClick={() => setCategoryFilter("all")}
-                        >
-                            Wszystkie
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            className={cn(
-                                "px-4 py-2 rounded-lg text-sm font-medium transition-colors",
-                                categoryFilter === "MATERIAL" ? "bg-[#252525] text-white" : "text-muted-foreground hover:text-white"
-                            )}
-                            onClick={() => setCategoryFilter("MATERIAL")}
-                        >
-                            <Package className="w-4 h-4 mr-2" />
-                            Materiały
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            className={cn(
-                                "px-4 py-2 rounded-lg text-sm font-medium transition-colors",
-                                categoryFilter === "LABOR" ? "bg-[#252525] text-white" : "text-muted-foreground hover:text-white"
-                            )}
-                            onClick={() => setCategoryFilter("LABOR")}
-                        >
-                            <Users className="w-4 h-4 mr-2" />
-                            Robocizna
-                        </Button>
-                    </div>
-
-                    {/* Status Filter */}
-                    <div className="flex bg-[#151515] rounded-xl p-1 h-[80px] items-center">
-                        <Button
-                            variant="ghost"
-                            className={cn(
-                                "px-4 py-2 rounded-lg text-sm font-medium transition-colors",
-                                statusFilter === "all" ? "bg-[#252525] text-white" : "text-muted-foreground hover:text-white"
-                            )}
-                            onClick={() => setStatusFilter("all")}
-                        >
-                            Wszystkie
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            className={cn(
-                                "px-4 py-2 rounded-lg text-sm font-medium transition-colors",
-                                statusFilter === "DRAFT" ? "bg-[#252525] text-white" : "text-muted-foreground hover:text-white"
-                            )}
-                            onClick={() => setStatusFilter("DRAFT")}
-                        >
-                            <FileText className="w-4 h-4 mr-2" />
-                            Brudnopis
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            className={cn(
-                                "px-4 py-2 rounded-lg text-sm font-medium transition-colors",
-                                statusFilter === "PLANNED" ? "bg-[#252525] text-white" : "text-muted-foreground hover:text-white"
-                            )}
-                            onClick={() => setStatusFilter("PLANNED")}
-                        >
-                            <Clock className="w-4 h-4 mr-2" />
-                            Planowane
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            className={cn(
-                                "px-4 py-2 rounded-lg text-sm font-medium transition-colors",
-                                statusFilter === "APPROVED" ? "bg-[#252525] text-white" : "text-muted-foreground hover:text-white"
-                            )}
-                            onClick={() => setStatusFilter("APPROVED")}
-                        >
-                            <Check className="w-4 h-4 mr-2" />
-                            Zatwierdzone
-                        </Button>
-                    </div>
-
-                    {/* Add Buttons */}
-                    <div className="flex flex-col gap-1 h-[80px]">
-                        <Button
-                            onClick={() => openAddModal("MATERIAL")}
-                            className="flex-1 bg-[#151515] hover:bg-[#252525] text-white px-4 rounded-xl text-sm font-medium transition-colors whitespace-nowrap flex items-center gap-2"
-                        >
-                            <Plus className="w-4 h-4" />
-                            <Package className="w-4 h-4" />
-                            Materiał
-                        </Button>
-                        <Button
-                            onClick={() => openAddModal("LABOR")}
-                            className="flex-1 bg-[#151515] hover:bg-[#252525] text-white px-4 rounded-xl text-sm font-medium transition-colors whitespace-nowrap flex items-center gap-2"
-                        >
-                            <Plus className="w-4 h-4" />
-                            <Users className="w-4 h-4" />
-                            Robocizna
-                        </Button>
-                    </div>
-                </div>
-            </div>
-
-            {/* Services List */}
-            {filteredServices.length === 0 ? (
-                <Card className="flex-1 flex flex-col items-center justify-center gap-4 text-muted-foreground">
-                    <Wrench className="w-16 h-16 opacity-20" />
-                    <p className="text-lg">Brak usług do wyświetlenia</p>
-                    <div className="flex gap-2">
-                        <Button onClick={() => openAddModal("MATERIAL")}>
-                            <Plus className="w-4 h-4 mr-2" />
-                            Dodaj materiał
-                        </Button>
-                        <Button onClick={() => openAddModal("LABOR")} variant="secondary">
-                            <Plus className="w-4 h-4 mr-2" />
-                            Dodaj robociznę
-                        </Button>
+                        {/* Status Filter */}
+                        <div className="flex bg-[#1B1B1B] rounded-lg p-1 h-[48px] items-center">
+                            <Button
+                                variant="ghost"
+                                className={cn(
+                                    "px-3 py-1.5 rounded-md text-sm font-medium transition-colors h-[40px]",
+                                    statusFilter === "all" ? "bg-[#252525] text-white" : "text-muted-foreground hover:text-white"
+                                )}
+                                onClick={() => setStatusFilter("all")}
+                            >
+                                Wszystkie
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                className={cn(
+                                    "px-3 py-1.5 rounded-md text-sm font-medium transition-colors h-[40px] flex items-center gap-1.5",
+                                    statusFilter === "DRAFT" ? "bg-[#252525] text-white" : "text-muted-foreground hover:text-white"
+                                )}
+                                onClick={() => setStatusFilter("DRAFT")}
+                            >
+                                <FileText className="w-4 h-4" />
+                                Brudnopis
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                className={cn(
+                                    "px-3 py-1.5 rounded-md text-sm font-medium transition-colors h-[40px] flex items-center gap-1.5",
+                                    statusFilter === "PLANNED" ? "bg-[#252525] text-white" : "text-muted-foreground hover:text-white"
+                                )}
+                                onClick={() => setStatusFilter("PLANNED")}
+                            >
+                                <Clock className="w-4 h-4" />
+                                Planowane
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                className={cn(
+                                    "px-3 py-1.5 rounded-md text-sm font-medium transition-colors h-[40px] flex items-center gap-1.5",
+                                    statusFilter === "APPROVED" ? "bg-[#252525] text-white" : "text-muted-foreground hover:text-white"
+                                )}
+                                onClick={() => setStatusFilter("APPROVED")}
+                            >
+                                <Check className="w-4 h-4" />
+                                Zatwierdzone
+                            </Button>
+                        </div>
                     </div>
                 </Card>
-            ) : (
-                <div className="flex-1 overflow-y-auto space-y-6">
-                    {/* Materials Section */}
-                    {(categoryFilter === "all" || categoryFilter === "MATERIAL") && materialServices.length > 0 && (
-                        <div>
-                            <div className="flex items-center gap-2 mb-3">
-                                <Package className="w-5 h-5 text-muted-foreground" />
-                                <h2 className="text-lg font-semibold text-white">Materiały</h2>
-                                <span className="text-sm text-muted-foreground">({materialServices.length})</span>
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-                                {materialServices.map((service) => (
-                                    <ServiceCard
-                                        key={service.id}
-                                        service={service}
-                                        onDelete={handleDeleteService}
-                                        onApprove={handleApproveService}
-                                        isDeleting={deletingId === service.id}
-                                        isApproving={approvingId === service.id}
-                                    />
-                                ))}
+
+                {/* Actions */}
+                <Card className="p-4 h-auto md:h-auto flex items-center justify-center gap-2 px-4 shrink-0">
+                    <Button
+                        onClick={() => openAddModal("MATERIAL")}
+                        className="h-[48px] px-4 rounded-lg bg-[#1B1B1B] hover:bg-[#252525] text-white flex items-center gap-2"
+                    >
+                        <Plus className="w-4 h-4" />
+                        <Package className="w-4 h-4" />
+                        <span className="hidden lg:inline">Materiał</span>
+                    </Button>
+                    <Button
+                        onClick={() => openAddModal("LABOR")}
+                        className="h-[48px] px-4 rounded-lg bg-[#1B1B1B] hover:bg-[#252525] text-white flex items-center gap-2"
+                    >
+                        <Plus className="w-4 h-4" />
+                        <Users className="w-4 h-4" />
+                        <span className="hidden lg:inline">Robocizna</span>
+                    </Button>
+                </Card>
+            </div>
+
+            {/* Main Content Area - Table + Sticky Footer */}
+            <div className="flex-1 flex flex-col min-h-0 relative">
+
+                {/* Scrollable List Container */}
+                <div className="flex-1 overflow-y-auto no-scrollbar pb-0 flex flex-col">
+
+                    {filteredServices.length === 0 ? (
+                        <div className="flex-1 flex flex-col items-center justify-center gap-4 text-muted-foreground">
+                            <Wrench className="w-16 h-16 opacity-20" />
+                            <p className="text-lg">Brak usług do wyświetlenia</p>
+                            <div className="flex gap-2">
+                                <Button onClick={() => openAddModal("MATERIAL")} className="bg-[#1B1B1B] hover:bg-[#252525]">
+                                    <Plus className="w-4 h-4 mr-2" />
+                                    Dodaj materiał
+                                </Button>
+                                <Button onClick={() => openAddModal("LABOR")} className="bg-[#1B1B1B] hover:bg-[#252525]">
+                                    <Plus className="w-4 h-4 mr-2" />
+                                    Dodaj robociznę
+                                </Button>
                             </div>
                         </div>
+                    ) : (
+                        <>
+                            {/* Sticky Table Header */}
+                            <div className="sticky top-0 bg-[#0E0E0E] z-20 border-b border-white/5">
+                                <div className="grid grid-cols-[50px_60px_2.5fr_2fr_1.5fr_1fr_1.5fr_100px] gap-4 px-6 py-4 text-sm font-medium text-muted-foreground items-center">
+                                    <div className="text-center">#</div>
+                                    <div></div> {/* Icon */}
+                                    <div className="flex items-center gap-2"><LayoutGrid className="w-4 h-4" /> Nazwa / Podwykonawca</div>
+                                    <div className="flex items-center gap-2"><Hash className="w-4 h-4" /> Pomieszczenie</div>
+                                    <div className="flex items-center gap-2">Szczegóły</div>
+                                    <div className="text-right">Cena</div>
+                                    <div className="flex items-center gap-2 justify-end"><Flame className="w-4 h-4" /> Status</div>
+                                    <div className="text-center">Akcje</div>
+                                </div>
+                            </div>
+
+                            {/* List Items */}
+                            <div className="px-0 pb-0">
+                                {filteredServices.map((service, index) => {
+                                    const isMaterial = service.category === "MATERIAL";
+                                    const statusInfo = planningStatusConfig[service.planningStatus] || planningStatusConfig['DRAFT'];
+                                    const fulfillmentStatus = service.planningStatus === "APPROVED"
+                                        ? (isMaterial
+                                            ? materialStatusConfig[service.materialStatus || 'TO_ORDER']
+                                            : laborStatusConfig[service.laborStatus || 'TO_ORDER'])
+                                        : null;
+
+                                    return (
+                                        <div
+                                            key={service.id}
+                                            className={cn(
+                                                "grid grid-cols-[50px_60px_2.5fr_2fr_1.5fr_1fr_1.5fr_100px] gap-4 py-4 items-center hover:bg-[#151515] transition-colors border-b border-white/5 last:border-0 text-[14px] px-6 group",
+                                                deletingId === service.id && "opacity-50 pointer-events-none"
+                                            )}
+                                        >
+                                            {/* Index */}
+                                            <div className="text-center text-muted-foreground/50">{index + 1}</div>
+
+                                            {/* Category Icon */}
+                                            <div className="flex justify-center">
+                                                <div className={cn(
+                                                    "w-10 h-10 rounded-lg flex items-center justify-center",
+                                                    isMaterial ? "bg-blue-500/10 text-blue-400" : "bg-orange-500/10 text-orange-400"
+                                                )}>
+                                                    {isMaterial ? <Package className="w-5 h-5" /> : <Users className="w-5 h-5" />}
+                                                </div>
+                                            </div>
+
+                                            {/* Name / Subcontractor */}
+                                            <div className="flex flex-col">
+                                                <span className="text-white font-medium truncate">
+                                                    {isMaterial ? service.name : service.subcontractor}
+                                                </span>
+                                                {isMaterial && service.materialType && (
+                                                    <span className="text-xs text-muted-foreground">{service.materialType}</span>
+                                                )}
+                                                {!isMaterial && service.scope && (
+                                                    <span className="text-xs text-muted-foreground truncate">{service.scope}</span>
+                                                )}
+                                            </div>
+
+                                            {/* Room */}
+                                            <div className="text-muted-foreground truncate">
+                                                {service.room?.name || "—"}
+                                            </div>
+
+                                            {/* Details */}
+                                            <div className="text-muted-foreground text-sm">
+                                                {isMaterial ? (
+                                                    service.quantity && service.unit ? `${service.quantity} ${service.unit}` : "—"
+                                                ) : (
+                                                    service.duration || "—"
+                                                )}
+                                            </div>
+
+                                            {/* Price */}
+                                            <div className="text-right text-white font-medium">
+                                                {formatCurrency(service.price)}
+                                            </div>
+
+                                            {/* Status */}
+                                            <div className="flex flex-col items-end gap-1">
+                                                <div className="flex items-center gap-2">
+                                                    <div className={`w-2.5 h-2.5 rounded-full ${statusInfo.dotColor}`}></div>
+                                                    <span className="text-[#F3F3F3]">{statusInfo.label}</span>
+                                                </div>
+                                                {fulfillmentStatus && (
+                                                    <span className="text-xs text-muted-foreground">{fulfillmentStatus.label}</span>
+                                                )}
+                                            </div>
+
+                                            {/* Actions */}
+                                            <div className="flex items-center justify-center gap-1">
+                                                {service.url && (
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-8 w-8 hover:bg-white/10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                                        onClick={() => window.open(service.url!, '_blank')}
+                                                    >
+                                                        <ExternalLink className="w-4 h-4 text-muted-foreground" />
+                                                    </Button>
+                                                )}
+                                                {service.planningStatus !== "APPROVED" && (
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-8 w-8 hover:bg-[#91E8B2]/20 rounded-full"
+                                                        onClick={() => handleApproveService(service.id)}
+                                                        disabled={approvingId === service.id}
+                                                    >
+                                                        {approvingId === service.id ? (
+                                                            <Loader2 className="w-4 h-4 animate-spin text-[#91E8B2]" />
+                                                        ) : (
+                                                            <Check className="w-4 h-4 text-[#91E8B2]" />
+                                                        )}
+                                                    </Button>
+                                                )}
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-8 w-8 hover:bg-red-500/20 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                                    onClick={() => handleDeleteService(service.id)}
+                                                    disabled={deletingId === service.id}
+                                                >
+                                                    {deletingId === service.id ? (
+                                                        <Loader2 className="w-4 h-4 animate-spin text-red-400" />
+                                                    ) : (
+                                                        <Trash2 className="w-4 h-4 text-red-400" />
+                                                    )}
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </>
                     )}
 
-                    {/* Labor Section */}
-                    {(categoryFilter === "all" || categoryFilter === "LABOR") && laborServices.length > 0 && (
-                        <div>
-                            <div className="flex items-center gap-2 mb-3">
-                                <Users className="w-5 h-5 text-muted-foreground" />
-                                <h2 className="text-lg font-semibold text-white">Robocizna</h2>
-                                <span className="text-sm text-muted-foreground">({laborServices.length})</span>
+                    {/* Spacer */}
+                    <div className="mt-auto"></div>
+                </div>
+
+                {/* Sticky Budget Summary Footer */}
+                <div className="shrink-0 bg-[#0F0F0F] z-30 p-0 animate-in slide-in-from-bottom-5 duration-500">
+                    <div className="flex flex-col md:flex-row items-center justify-between gap-6 px-6 bg-[#151515] py-4 w-full rounded-2xl">
+
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-[#252525] flex items-center justify-center">
+                                <Clock className="w-5 h-5 text-[#E8B491]" />
                             </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-                                {laborServices.map((service) => (
-                                    <ServiceCard
-                                        key={service.id}
-                                        service={service}
-                                        onDelete={handleDeleteService}
-                                        onApprove={handleApproveService}
-                                        isDeleting={deletingId === service.id}
-                                        isApproving={approvingId === service.id}
-                                    />
-                                ))}
+                            <div>
+                                <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Budżet estymacyjny</div>
+                                <div className="text-xl font-bold text-white tracking-tight">{formatCurrency(totals.totalPlanned)}</div>
                             </div>
                         </div>
-                    )}
+
+                        <div className="hidden md:block w-px h-10 bg-white/5"></div>
+
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-[#252525] flex items-center justify-center">
+                                <Package className="w-5 h-5 text-blue-400" />
+                            </div>
+                            <div>
+                                <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Materiały (plan/zatw.)</div>
+                                <div className="text-lg font-bold text-white tracking-tight">
+                                    {formatCurrency(totals.materialPlanned)} / <span className="text-[#91E8B2]">{formatCurrency(totals.materialApproved)}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="hidden md:block w-px h-10 bg-white/5"></div>
+
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-[#252525] flex items-center justify-center">
+                                <Users className="w-5 h-5 text-orange-400" />
+                            </div>
+                            <div>
+                                <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Robocizna (plan/zatw.)</div>
+                                <div className="text-lg font-bold text-white tracking-tight">
+                                    {formatCurrency(totals.laborPlanned)} / <span className="text-[#91E8B2]">{formatCurrency(totals.laborApproved)}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="hidden md:block w-px h-10 bg-white/5"></div>
+
+                        <div className="flex items-center gap-3 mr-auto md:mr-0">
+                            <div className="w-10 h-10 rounded-full bg-[#91E8B2]/20 flex items-center justify-center">
+                                <Check className="w-5 h-5 text-[#91E8B2]" />
+                            </div>
+                            <div>
+                                <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Budżet rzeczywisty</div>
+                                <div className="text-xl font-bold text-[#91E8B2] tracking-tight">{formatCurrency(totals.totalApproved)}</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            )}
+
+            </div>
 
             {/* Add Service Modal */}
             <AddServiceModal
@@ -371,177 +542,5 @@ export default function ServicesPage() {
                 onSuccess={loadData}
             />
         </div>
-    );
-}
-
-// Service Card Component
-interface ServiceCardProps {
-    service: ServiceItem;
-    onDelete: (id: string) => void;
-    onApprove: (id: string) => void;
-    isDeleting: boolean;
-    isApproving: boolean;
-}
-
-function ServiceCard({ service, onDelete, onApprove, isDeleting, isApproving }: ServiceCardProps) {
-    const isMaterial = service.category === "MATERIAL";
-    const statusInfo = planningStatusConfig[service.planningStatus] || planningStatusConfig['DRAFT'];
-
-    // Get fulfillment status for approved items
-    const fulfillmentStatus = service.planningStatus === "APPROVED"
-        ? (isMaterial
-            ? materialStatusConfig[service.materialStatus || 'TO_ORDER']
-            : laborStatusConfig[service.laborStatus || 'TO_ORDER'])
-        : null;
-
-    const formatCurrency = (value: number) => {
-        return value.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' zł';
-    };
-
-    return (
-        <Card className={cn(
-            "overflow-hidden flex flex-col p-4 gap-4 group hover:border-white/10 transition-colors",
-            isDeleting && "opacity-50 pointer-events-none"
-        )}>
-            {/* Header */}
-            <div className="flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                    <div className={cn(
-                        "p-2.5 rounded-xl",
-                        isMaterial ? "bg-blue-500/10 text-blue-400" : "bg-orange-500/10 text-orange-400"
-                    )}>
-                        {isMaterial ? <Package className="w-5 h-5" /> : <Users className="w-5 h-5" />}
-                    </div>
-                    <div>
-                        <h3 className="font-semibold text-[15px] text-white">
-                            {isMaterial ? service.name : service.subcontractor}
-                        </h3>
-                        {service.room && (
-                            <p className="text-sm text-muted-foreground">{service.room.name}</p>
-                        )}
-                    </div>
-                </div>
-                <Badge status={statusInfo.badgeStatus} dot className="bg-transparent px-0 text-[13px] gap-2">
-                    {statusInfo.label}
-                </Badge>
-            </div>
-
-            {/* Content */}
-            <div className="flex gap-3 flex-1">
-                {/* Image */}
-                {service.imageUrl && (
-                    <div className="w-20 h-20 rounded-lg overflow-hidden bg-zinc-800 shrink-0">
-                        <img
-                            src={service.imageUrl}
-                            alt={isMaterial ? service.name || "" : service.subcontractor || ""}
-                            className="w-full h-full object-cover"
-                        />
-                    </div>
-                )}
-
-                {/* Details */}
-                <div className="flex-1 space-y-2 text-sm">
-                    {isMaterial ? (
-                        <>
-                            {service.materialType && (
-                                <div className="flex justify-between">
-                                    <span className="text-muted-foreground">Typ:</span>
-                                    <span className="text-white">{service.materialType}</span>
-                                </div>
-                            )}
-                            {service.quantity && service.unit && (
-                                <div className="flex justify-between">
-                                    <span className="text-muted-foreground">Ilość:</span>
-                                    <span className="text-white">{service.quantity} {service.unit}</span>
-                                </div>
-                            )}
-                        </>
-                    ) : (
-                        <>
-                            {service.scope && (
-                                <div className="flex justify-between">
-                                    <span className="text-muted-foreground">Zakres:</span>
-                                    <span className="text-white truncate max-w-[150px]">{service.scope}</span>
-                                </div>
-                            )}
-                            {service.duration && (
-                                <div className="flex justify-between">
-                                    <span className="text-muted-foreground">Czas trwania:</span>
-                                    <span className="text-white">{service.duration}</span>
-                                </div>
-                            )}
-                        </>
-                    )}
-                    <div className="flex justify-between pt-2 border-t border-white/5">
-                        <span className="text-muted-foreground">Cena:</span>
-                        <span className="text-white font-semibold">{formatCurrency(service.price)}</span>
-                    </div>
-                </div>
-            </div>
-
-            {/* Fulfillment Status (only for approved) */}
-            {fulfillmentStatus && (
-                <div className="flex items-center gap-2 text-sm bg-[#1B1B1B] px-3 py-2 rounded-lg">
-                    <span className="text-muted-foreground">Status realizacji:</span>
-                    <span className={fulfillmentStatus.color}>{fulfillmentStatus.label}</span>
-                </div>
-            )}
-
-            {/* Notes */}
-            {service.notes && (
-                <p className="text-sm text-muted-foreground italic line-clamp-2">{service.notes}</p>
-            )}
-
-            {/* Actions */}
-            <div className="flex gap-2 mt-auto pt-2">
-                {service.url && (
-                    <Button
-                        variant="secondary"
-                        className="flex-1 bg-[#1B1B1B] hover:bg-[#252525] text-sm h-[40px]"
-                        onClick={() => window.open(service.url!, '_blank')}
-                    >
-                        <ExternalLink className="w-4 h-4 mr-2" />
-                        Link
-                    </Button>
-                )}
-
-                {service.planningStatus !== "APPROVED" && (
-                    <Button
-                        className="flex-1 bg-[#91E8B2]/10 hover:bg-[#91E8B2]/20 text-[#91E8B2] text-sm h-[40px]"
-                        onClick={() => onApprove(service.id)}
-                        disabled={isApproving}
-                    >
-                        {isApproving ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                            <>
-                                <Check className="w-4 h-4 mr-2" />
-                                Zatwierdź
-                            </>
-                        )}
-                    </Button>
-                )}
-
-                <Button
-                    variant="secondary"
-                    className="px-3 bg-[#1B1B1B] hover:bg-[#252525] text-muted-foreground hover:text-white h-[40px]"
-                >
-                    <Edit3 className="w-4 h-4" />
-                </Button>
-
-                <Button
-                    variant="secondary"
-                    className="px-3 bg-[#1B1B1B] hover:bg-[#252525] text-muted-foreground hover:text-red-400 h-[40px]"
-                    onClick={() => onDelete(service.id)}
-                    disabled={isDeleting}
-                >
-                    {isDeleting ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                        <Trash2 className="w-4 h-4" />
-                    )}
-                </Button>
-            </div>
-        </Card>
     );
 }
