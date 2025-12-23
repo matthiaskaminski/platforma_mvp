@@ -50,9 +50,10 @@ interface RoomData {
 interface RoomsClientProps {
     rooms: RoomData[];
     projectId: string;
+    projectBudget: number;
 }
 
-export default function RoomsClient({ rooms: initialRooms, projectId }: RoomsClientProps) {
+export default function RoomsClient({ rooms: initialRooms, projectId, projectBudget }: RoomsClientProps) {
     const [rooms, setRooms] = useState<RoomData[]>(initialRooms);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingRoom, setEditingRoom] = useState<RoomData | null>(null);
@@ -125,7 +126,8 @@ export default function RoomsClient({ rooms: initialRooms, projectId }: RoomsCli
                     const configKey = (room.status in statusConfig) ? room.status as keyof typeof statusConfig : 'not_started';
                     const status = statusConfig[configKey];
 
-                    const progress = room.budget > 0 ? (room.spent / room.budget) * 100 : 0;
+                    // Calculate percentage of project budget this room represents
+                    const projectPercentage = projectBudget > 0 ? (room.spent / projectBudget) * 100 : 0;
 
                     return (
                         <Card key={room.id} className="overflow-hidden flex flex-col p-4 gap-5 group hover:border-white/10 transition-colors w-full min-h-[400px]">
@@ -202,20 +204,20 @@ export default function RoomsClient({ rooms: initialRooms, projectId }: RoomsCli
                                         </div>
                                     </div>
 
-                                    {/* Budget */}
+                                    {/* Budget - show spent amount and % of project budget */}
                                     <div className="space-y-1.5 pt-3 border-t border-white/5 mt-auto">
                                         <div className="flex justify-between items-end">
-                                            <span className="text-sm text-muted-foreground">Budżet</span>
-                                            <span className="text-base font-medium">{room.budget.toLocaleString('pl-PL')} zł</span>
+                                            <span className="text-sm text-muted-foreground">Wydano</span>
+                                            <span className="text-base font-medium">{room.spent.toLocaleString('pl-PL')} zł</span>
                                         </div>
                                         <div className="flex justify-between items-end">
-                                            <span className="text-sm text-muted-foreground">Pozostało</span>
-                                            <span className="text-base font-medium">{(room.budget - room.spent).toLocaleString('pl-PL')} zł</span>
+                                            <span className="text-sm text-muted-foreground">Udział w budżecie</span>
+                                            <span className="text-base font-medium">{projectPercentage.toFixed(1)}%</span>
                                         </div>
 
-                                        {/* Progress Bar */}
+                                        {/* Progress Bar - shows percentage of project budget */}
                                         <div className="h-2 bg-[#252525] rounded-full mt-3 overflow-hidden w-full">
-                                            <div className="h-full bg-white rounded-full relative" style={{ width: `${progress}%` }}></div>
+                                            <div className="h-full bg-white rounded-full relative" style={{ width: `${Math.min(projectPercentage, 100)}%` }}></div>
                                         </div>
                                     </div>
                                 </div>

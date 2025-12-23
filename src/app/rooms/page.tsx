@@ -127,6 +127,7 @@ export default async function RoomsPage() {
         <RoomsClient
             rooms={roomsData}
             projectId={project.id}
+            projectBudget={Number(project.budgetGoal) || 0}
         />
     )
 }
