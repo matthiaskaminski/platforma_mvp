@@ -21,9 +21,9 @@ import {
     Loader2,
     ShoppingCart,
     Check,
-    Square,
-    CheckSquare,
-    FileSpreadsheet
+    FileSpreadsheet,
+    Trash2,
+    X
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -52,23 +52,23 @@ interface CartItem {
 type CategoryFilter = 'all' | 'product' | 'material' | 'labor';
 type StatusFilter = 'all' | 'to_pay' | 'paid';
 
-// Status configurations
+// Status configurations with distinctive colors
 const productStatusConfig: Record<string, { label: string; dotColor: string }> = {
-    'TO_ORDER': { label: "Do zamówienia", dotColor: "bg-[#6E6E6E]" },
+    'TO_ORDER': { label: "Do zamówienia", dotColor: "bg-[#E8B491] shadow-[0_0_8px_rgba(232,180,145,0.4)]" },
     'ORDERED': { label: "Zamówione", dotColor: "bg-[#91A3E8] shadow-[0_0_8px_rgba(145,163,232,0.4)]" },
-    'PAID': { label: "Opłacone", dotColor: "bg-[#91E8B2] shadow-[0_0_8px_rgba(145,232,178,0.5)]" },
+    'PAID': { label: "Opłacone", dotColor: "bg-[#B291E8] shadow-[0_0_8px_rgba(178,145,232,0.4)]" },
     'DELIVERED': { label: "Dostarczone", dotColor: "bg-[#91E8B2] shadow-[0_0_8px_rgba(145,232,178,0.5)]" },
-    'RETURNED': { label: "Zwrócone", dotColor: "bg-red-500" }
+    'RETURNED': { label: "Zwrócone", dotColor: "bg-[#E89191] shadow-[0_0_8px_rgba(232,145,145,0.4)]" }
 };
 
 const serviceStatusConfig: Record<string, { label: string; dotColor: string }> = {
-    'TO_ORDER': { label: "Do zamówienia", dotColor: "bg-[#6E6E6E]" },
+    'TO_ORDER': { label: "Do zamówienia", dotColor: "bg-[#E8B491] shadow-[0_0_8px_rgba(232,180,145,0.4)]" },
     'ORDERED': { label: "Zamówione", dotColor: "bg-[#91A3E8] shadow-[0_0_8px_rgba(145,163,232,0.4)]" },
-    'TO_PAY': { label: "Do zapłaty", dotColor: "bg-[#E8B491] shadow-[0_0_8px_rgba(232,180,145,0.4)]" },
-    'PAID': { label: "Opłacone", dotColor: "bg-[#91E8B2] shadow-[0_0_8px_rgba(145,232,178,0.5)]" },
-    'ADVANCE_PAID': { label: "Zaliczka", dotColor: "bg-[#E8D891] shadow-[0_0_8px_rgba(232,216,145,0.4)]" },
+    'TO_PAY': { label: "Do zapłaty", dotColor: "bg-[#E8D891] shadow-[0_0_8px_rgba(232,216,145,0.4)]" },
+    'PAID': { label: "Opłacone", dotColor: "bg-[#B291E8] shadow-[0_0_8px_rgba(178,145,232,0.4)]" },
+    'ADVANCE_PAID': { label: "Zaliczka", dotColor: "bg-[#91D8E8] shadow-[0_0_8px_rgba(145,216,232,0.4)]" },
     'RECEIVED': { label: "Odebrane", dotColor: "bg-[#91E8B2] shadow-[0_0_8px_rgba(145,232,178,0.5)]" },
-    'IN_PROGRESS': { label: "W trakcie", dotColor: "bg-[#91A3E8] shadow-[0_0_8px_rgba(145,163,232,0.4)]" },
+    'IN_PROGRESS': { label: "W trakcie", dotColor: "bg-[#E891D8] shadow-[0_0_8px_rgba(232,145,216,0.4)]" },
     'COMPLETED': { label: "Zakończone", dotColor: "bg-[#91E8B2] shadow-[0_0_8px_rgba(145,232,178,0.5)]" }
 };
 
@@ -390,12 +390,15 @@ export default function CartPage() {
                                     <div className="flex justify-center">
                                         <button
                                             onClick={toggleSelectAll}
-                                            className="text-muted-foreground hover:text-white transition-colors"
+                                            className={cn(
+                                                "w-5 h-5 rounded border-2 flex items-center justify-center transition-all",
+                                                selectedIds.size === filteredItems.length && filteredItems.length > 0
+                                                    ? "bg-blue-500 border-blue-500 text-white"
+                                                    : "bg-transparent border-gray-500 hover:border-gray-400"
+                                            )}
                                         >
-                                            {selectedIds.size === filteredItems.length && filteredItems.length > 0 ? (
-                                                <CheckSquare className="w-5 h-5" />
-                                            ) : (
-                                                <Square className="w-5 h-5" />
+                                            {selectedIds.size === filteredItems.length && filteredItems.length > 0 && (
+                                                <Check className="w-3.5 h-3.5" />
                                             )}
                                         </button>
                                     </div>
@@ -431,13 +434,14 @@ export default function CartPage() {
                                             <div className="flex justify-center">
                                                 <button
                                                     onClick={() => toggleSelection(item.id)}
-                                                    className="text-muted-foreground hover:text-white transition-colors"
-                                                >
-                                                    {isSelected ? (
-                                                        <CheckSquare className="w-5 h-5 text-[#91E8B2]" />
-                                                    ) : (
-                                                        <Square className="w-5 h-5" />
+                                                    className={cn(
+                                                        "w-5 h-5 rounded border-2 flex items-center justify-center transition-all",
+                                                        isSelected
+                                                            ? "bg-blue-500 border-blue-500 text-white"
+                                                            : "bg-transparent border-gray-500 hover:border-gray-400"
                                                     )}
+                                                >
+                                                    {isSelected && <Check className="w-3.5 h-3.5" />}
                                                 </button>
                                             </div>
 
@@ -615,6 +619,43 @@ export default function CartPage() {
                 </div>
 
             </div>
+
+            {/* Bottom Selection Toolbar */}
+            {selectedIds.size > 0 && (
+                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-[#1B1B1B] border border-white/10 rounded-xl shadow-2xl px-6 py-4 flex items-center gap-4 animate-in slide-in-from-bottom-4 duration-200">
+                    <span className="text-sm text-white">
+                        Zaznaczono: <span className="font-semibold">{selectedIds.size}</span>
+                    </span>
+                    <div className="h-6 w-px bg-white/10" />
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={toggleSelectAll}
+                        className="h-8"
+                    >
+                        Zaznacz wszystko
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleExport}
+                        disabled={isExporting}
+                        className="h-8"
+                    >
+                        <FileSpreadsheet className="w-4 h-4 mr-2" />
+                        Eksportuj zaznaczone
+                    </Button>
+                    <div className="h-6 w-px bg-white/10" />
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setSelectedIds(new Set())}
+                        className="h-8"
+                    >
+                        <X className="w-4 h-4" />
+                    </Button>
+                </div>
+            )}
         </div>
     );
 }

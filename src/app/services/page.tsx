@@ -381,12 +381,15 @@ export default function ServicesPage() {
                                     <div className="flex justify-center">
                                         <button
                                             onClick={toggleSelectAll}
-                                            className="text-muted-foreground hover:text-white transition-colors"
+                                            className={cn(
+                                                "w-5 h-5 rounded border-2 flex items-center justify-center transition-all",
+                                                selectedIds.size === filteredServices.length && filteredServices.length > 0
+                                                    ? "bg-blue-500 border-blue-500 text-white"
+                                                    : "bg-transparent border-gray-500 hover:border-gray-400"
+                                            )}
                                         >
-                                            {selectedIds.size === filteredServices.length && filteredServices.length > 0 ? (
-                                                <CheckSquare className="w-5 h-5" />
-                                            ) : (
-                                                <Square className="w-5 h-5" />
+                                            {selectedIds.size === filteredServices.length && filteredServices.length > 0 && (
+                                                <Check className="w-3.5 h-3.5" />
                                             )}
                                         </button>
                                     </div>
@@ -426,13 +429,14 @@ export default function ServicesPage() {
                                             <div className="flex justify-center">
                                                 <button
                                                     onClick={() => toggleSelection(service.id)}
-                                                    className="text-muted-foreground hover:text-white transition-colors"
-                                                >
-                                                    {isSelected ? (
-                                                        <CheckSquare className="w-5 h-5 text-[#91E8B2]" />
-                                                    ) : (
-                                                        <Square className="w-5 h-5" />
+                                                    className={cn(
+                                                        "w-5 h-5 rounded border-2 flex items-center justify-center transition-all",
+                                                        isSelected
+                                                            ? "bg-blue-500 border-blue-500 text-white"
+                                                            : "bg-transparent border-gray-500 hover:border-gray-400"
                                                     )}
+                                                >
+                                                    {isSelected && <Check className="w-3.5 h-3.5" />}
                                                 </button>
                                             </div>
 
@@ -646,6 +650,68 @@ export default function ServicesPage() {
                     onClose={() => setEditingId(null)}
                     onSuccess={loadData}
                 />
+            )}
+
+            {/* Bottom Selection Toolbar */}
+            {selectedIds.size > 0 && (
+                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-[#1B1B1B] border border-white/10 rounded-xl shadow-2xl px-6 py-4 flex items-center gap-4 animate-in slide-in-from-bottom-4 duration-200">
+                    <span className="text-sm text-white">
+                        Zaznaczono: <span className="font-semibold">{selectedIds.size}</span>
+                    </span>
+                    <div className="h-6 w-px bg-white/10" />
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={toggleSelectAll}
+                        className="h-8"
+                    >
+                        {selectedIds.size === filteredServices.length ? "Odznacz wszystko" : "Zaznacz wszystko"}
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={async () => {
+                            const selectedServices = filteredServices.filter(s => selectedIds.has(s.id) && s.planningStatus !== "APPROVED");
+                            if (selectedServices.length === 0) return;
+
+                            for (const service of selectedServices) {
+                                await approveService(service.id);
+                            }
+                            setSelectedIds(new Set());
+                            await loadData();
+                        }}
+                        className="h-8 text-[#91E8B2] hover:text-[#91E8B2] hover:bg-[#91E8B2]/10"
+                    >
+                        <Check className="w-4 h-4 mr-2" />
+                        Zatwierdź zaznaczone
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={async () => {
+                            if (!confirm(`Czy na pewno chcesz usunąć ${selectedIds.size} usług?`)) return;
+
+                            for (const id of selectedIds) {
+                                await deleteService(id);
+                            }
+                            setSelectedIds(new Set());
+                            await loadData();
+                        }}
+                        className="h-8 text-red-400 hover:text-red-400 hover:bg-red-500/10"
+                    >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Usuń zaznaczone
+                    </Button>
+                    <div className="h-6 w-px bg-white/10" />
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setSelectedIds(new Set())}
+                        className="h-8"
+                    >
+                        <X className="w-4 h-4" />
+                    </Button>
+                </div>
             )}
         </div>
     );
