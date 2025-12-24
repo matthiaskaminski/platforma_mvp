@@ -21,13 +21,18 @@ import {
     Edit3,
     FileText,
     Clock,
-    Wrench
+    Wrench,
+    Pencil,
+    Undo2,
+    X,
+    Square,
+    CheckSquare
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { cn } from "@/lib/utils";
-import { getServices, deleteService, approveService, getRoomsForProject } from "@/app/actions/services";
+import { getServices, deleteService, approveService, revokeServiceApproval, updateService, getRoomsForProject } from "@/app/actions/services";
 import { AddServiceModal } from "./components/AddServiceModal";
 
 // Types
@@ -87,7 +92,12 @@ export default function ServicesPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [deletingId, setDeletingId] = useState<string | null>(null);
     const [approvingId, setApprovingId] = useState<string | null>(null);
+    const [revokingId, setRevokingId] = useState<string | null>(null);
+    const [editingId, setEditingId] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
+
+    // Selection
+    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
     // Filters
     const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
@@ -135,6 +145,37 @@ export default function ServicesPage() {
             await loadData();
         }
         setApprovingId(null);
+    };
+
+    const handleRevokeApproval = async (id: string) => {
+        if (!confirm("Czy na pewno chcesz cofnąć zatwierdzenie tej usługi?")) return;
+
+        setRevokingId(id);
+        const result = await revokeServiceApproval(id);
+        if (result.success) {
+            await loadData();
+        }
+        setRevokingId(null);
+    };
+
+    const toggleSelection = (id: string) => {
+        setSelectedIds(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(id)) {
+                newSet.delete(id);
+            } else {
+                newSet.add(id);
+            }
+            return newSet;
+        });
+    };
+
+    const toggleSelectAll = () => {
+        if (selectedIds.size === filteredServices.length) {
+            setSelectedIds(new Set());
+        } else {
+            setSelectedIds(new Set(filteredServices.map(s => s.id)));
+        }
     };
 
     const openAddModal = (category: "MATERIAL" | "LABOR") => {
@@ -336,7 +377,19 @@ export default function ServicesPage() {
                         <>
                             {/* Sticky Table Header */}
                             <div className="sticky top-0 bg-[#0E0E0E] z-20 border-b border-white/5">
-                                <div className="grid grid-cols-[50px_60px_2.5fr_2fr_1.5fr_1fr_1.5fr_100px] gap-4 px-6 py-4 text-sm font-medium text-muted-foreground items-center">
+                                <div className="grid grid-cols-[40px_50px_60px_2.5fr_2fr_1.5fr_1fr_1.5fr_120px] gap-4 px-6 py-4 text-sm font-medium text-muted-foreground items-center">
+                                    <div className="flex justify-center">
+                                        <button
+                                            onClick={toggleSelectAll}
+                                            className="text-muted-foreground hover:text-white transition-colors"
+                                        >
+                                            {selectedIds.size === filteredServices.length && filteredServices.length > 0 ? (
+                                                <CheckSquare className="w-5 h-5" />
+                                            ) : (
+                                                <Square className="w-5 h-5" />
+                                            )}
+                                        </button>
+                                    </div>
                                     <div className="text-center">#</div>
                                     <div></div> {/* Icon */}
                                     <div className="flex items-center gap-2"><LayoutGrid className="w-4 h-4" /> Nazwa / Podwykonawca</div>
@@ -358,15 +411,31 @@ export default function ServicesPage() {
                                             ? materialStatusConfig[service.materialStatus || 'TO_ORDER']
                                             : laborStatusConfig[service.laborStatus || 'TO_ORDER'])
                                         : null;
+                                    const isSelected = selectedIds.has(service.id);
 
                                     return (
                                         <div
                                             key={service.id}
                                             className={cn(
-                                                "grid grid-cols-[50px_60px_2.5fr_2fr_1.5fr_1fr_1.5fr_100px] gap-4 py-4 items-center hover:bg-[#151515] transition-colors border-b border-white/5 last:border-0 text-[14px] px-6 group",
-                                                deletingId === service.id && "opacity-50 pointer-events-none"
+                                                "grid grid-cols-[40px_50px_60px_2.5fr_2fr_1.5fr_1fr_1.5fr_120px] gap-4 py-4 items-center hover:bg-[#151515] transition-colors border-b border-white/5 last:border-0 text-[14px] px-6 group",
+                                                deletingId === service.id && "opacity-50 pointer-events-none",
+                                                isSelected && "bg-[#1a1a1a]"
                                             )}
                                         >
+                                            {/* Checkbox */}
+                                            <div className="flex justify-center">
+                                                <button
+                                                    onClick={() => toggleSelection(service.id)}
+                                                    className="text-muted-foreground hover:text-white transition-colors"
+                                                >
+                                                    {isSelected ? (
+                                                        <CheckSquare className="w-5 h-5 text-[#91E8B2]" />
+                                                    ) : (
+                                                        <Square className="w-5 h-5" />
+                                                    )}
+                                                </button>
+                                            </div>
+
                                             {/* Index */}
                                             <div className="text-center text-muted-foreground/50">{index + 1}</div>
 
@@ -435,13 +504,40 @@ export default function ServicesPage() {
                                                         <ExternalLink className="w-4 h-4 text-muted-foreground" />
                                                     </Button>
                                                 )}
-                                                {service.planningStatus !== "APPROVED" && (
+                                                {/* Edit button */}
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-8 w-8 hover:bg-white/10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                                    onClick={() => setEditingId(service.id)}
+                                                >
+                                                    <Pencil className="w-4 h-4 text-muted-foreground" />
+                                                </Button>
+                                                {service.planningStatus === "APPROVED" ? (
+                                                    // Revoke approval button
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-8 w-8 hover:bg-[#E8B491]/20 rounded-full"
+                                                        onClick={() => handleRevokeApproval(service.id)}
+                                                        disabled={revokingId === service.id}
+                                                        title="Cofnij zatwierdzenie"
+                                                    >
+                                                        {revokingId === service.id ? (
+                                                            <Loader2 className="w-4 h-4 animate-spin text-[#E8B491]" />
+                                                        ) : (
+                                                            <Undo2 className="w-4 h-4 text-[#E8B491]" />
+                                                        )}
+                                                    </Button>
+                                                ) : (
+                                                    // Approve button
                                                     <Button
                                                         variant="ghost"
                                                         size="icon"
                                                         className="h-8 w-8 hover:bg-[#91E8B2]/20 rounded-full"
                                                         onClick={() => handleApproveService(service.id)}
                                                         disabled={approvingId === service.id}
+                                                        title="Zatwierdź"
                                                     >
                                                         {approvingId === service.id ? (
                                                             <Loader2 className="w-4 h-4 animate-spin text-[#91E8B2]" />
@@ -541,6 +637,249 @@ export default function ServicesPage() {
                 rooms={rooms}
                 onSuccess={loadData}
             />
+
+            {/* Edit Service Modal */}
+            {editingId && (
+                <EditServiceModal
+                    service={services.find(s => s.id === editingId)!}
+                    rooms={rooms}
+                    onClose={() => setEditingId(null)}
+                    onSuccess={loadData}
+                />
+            )}
         </div>
+    );
+}
+
+// Edit Service Modal Component
+interface EditServiceModalProps {
+    service: ServiceItem;
+    rooms: { id: string; name: string; type: string }[];
+    onClose: () => void;
+    onSuccess: () => void;
+}
+
+function EditServiceModal({ service, rooms, onClose, onSuccess }: EditServiceModalProps) {
+    const isMaterial = service.category === "MATERIAL";
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    // Form state
+    const [name, setName] = useState(service.name || "");
+    const [subcontractor, setSubcontractor] = useState(service.subcontractor || "");
+    const [price, setPrice] = useState(service.price.toString());
+    const [quantity, setQuantity] = useState(service.quantity?.toString() || "");
+    const [unit, setUnit] = useState(service.unit || "");
+    const [materialType, setMaterialType] = useState(service.materialType || "");
+    const [scope, setScope] = useState(service.scope || "");
+    const [duration, setDuration] = useState(service.duration || "");
+    const [url, setUrl] = useState(service.url || "");
+    const [notes, setNotes] = useState(service.notes || "");
+    const [roomId, setRoomId] = useState(service.room?.id || "");
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSubmitting(true);
+
+        try {
+            const updateData: any = {
+                price: parseFloat(price) || 0,
+                url: url || null,
+                notes: notes || null,
+                roomId: roomId || null
+            };
+
+            if (isMaterial) {
+                updateData.name = name;
+                updateData.quantity = quantity ? parseFloat(quantity) : null;
+                updateData.unit = unit || null;
+                updateData.materialType = materialType || null;
+            } else {
+                updateData.subcontractor = subcontractor;
+                updateData.scope = scope || null;
+                updateData.duration = duration || null;
+            }
+
+            const result = await updateService(service.id, updateData);
+            if (result.success) {
+                onClose();
+                onSuccess();
+            }
+        } catch (error) {
+            console.error('Error updating service:', error);
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    return (
+        <>
+            <div className="fixed inset-0 bg-black/50 z-50" onClick={onClose} />
+            <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 bg-[#151515] rounded-2xl p-6 w-full max-w-lg shadow-xl border border-white/10">
+                <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-3">
+                        <div className={cn(
+                            "p-2 rounded-lg",
+                            isMaterial ? "bg-blue-500/10 text-blue-400" : "bg-orange-500/10 text-orange-400"
+                        )}>
+                            {isMaterial ? <Package className="w-5 h-5" /> : <Users className="w-5 h-5" />}
+                        </div>
+                        <h2 className="text-lg font-semibold text-white">
+                            Edytuj {isMaterial ? "materiał" : "robociznę"}
+                        </h2>
+                    </div>
+                    <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8">
+                        <X className="w-4 h-4" />
+                    </Button>
+                </div>
+
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    {isMaterial ? (
+                        <>
+                            <div>
+                                <label className="text-sm text-muted-foreground mb-1 block">Nazwa</label>
+                                <Input
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
+                                    placeholder="Nazwa materiału"
+                                    className="bg-[#1B1B1B] border-white/10"
+                                />
+                            </div>
+                            <div>
+                                <label className="text-sm text-muted-foreground mb-1 block">Typ materiału</label>
+                                <Input
+                                    value={materialType}
+                                    onChange={(e) => setMaterialType(e.target.value)}
+                                    placeholder="np. Drewno, Metal, itp."
+                                    className="bg-[#1B1B1B] border-white/10"
+                                />
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="text-sm text-muted-foreground mb-1 block">Ilość</label>
+                                    <Input
+                                        type="number"
+                                        value={quantity}
+                                        onChange={(e) => setQuantity(e.target.value)}
+                                        placeholder="0"
+                                        className="bg-[#1B1B1B] border-white/10"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-sm text-muted-foreground mb-1 block">Jednostka</label>
+                                    <Input
+                                        value={unit}
+                                        onChange={(e) => setUnit(e.target.value)}
+                                        placeholder="m², szt., kg"
+                                        className="bg-[#1B1B1B] border-white/10"
+                                    />
+                                </div>
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            <div>
+                                <label className="text-sm text-muted-foreground mb-1 block">Podwykonawca</label>
+                                <Input
+                                    value={subcontractor}
+                                    onChange={(e) => setSubcontractor(e.target.value)}
+                                    placeholder="Nazwa firmy lub osoby"
+                                    className="bg-[#1B1B1B] border-white/10"
+                                />
+                            </div>
+                            <div>
+                                <label className="text-sm text-muted-foreground mb-1 block">Zakres prac</label>
+                                <Input
+                                    value={scope}
+                                    onChange={(e) => setScope(e.target.value)}
+                                    placeholder="Opis zakresu prac"
+                                    className="bg-[#1B1B1B] border-white/10"
+                                />
+                            </div>
+                            <div>
+                                <label className="text-sm text-muted-foreground mb-1 block">Czas trwania</label>
+                                <Input
+                                    value={duration}
+                                    onChange={(e) => setDuration(e.target.value)}
+                                    placeholder="np. 2 tygodnie"
+                                    className="bg-[#1B1B1B] border-white/10"
+                                />
+                            </div>
+                        </>
+                    )}
+
+                    <div>
+                        <label className="text-sm text-muted-foreground mb-1 block">Cena</label>
+                        <Input
+                            type="number"
+                            value={price}
+                            onChange={(e) => setPrice(e.target.value)}
+                            placeholder="0"
+                            className="bg-[#1B1B1B] border-white/10"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="text-sm text-muted-foreground mb-1 block">Pomieszczenie</label>
+                        <select
+                            value={roomId}
+                            onChange={(e) => setRoomId(e.target.value)}
+                            className="w-full bg-[#1B1B1B] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-white/20"
+                        >
+                            <option value="">Brak przypisania</option>
+                            {rooms.map(room => (
+                                <option key={room.id} value={room.id}>{room.name}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label className="text-sm text-muted-foreground mb-1 block">URL</label>
+                        <Input
+                            type="url"
+                            value={url}
+                            onChange={(e) => setUrl(e.target.value)}
+                            placeholder="https://..."
+                            className="bg-[#1B1B1B] border-white/10"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="text-sm text-muted-foreground mb-1 block">Notatki</label>
+                        <textarea
+                            value={notes}
+                            onChange={(e) => setNotes(e.target.value)}
+                            placeholder="Dodatkowe informacje..."
+                            rows={2}
+                            className="w-full bg-[#1B1B1B] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder:text-muted-foreground focus:outline-none focus:border-white/20 resize-none"
+                        />
+                    </div>
+
+                    <div className="flex gap-3 pt-4">
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            className="flex-1 bg-[#1B1B1B] hover:bg-[#252525]"
+                            onClick={onClose}
+                        >
+                            Anuluj
+                        </Button>
+                        <Button
+                            type="submit"
+                            className="flex-1 bg-[#91E8B2]/10 hover:bg-[#91E8B2]/20 text-[#91E8B2]"
+                            disabled={isSubmitting}
+                        >
+                            {isSubmitting ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                                <>
+                                    <Check className="w-4 h-4 mr-2" />
+                                    Zapisz
+                                </>
+                            )}
+                        </Button>
+                    </div>
+                </form>
+            </div>
+        </>
     );
 }
