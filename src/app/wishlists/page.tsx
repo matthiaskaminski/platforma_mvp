@@ -188,7 +188,6 @@ export default function WishlistsPage() {
                     {wishlists.map((list) => {
                         const statusKey = getWishlistStatus(list.totalBudget, list.totalSpent);
                         const status = statusConfig[statusKey];
-                        const progress = list.totalBudget > 0 ? (list.totalSpent / list.totalBudget) * 100 : 0;
                         const formattedDate = new Date(list.createdAt).toLocaleDateString('pl-PL');
                         const isDeleting = deletingId === list.id;
 
@@ -278,15 +277,6 @@ export default function WishlistsPage() {
                                             <div className="flex justify-between items-end">
                                                 <span className="text-sm text-muted-foreground">Budżet</span>
                                                 <span className="text-base font-medium">{list.totalBudget.toLocaleString('pl-PL')} zł</span>
-                                            </div>
-                                            <div className="flex justify-between items-end">
-                                                <span className="text-sm text-muted-foreground">Suma</span>
-                                                <span className="text-base font-medium">{list.totalSpent.toLocaleString('pl-PL')} zł</span>
-                                            </div>
-
-                                            {/* Progress Bar */}
-                                            <div className="h-2 bg-[#252525] rounded-full mt-3 overflow-hidden w-full">
-                                                <div className="h-full bg-white rounded-full relative" style={{ width: `${Math.min(progress, 100)}%` }}></div>
                                             </div>
                                         </div>
                                     </div>

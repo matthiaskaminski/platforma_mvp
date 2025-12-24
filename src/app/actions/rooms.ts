@@ -968,25 +968,41 @@ export async function getActiveProjectRooms() {
     const cookies = await import('next/headers').then(m => m.cookies())
     const activeProjectId = cookies.get('active-project-id')?.value
 
-    if (!activeProjectId) {
-        return []
-    }
+    // If we have an active project, use it; otherwise get rooms from all projects
+    if (activeProjectId) {
+        // Verify project ownership
+        const project = await prisma.project.findFirst({
+            where: {
+                id: activeProjectId,
+                designerId: profile.id
+            }
+        })
 
-    // Verify project ownership
-    const project = await prisma.project.findFirst({
-        where: {
-            id: activeProjectId,
-            designerId: profile.id
+        if (project) {
+            const rooms = await prisma.room.findMany({
+                where: {
+                    projectId: activeProjectId
+                },
+                select: {
+                    id: true,
+                    name: true,
+                    type: true,
+                    coverImage: true
+                },
+                orderBy: {
+                    name: 'asc'
+                }
+            })
+            return rooms
         }
-    })
-
-    if (!project) {
-        return []
     }
 
+    // Fallback: get rooms from all designer's projects
     const rooms = await prisma.room.findMany({
         where: {
-            projectId: activeProjectId
+            project: {
+                designerId: profile.id
+            }
         },
         select: {
             id: true,
