@@ -409,21 +409,21 @@ function ServiceCard({ service, onDelete, onApprove, onRevokeApproval, onEdit, i
                             {isMaterial ? service.name : service.subcontractor}
                         </h4>
                         {isMaterial && service.materialType && (
-                            <p className="text-xs text-muted-foreground">{service.materialType}</p>
+                            <p className="text-[14px] text-muted-foreground">{service.materialType}</p>
                         )}
                         {!isMaterial && service.scope && (
-                            <p className="text-xs text-muted-foreground truncate max-w-[180px]">{service.scope}</p>
+                            <p className="text-[14px] text-muted-foreground truncate max-w-[180px]">{service.scope}</p>
                         )}
                     </div>
                 </div>
                 <div className="flex items-center gap-1.5">
                     <div className={`w-2 h-2 rounded-full ${statusInfo.dotColor}`}></div>
-                    <span className="text-xs text-muted-foreground">{statusInfo.label}</span>
+                    <span className="text-[14px] text-muted-foreground">{statusInfo.label}</span>
                 </div>
             </div>
 
             {/* Details */}
-            <div className="flex items-center justify-between text-sm">
+            <div className="flex items-center justify-between text-[14px]">
                 <span className="text-muted-foreground">
                     {isMaterial
                         ? (service.quantity && service.unit ? `${service.quantity} ${service.unit}` : "—")
@@ -435,8 +435,8 @@ function ServiceCard({ service, onDelete, onApprove, onRevokeApproval, onEdit, i
 
             {/* Fulfillment Status */}
             {fulfillmentStatus && (
-                <div className="flex items-center gap-2 text-xs bg-[#1B1B1B] px-2 py-1.5 rounded-md">
-                    <Clock className="w-3 h-3 text-muted-foreground" />
+                <div className="flex items-center gap-2 text-[14px] bg-[#1B1B1B] px-2 py-1.5 rounded-md">
+                    <Clock className="w-3.5 h-3.5 text-muted-foreground" />
                     <span className="text-muted-foreground">Realizacja:</span>
                     <span className="text-white">{fulfillmentStatus}</span>
                 </div>
@@ -469,15 +469,15 @@ function ServiceCard({ service, onDelete, onApprove, onRevokeApproval, onEdit, i
                     // Revoke approval button for approved services
                     <Button
                         size="sm"
-                        className="flex-1 h-8 text-xs bg-[#E8B491]/10 hover:bg-[#E8B491]/20 text-[#E8B491]"
+                        className="flex-1 h-8 text-[14px] bg-[#E8B491]/10 hover:bg-[#E8B491]/20 text-[#E8B491]"
                         onClick={() => onRevokeApproval(service.id)}
                         disabled={isRevoking}
                     >
                         {isRevoking ? (
-                            <Loader2 className="w-3 h-3 animate-spin" />
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
                         ) : (
                             <>
-                                <Undo2 className="w-3 h-3 mr-1" />
+                                <Undo2 className="w-3.5 h-3.5 mr-1" />
                                 Cofnij
                             </>
                         )}
@@ -486,15 +486,15 @@ function ServiceCard({ service, onDelete, onApprove, onRevokeApproval, onEdit, i
                     // Approve button for non-approved services
                     <Button
                         size="sm"
-                        className="flex-1 h-8 text-xs bg-[#91E8B2]/10 hover:bg-[#91E8B2]/20 text-[#91E8B2]"
+                        className="flex-1 h-8 text-[14px] bg-[#91E8B2]/10 hover:bg-[#91E8B2]/20 text-[#91E8B2]"
                         onClick={() => onApprove(service.id)}
                         disabled={isApproving}
                     >
                         {isApproving ? (
-                            <Loader2 className="w-3 h-3 animate-spin" />
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
                         ) : (
                             <>
-                                <Check className="w-3 h-3 mr-1" />
+                                <Check className="w-3.5 h-3.5 mr-1" />
                                 Zatwierdź
                             </>
                         )}
