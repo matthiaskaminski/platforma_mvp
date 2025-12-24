@@ -74,8 +74,27 @@ export const ROOM_COLORS = [
     '#C98B8B', // koralowy
 ];
 
-// Funkcja pomocnicza do pobrania koloru dla pomieszczenia
-export const getRoomColor = (index: number) => ROOM_COLORS[index % ROOM_COLORS.length];
+// Funkcja pomocnicza do generowania stabilnego indeksu koloru na podstawie ID pomieszczenia
+const hashStringToIndex = (str: string): number => {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash; // Convert to 32bit integer
+    }
+    return Math.abs(hash);
+};
+
+// Funkcja pomocnicza do pobrania koloru dla pomieszczenia - używa ID dla stabilności
+export const getRoomColor = (indexOrId: number | string) => {
+    if (typeof indexOrId === 'string') {
+        // Jeśli przekazano ID (string), użyj hasha
+        const index = hashStringToIndex(indexOrId);
+        return ROOM_COLORS[index % ROOM_COLORS.length];
+    }
+    // Fallback dla indeksu numerycznego (kompatybilność wsteczna)
+    return ROOM_COLORS[indexOrId % ROOM_COLORS.length];
+};
 
 interface DashboardClientProps {
     user: any
@@ -211,10 +230,10 @@ export default function DashboardClient({ user, project, stats, recentProducts =
 
     const budgetData = roomBreakdown.length > 0 || servicesTotal > 0
         ? [
-            ...roomBreakdown.map((room, index) => ({
+            ...roomBreakdown.map((room) => ({
                 name: room.name,
                 value: room.spent,
-                color: getRoomColor(index)
+                color: getRoomColor(room.id)
             })),
             // Dodaj usługi jako osobną kategorię - szary kolor
             ...(servicesTotal > 0 ? [{
@@ -592,8 +611,8 @@ export default function DashboardClient({ user, project, stats, recentProducts =
                             <div className="flex-1 flex flex-col justify-center">
                                 <div className="flex flex-col gap-5 overflow-y-auto no-scrollbar pr-2">
                                     {roomBreakdown.length > 0 ? (
-                                        roomBreakdown.map((room, index) => {
-                                            const color = getRoomColor(index);
+                                        roomBreakdown.map((room) => {
+                                            const color = getRoomColor(room.id);
                                             return (
                                                 <div key={room.id} className="flex items-center justify-between">
                                                     <div className="flex items-center gap-3">

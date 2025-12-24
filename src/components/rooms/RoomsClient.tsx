@@ -121,7 +121,7 @@ export default function RoomsClient({ rooms: initialRooms, projectId, projectBud
                 "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 xl:grid-rows-2 gap-3 w-full flex-1 min-h-0 overflow-y-auto pr-1",
                 rooms.length === 0 && "flex items-center justify-center"
             )}>
-                {rooms.length > 0 ? rooms.map((room, roomIndex) => {
+                {rooms.length > 0 ? rooms.map((room) => {
                     const Icon = iconMap[room.type] || Armchair;
                     // Safe status fallback
                     const configKey = (room.status in statusConfig) ? room.status as keyof typeof statusConfig : 'not_started';
@@ -130,8 +130,8 @@ export default function RoomsClient({ rooms: initialRooms, projectId, projectBud
                     // Calculate percentage of project budget this room represents
                     const projectPercentage = projectBudget > 0 ? (room.spent / projectBudget) * 100 : 0;
 
-                    // Get unique color for this room
-                    const roomColor = getRoomColor(roomIndex);
+                    // Get unique color for this room based on ID
+                    const roomColor = getRoomColor(room.id);
 
                     return (
                         <Card key={room.id} className="overflow-hidden flex flex-col p-4 gap-5 group hover:border-white/10 transition-colors w-full min-h-[400px]">

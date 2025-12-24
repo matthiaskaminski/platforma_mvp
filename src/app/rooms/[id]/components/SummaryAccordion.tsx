@@ -147,13 +147,12 @@ export function SummaryAccordion({ projectSummary }: SummaryAccordionProps) {
 
             const data = [];
 
-            // Current room - with color
+            // Current room - with color based on room ID
             if (currentRoom && currentRoom.spent > 0) {
-                const currentRoomIndex = roomsBreakdown.findIndex(r => r.id === currentRoomId);
                 data.push({
                     name: currentRoom.name,
                     value: currentRoom.spent,
-                    color: getRoomColor(currentRoomIndex >= 0 ? currentRoomIndex : 0),
+                    color: getRoomColor(currentRoom.id),
                     isCurrentRoom: true
                 });
             }
@@ -305,14 +304,13 @@ export function SummaryAccordion({ projectSummary }: SummaryAccordionProps) {
                                             {/* Current Room */}
                                             {(() => {
                                                 const currentRoom = roomsBreakdown.find(r => r.id === currentRoomId);
-                                                const currentRoomIndex = roomsBreakdown.findIndex(r => r.id === currentRoomId);
                                                 if (currentRoom && currentRoom.spent > 0) {
                                                     return (
                                                         <div className="flex items-center justify-between">
                                                             <div className="flex items-center gap-3">
                                                                 <span
                                                                     className="w-3.5 h-3.5 rounded-full flex-shrink-0"
-                                                                    style={{ backgroundColor: getRoomColor(currentRoomIndex >= 0 ? currentRoomIndex : 0) }}
+                                                                    style={{ backgroundColor: getRoomColor(currentRoom.id) }}
                                                                 />
                                                                 <span className="text-[15px] text-white font-semibold">
                                                                     {currentRoom.name}
