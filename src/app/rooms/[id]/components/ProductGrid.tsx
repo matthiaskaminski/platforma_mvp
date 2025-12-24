@@ -805,8 +805,8 @@ export const ProductGrid = React.memo(function ProductGrid({ products, onAddProd
                                         className={cn(
                                             "absolute top-2 left-2 z-20 w-6 h-6 rounded border-2 flex items-center justify-center transition-all",
                                             isSelected
-                                                ? "bg-blue-500 border-blue-500 text-white"
-                                                : "bg-white/90 border-gray-300 hover:border-gray-400 opacity-0 group-hover:opacity-100"
+                                                ? "bg-[#6E6E6E] border-[#6E6E6E] text-white"
+                                                : "bg-white/90 border-[#4A4A4A] hover:border-[#6E6E6E] opacity-0 group-hover:opacity-100"
                                         )}
                                         style={isSelected ? { opacity: 1 } : undefined}
                                     >

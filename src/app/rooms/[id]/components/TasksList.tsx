@@ -393,7 +393,7 @@ export const TasksList = React.memo(function TasksList({
                                                         e.stopPropagation();
                                                         toggleTaskSelection(task.id);
                                                     }}
-                                                    className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${isChecked ? 'bg-blue-500 border-blue-500 text-white' : 'border-white/20 hover:border-white/40'}`}
+                                                    className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${isChecked ? 'bg-[#6E6E6E] border-[#6E6E6E] text-white' : 'border-[#4A4A4A] hover:border-[#6E6E6E]'}`}
                                                 >
                                                     {isChecked && <Check className="w-3.5 h-3.5" />}
                                                 </button>
@@ -553,7 +553,7 @@ export const TasksList = React.memo(function TasksList({
                                                                     e.stopPropagation();
                                                                     toggleTaskSelection(task.id);
                                                                 }}
-                                                                className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${selectedTasks.has(task.id) ? 'bg-blue-500 border-blue-500 text-white' : 'border-white/20 hover:border-white/40'}`}
+                                                                className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${selectedTasks.has(task.id) ? 'bg-[#6E6E6E] border-[#6E6E6E] text-white' : 'border-[#4A4A4A] hover:border-[#6E6E6E]'}`}
                                                             >
                                                                 {selectedTasks.has(task.id) && <Check className="w-3.5 h-3.5" />}
                                                             </button>

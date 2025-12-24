@@ -384,8 +384,8 @@ export default function ServicesPage() {
                                             className={cn(
                                                 "w-5 h-5 rounded border-2 flex items-center justify-center transition-all",
                                                 selectedIds.size === filteredServices.length && filteredServices.length > 0
-                                                    ? "bg-blue-500 border-blue-500 text-white"
-                                                    : "bg-transparent border-gray-500 hover:border-gray-400"
+                                                    ? "bg-[#6E6E6E] border-[#6E6E6E] text-white"
+                                                    : "bg-transparent border-[#4A4A4A] hover:border-[#6E6E6E]"
                                             )}
                                         >
                                             {selectedIds.size === filteredServices.length && filteredServices.length > 0 && (
@@ -432,8 +432,8 @@ export default function ServicesPage() {
                                                     className={cn(
                                                         "w-5 h-5 rounded border-2 flex items-center justify-center transition-all",
                                                         isSelected
-                                                            ? "bg-blue-500 border-blue-500 text-white"
-                                                            : "bg-transparent border-gray-500 hover:border-gray-400"
+                                                            ? "bg-[#6E6E6E] border-[#6E6E6E] text-white"
+                                                            : "bg-transparent border-[#4A4A4A] hover:border-[#6E6E6E]"
                                                     )}
                                                 >
                                                     {isSelected && <Check className="w-3.5 h-3.5" />}
