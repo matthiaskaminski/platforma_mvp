@@ -139,8 +139,8 @@ export default function RoomsClient({ rooms: initialRooms, projectId, projectBud
                             <div className="flex items-start justify-between">
                                 <div className="flex items-center gap-4">
                                     <div
-                                        className="p-3 rounded-xl text-white"
-                                        style={{ backgroundColor: roomColor }}
+                                        className="p-3 rounded-xl bg-[#1B1B1B]"
+                                        style={{ color: roomColor }}
                                     >
                                         <Icon className="w-6 h-6" />
                                     </div>
