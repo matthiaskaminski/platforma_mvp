@@ -54,6 +54,7 @@ interface BudgetItem {
     name: string;
     category: string | null;
     supplier: string | null;
+    url: string | null;
     imageUrl: string | null;
     price: any;
     quantity: number;

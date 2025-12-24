@@ -347,6 +347,7 @@ export async function getRoomBudget(roomId: string) {
             name: true,
             category: true,
             supplier: true,
+            url: true,
             imageUrl: true,
             price: true,
             quantity: true,
