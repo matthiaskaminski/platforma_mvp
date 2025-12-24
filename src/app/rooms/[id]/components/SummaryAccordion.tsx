@@ -388,19 +388,19 @@ export function SummaryAccordion({ projectSummary }: SummaryAccordionProps) {
                                         )}
                                     </div>
 
-                                    {/* Chart - Like Dashboard */}
+                                    {/* Chart - Larger size to fill space */}
                                     {budgetData.length > 0 && (
-                                        <div className="aspect-square h-full max-h-[200px] relative shrink-0 self-center">
+                                        <div className="w-[220px] h-[220px] relative shrink-0 self-center">
                                             <ResponsiveContainer width="100%" height="100%">
                                                 <PieChart>
                                                     <Pie
                                                         data={budgetData}
-                                                        innerRadius="72%"
-                                                        outerRadius="90%"
-                                                        paddingAngle={4}
+                                                        innerRadius="68%"
+                                                        outerRadius="95%"
+                                                        paddingAngle={3}
                                                         dataKey="value"
                                                         stroke="none"
-                                                        cornerRadius={6}
+                                                        cornerRadius={10}
                                                     >
                                                         {budgetData.map((entry, index) => (
                                                             <Cell key={`cell-${index}`} fill={entry.color} />
@@ -409,10 +409,10 @@ export function SummaryAccordion({ projectSummary }: SummaryAccordionProps) {
                                                 </PieChart>
                                             </ResponsiveContainer>
                                             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                                                <span className="text-[24px] font-bold text-white">
+                                                <span className="text-[28px] font-bold text-white">
                                                     {budget.projectPercentage}%
                                                 </span>
-                                                <span className="text-xs text-muted-foreground">budżetu projektu</span>
+                                                <span className="text-sm text-muted-foreground">budżetu projektu</span>
                                             </div>
                                         </div>
                                     )}
