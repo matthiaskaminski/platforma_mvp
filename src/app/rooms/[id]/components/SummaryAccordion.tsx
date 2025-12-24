@@ -158,22 +158,22 @@ export function SummaryAccordion({ projectSummary }: SummaryAccordionProps) {
                 });
             }
 
-            // Other rooms combined - gray
+            // Other rooms combined - lighter gray
             if (otherRoomsTotal > 0) {
                 data.push({
-                    name: "Inne pomieszczenia",
+                    name: "Pozostałe pomieszczenia",
                     value: otherRoomsTotal,
-                    color: "#6E6E6E",
+                    color: "#8A8A8A",
                     isCurrentRoom: false
                 });
             }
 
-            // Services - gray (budżet estymacyjny)
+            // Services - darker gray (distinct from other rooms)
             if (servicesTotal > 0) {
                 data.push({
                     name: "Usługi",
                     value: servicesTotal,
-                    color: "#6E6E6E",
+                    color: "#4A4A4A",
                     isCurrentRoom: false
                 });
             }
@@ -298,53 +298,84 @@ export function SummaryAccordion({ projectSummary }: SummaryAccordionProps) {
                             {/* Right: Budget - Fills remaining space and height */}
                             <div className="flex-1 flex gap-6 justify-end min-w-0">
                                 <div className="flex gap-8 h-full w-full items-stretch">
-                                    {/* Room List - Like Dashboard */}
+                                    {/* Budget List - 3 categories: current room, other rooms, services */}
                                     <div className="flex-1 min-w-0 flex flex-col justify-center">
                                         <h3 className="text-sm font-medium text-muted-foreground mb-4">Budżet estymacyjny</h3>
                                         <div className="flex flex-col gap-4 overflow-y-auto no-scrollbar pr-2">
-                                            {roomsBreakdown.length > 0 ? (
-                                                roomsBreakdown.map((room, index) => {
-                                                    const color = getRoomColor(index);
-                                                    const isCurrentRoomItem = room.id === currentRoomId;
+                                            {/* Current Room */}
+                                            {(() => {
+                                                const currentRoom = roomsBreakdown.find(r => r.id === currentRoomId);
+                                                const currentRoomIndex = roomsBreakdown.findIndex(r => r.id === currentRoomId);
+                                                if (currentRoom && currentRoom.spent > 0) {
                                                     return (
-                                                        <div key={room.id} className="flex items-center justify-between">
+                                                        <div className="flex items-center justify-between">
                                                             <div className="flex items-center gap-3">
                                                                 <span
                                                                     className="w-3.5 h-3.5 rounded-full flex-shrink-0"
-                                                                    style={{ backgroundColor: color }}
+                                                                    style={{ backgroundColor: getRoomColor(currentRoomIndex >= 0 ? currentRoomIndex : 0) }}
                                                                 />
-                                                                <span className={`text-[15px] ${isCurrentRoomItem ? 'text-white font-semibold' : 'text-[#E5E5E5]'}`}>
-                                                                    {room.name}
+                                                                <span className="text-[15px] text-white font-semibold">
+                                                                    {currentRoom.name}
                                                                 </span>
                                                             </div>
-                                                            <span className={`text-[15px] tabular-nums ${isCurrentRoomItem ? 'text-white font-semibold' : 'text-[#E5E5E5] font-medium'}`}>
-                                                                {formatCurrency(room.spent)}
+                                                            <span className="text-[15px] text-white font-semibold tabular-nums">
+                                                                {formatCurrency(currentRoom.spent)}
                                                             </span>
                                                         </div>
                                                     );
-                                                })
-                                            ) : (
+                                                }
+                                                return null;
+                                            })()}
+
+                                            {/* Other Rooms Combined */}
+                                            {(() => {
+                                                const otherRoomsTotal = roomsBreakdown
+                                                    .filter(r => r.id !== currentRoomId)
+                                                    .reduce((sum, r) => sum + r.spent, 0);
+                                                if (otherRoomsTotal > 0) {
+                                                    return (
+                                                        <div className="flex items-center justify-between">
+                                                            <div className="flex items-center gap-3">
+                                                                <span
+                                                                    className="w-3.5 h-3.5 rounded-full flex-shrink-0"
+                                                                    style={{ backgroundColor: "#8A8A8A" }}
+                                                                />
+                                                                <span className="text-[15px] text-[#E5E5E5]">
+                                                                    Pozostałe pomieszczenia
+                                                                </span>
+                                                            </div>
+                                                            <span className="text-[15px] text-[#E5E5E5] font-medium tabular-nums">
+                                                                {formatCurrency(otherRoomsTotal)}
+                                                            </span>
+                                                        </div>
+                                                    );
+                                                }
+                                                return null;
+                                            })()}
+
+                                            {/* Services */}
+                                            {servicesTotal > 0 && (
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex items-center gap-3">
+                                                        <span
+                                                            className="w-3.5 h-3.5 rounded-full flex-shrink-0"
+                                                            style={{ backgroundColor: "#4A4A4A" }}
+                                                        />
+                                                        <span className="text-[15px] text-[#E5E5E5]">Usługi</span>
+                                                    </div>
+                                                    <span className="text-[15px] text-[#E5E5E5] font-medium tabular-nums">
+                                                        {formatCurrency(servicesTotal)}
+                                                    </span>
+                                                </div>
+                                            )}
+
+                                            {/* Empty state */}
+                                            {roomsBreakdown.length === 0 && servicesTotal === 0 && (
                                                 <div className="text-[14px] text-muted-foreground py-4">
-                                                    Brak pomieszczeń z produktami
+                                                    Brak danych budżetowych
                                                 </div>
                                             )}
                                         </div>
-
-                                        {/* Services Summary - jedna pozycja dla wszystkich usług */}
-                                        {servicesTotal > 0 && (
-                                            <div className="flex items-center justify-between mt-4">
-                                                <div className="flex items-center gap-3">
-                                                    <span
-                                                        className="w-3.5 h-3.5 rounded-full flex-shrink-0"
-                                                        style={{ backgroundColor: "#6E6E6E" }}
-                                                    />
-                                                    <span className="text-[15px] text-[#E5E5E5]">Usługi</span>
-                                                </div>
-                                                <span className="text-[15px] text-[#E5E5E5] font-medium tabular-nums">
-                                                    {formatCurrency(servicesTotal)}
-                                                </span>
-                                            </div>
-                                        )}
 
                                         {/* Total - Łącznie */}
                                         {(roomsBreakdown.length > 0 || servicesTotal > 0) && (
