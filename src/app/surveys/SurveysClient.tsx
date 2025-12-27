@@ -16,10 +16,12 @@ import {
     Copy,
     ExternalLink,
     FileText,
-    Send
+    Send,
+    MessageSquare
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
 import { cn } from "@/lib/utils";
 import { CreateSurveyModal } from "@/components/modals/CreateSurveyModal";
 import { SurveyDetailModal } from "@/components/modals/SurveyDetailModal";
@@ -132,58 +134,72 @@ export default function SurveysClient({ initialSurveys, projects, initialProject
     };
 
     return (
-        <div className="animate-in fade-in duration-500">
-            {/* Header */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-                <div className="flex items-center gap-4">
-                    <h1 className="text-2xl font-bold">Ankiety</h1>
+        <div className="flex flex-col h-full animate-in fade-in duration-500 pb-0 overflow-hidden w-full">
+            {/* Filters & Actions Row - matching rooms page style */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-stretch gap-3 shrink-0 mb-3">
+                {/* Filter Bar */}
+                <Card className="flex-1 p-4 flex gap-4 items-center w-full md:w-auto overflow-x-auto no-scrollbar">
+                    <span className="text-[16px] font-medium text-[#DBDAD9] whitespace-nowrap px-2">Sortuj według</span>
 
-                    {/* Project Selector */}
-                    <div className="relative">
-                        <button
-                            onClick={() => setIsProjectDropdownOpen(!isProjectDropdownOpen)}
-                            className="flex items-center gap-2 bg-[#1B1B1B] hover:bg-[#252525] px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                        >
-                            <FileText className="w-4 h-4 text-muted-foreground" />
-                            <span className="text-white">{selectedProject?.name || 'Wybierz projekt'}</span>
-                            <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                        </button>
+                    {/* Filter Dropdowns */}
+                    <div className="flex gap-2 ml-auto">
+                        {/* Project Selector */}
+                        <div className="relative">
+                            <Button
+                                variant="secondary"
+                                onClick={() => setIsProjectDropdownOpen(!isProjectDropdownOpen)}
+                                className="flex items-center gap-2 bg-[#1B1B1B] hover:bg-[#252525] text-sm px-4 py-2 rounded-lg transition-colors text-muted-foreground min-w-[180px] justify-between h-[48px]"
+                            >
+                                <span className="truncate">{selectedProject?.name || 'Wybierz projekt'}</span>
+                                <ChevronDown className="w-4 h-4 opacity-50 shrink-0" />
+                            </Button>
 
-                        {isProjectDropdownOpen && (
-                            <>
-                                <div
-                                    className="fixed inset-0 z-40"
-                                    onClick={() => setIsProjectDropdownOpen(false)}
-                                />
-                                <div className="absolute left-0 top-full mt-2 z-50 bg-[#1B1B1B] rounded-lg border border-white/10 shadow-xl py-1 min-w-[200px]">
-                                    {projects.map(project => (
-                                        <button
-                                            key={project.id}
-                                            onClick={() => handleProjectChange(project.id)}
-                                            className={cn(
-                                                "w-full flex items-center gap-2 px-4 py-2 text-sm hover:bg-white/5 transition-colors text-left",
-                                                project.id === selectedProjectId && "bg-white/5"
-                                            )}
-                                        >
-                                            <span className="text-white">{project.name}</span>
-                                            {project.id === selectedProjectId && (
-                                                <CheckCircle2 className="w-4 h-4 ml-auto text-[#91E8B2]" />
-                                            )}
-                                        </button>
-                                    ))}
-                                </div>
-                            </>
-                        )}
+                            {isProjectDropdownOpen && (
+                                <>
+                                    <div
+                                        className="fixed inset-0 z-40"
+                                        onClick={() => setIsProjectDropdownOpen(false)}
+                                    />
+                                    <div className="absolute left-0 top-full mt-2 z-50 bg-[#1B1B1B] rounded-lg border border-white/10 shadow-xl py-1 min-w-[200px]">
+                                        {projects.map(project => (
+                                            <button
+                                                key={project.id}
+                                                onClick={() => handleProjectChange(project.id)}
+                                                className={cn(
+                                                    "w-full flex items-center gap-2 px-4 py-2 text-sm hover:bg-white/5 transition-colors text-left",
+                                                    project.id === selectedProjectId && "bg-white/5"
+                                                )}
+                                            >
+                                                <span className="text-white">{project.name}</span>
+                                                {project.id === selectedProjectId && (
+                                                    <CheckCircle2 className="w-4 h-4 ml-auto text-[#91E8B2]" />
+                                                )}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </>
+                            )}
+                        </div>
+
+                        <Button variant="secondary" className="flex items-center gap-2 bg-[#1B1B1B] hover:bg-[#252525] text-sm px-4 py-2 rounded-lg transition-colors text-muted-foreground min-w-[110px] justify-between h-[48px]">
+                            Status
+                            <ChevronDown className="w-4 h-4 opacity-50" />
+                        </Button>
+                        <Button variant="secondary" className="flex items-center gap-2 bg-[#1B1B1B] hover:bg-[#252525] text-sm px-4 py-2 rounded-lg transition-colors text-muted-foreground min-w-[140px] justify-between h-[48px]">
+                            Data utworzenia
+                            <ChevronDown className="w-4 h-4 opacity-50" />
+                        </Button>
                     </div>
-                </div>
+                </Card>
 
+                {/* Add Button */}
                 <Button
                     onClick={() => setIsCreateModalOpen(true)}
                     disabled={!selectedProjectId}
-                    className="bg-white text-black hover:bg-zinc-200 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+                    className="self-center md:self-stretch h-[80px] bg-[#151515] hover:bg-[#252525] text-white px-6 rounded-2xl text-sm font-medium transition-colors whitespace-nowrap flex items-center gap-2 shadow-sm w-full md:w-auto"
                 >
-                    <Plus className="w-4 h-4" />
-                    Nowa ankieta
+                    <Plus className="w-5 h-5" />
+                    Dodaj nową ankietę
                 </Button>
             </div>
 
@@ -212,120 +228,135 @@ export default function SurveysClient({ initialSurveys, projects, initialProject
                     </Button>
                 </Card>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className={cn(
+                    "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 w-full flex-1 min-h-0 overflow-y-auto pr-1",
+                    surveys.length === 0 && "flex items-center justify-center"
+                )}>
                     {surveys.map(survey => {
                         const status = statusConfig[survey.status] || statusConfig['DRAFT'];
                         const completedCount = getCompletedLinksCount(survey);
 
+                        // Status mapping for Badge component
+                        const badgeStatusMap: Record<string, 'finished' | 'in_progress' | 'not_started'> = {
+                            'COMPLETED': 'finished',
+                            'ACTIVE': 'in_progress',
+                            'DRAFT': 'not_started',
+                            'EXPIRED': 'finished'
+                        };
+                        const badgeStatus = badgeStatusMap[survey.status] || 'not_started';
+
                         return (
                             <Card
                                 key={survey.id}
-                                className="overflow-hidden group hover:border-zinc-600 transition-all cursor-pointer"
-                                onClick={() => handleViewSurvey(survey)}
+                                className="overflow-hidden flex flex-col p-4 gap-5 group hover:border-white/10 transition-colors w-full min-h-[360px]"
                             >
-                                {/* Header */}
-                                <div className="p-4 border-b border-white/5">
-                                    <div className="flex justify-between items-start mb-2">
-                                        <h3 className="font-semibold text-white truncate pr-2">{survey.title}</h3>
-                                        <span className={cn(
-                                            "px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider border shrink-0",
-                                            status.color,
-                                            status.bg
-                                        )}>
+                                {/* Header Row - like rooms */}
+                                <div className="flex items-start justify-between">
+                                    <div className="flex items-center gap-4">
+                                        <div className="p-3 rounded-xl bg-[#91E8B2] text-[#1B1B1B]">
+                                            <ClipboardList className="w-6 h-6" />
+                                        </div>
+                                        <div>
+                                            <h3 className="font-semibold text-[16px] text-white">{survey.title}</h3>
+                                            <p className="text-sm text-muted-foreground">{formatDate(survey.createdAt)}</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-sm font-medium">
+                                        <span className="text-muted-foreground/60">Status:</span>
+                                        <Badge status={badgeStatus} dot className="bg-transparent px-0 font-semibold gap-2">
                                             {status.label}
-                                        </span>
-                                    </div>
-                                    {survey.description && (
-                                        <p className="text-sm text-muted-foreground line-clamp-2">{survey.description}</p>
-                                    )}
-                                </div>
-
-                                {/* Stats */}
-                                <div className="p-4 bg-[#0F0F0F]">
-                                    <div className="grid grid-cols-3 gap-4 mb-4">
-                                        <div className="text-center">
-                                            <div className="text-2xl font-bold text-white">{survey._count.questions}</div>
-                                            <div className="text-xs text-muted-foreground">pytan</div>
-                                        </div>
-                                        <div className="text-center">
-                                            <div className="text-2xl font-bold text-white">{survey._count.links}</div>
-                                            <div className="text-xs text-muted-foreground">linkow</div>
-                                        </div>
-                                        <div className="text-center">
-                                            <div className="text-2xl font-bold text-[#91E8B2]">{completedCount}</div>
-                                            <div className="text-xs text-muted-foreground">odpowiedzi</div>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex items-center justify-between text-xs text-muted-foreground">
-                                        <div className="flex items-center gap-1.5">
-                                            <CalendarIcon className="w-3.5 h-3.5" />
-                                            {formatDate(survey.createdAt)}
-                                        </div>
+                                        </Badge>
                                     </div>
                                 </div>
 
-                                {/* Actions */}
-                                <div className="p-3 border-t border-white/5 flex items-center gap-2">
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleGenerateLink(survey);
-                                        }}
-                                        className="flex-1 h-9 text-xs"
-                                    >
-                                        <Send className="w-3.5 h-3.5 mr-1.5" />
-                                        Wyslij do klienta
-                                    </Button>
-                                    <div className="relative">
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                setMenuOpenId(menuOpenId === survey.id ? null : survey.id);
-                                            }}
-                                            className="h-9 w-9"
-                                        >
-                                            <MoreHorizontal className="w-4 h-4" />
-                                        </Button>
-
-                                        {menuOpenId === survey.id && (
-                                            <>
-                                                <div
-                                                    className="fixed inset-0 z-40"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setMenuOpenId(null);
-                                                    }}
-                                                />
-                                                <div className="absolute right-0 bottom-full mb-1 z-50 bg-[#1B1B1B] rounded-lg border border-white/10 shadow-xl py-1 min-w-[140px]">
-                                                    <button
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            handleViewSurvey(survey);
-                                                        }}
-                                                        className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-white/5 transition-colors"
-                                                    >
-                                                        <Eye className="w-4 h-4" />
-                                                        Podglad
-                                                    </button>
-                                                    <button
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            handleDeleteSurvey(survey.id);
-                                                        }}
-                                                        className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-white/5 transition-colors text-red-400"
-                                                    >
-                                                        <Trash2 className="w-4 h-4" />
-                                                        Usun
-                                                    </button>
-                                                </div>
-                                            </>
+                                {/* Middle Content: Description + Info Box */}
+                                <div className="flex gap-4 flex-1 min-h-0">
+                                    {/* Left: Description or placeholder */}
+                                    <div className="w-[45%] relative rounded-xl overflow-hidden bg-[#1B1B1B] flex items-center justify-center p-4">
+                                        {survey.description ? (
+                                            <p className="text-sm text-muted-foreground line-clamp-6">{survey.description}</p>
+                                        ) : (
+                                            <div className="flex flex-col items-center justify-center text-center">
+                                                <MessageSquare className="w-8 h-8 text-[#6E6E6E] mb-2" />
+                                                <span className="text-sm text-[#6E6E6E]">Brak opisu</span>
+                                            </div>
                                         )}
                                     </div>
+
+                                    {/* Right: Info Box */}
+                                    <div className="flex-1 bg-[#1B1B1B] rounded-xl p-4 flex flex-col justify-between">
+                                        {/* Responses Badge */}
+                                        <div className="flex justify-between items-center mb-1">
+                                            <span className="text-sm text-muted-foreground">Odpowiedzi</span>
+                                            <span
+                                                className={cn("text-[14px] font-bold px-2 py-0.5 rounded-full min-w-[24px] text-center",
+                                                    completedCount === 0 ? 'bg-[#2A2A2A] text-zinc-500' : 'bg-[#91E8B2] text-black'
+                                                )}
+                                            >
+                                                {completedCount}
+                                            </span>
+                                        </div>
+
+                                        {/* Stats Grid */}
+                                        <div className="space-y-3 py-2">
+                                            <div className="flex justify-between items-end">
+                                                <span className="text-sm text-muted-foreground">Pytania</span>
+                                                <span className="text-base font-medium">{survey._count.questions}</span>
+                                            </div>
+                                            <div className="flex justify-between items-end">
+                                                <span className="text-sm text-muted-foreground">Wysłane linki</span>
+                                                <span className="text-base font-medium">{survey._count.links}</span>
+                                            </div>
+                                            <div className="flex justify-between items-end">
+                                                <span className="text-sm text-muted-foreground">Ukończone</span>
+                                                <span className="text-base font-medium text-[#91E8B2]">{completedCount}</span>
+                                            </div>
+                                        </div>
+
+                                        {/* Progress section */}
+                                        <div className="space-y-1.5 pt-3 border-t border-white/5 mt-auto">
+                                            <div className="flex justify-between items-end">
+                                                <span className="text-sm text-muted-foreground">Postęp</span>
+                                                <span className="text-base font-medium">
+                                                    {survey._count.links > 0 ? Math.round((completedCount / survey._count.links) * 100) : 0}%
+                                                </span>
+                                            </div>
+
+                                            {/* Progress Bar */}
+                                            <div className="h-2 bg-[#252525] rounded-full mt-3 overflow-hidden w-full">
+                                                <div
+                                                    className="h-full bg-[#91E8B2] rounded-full relative"
+                                                    style={{ width: `${survey._count.links > 0 ? Math.min((completedCount / survey._count.links) * 100, 100) : 0}%` }}
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Bottom Actions - like rooms */}
+                                <div className="flex gap-3 mt-auto">
+                                    <Button
+                                        onClick={() => handleViewSurvey(survey)}
+                                        className="flex-1 bg-[#222222] hover:bg-[#2a2a2a] text-zinc-300 hover:text-white text-sm font-medium py-3 rounded-lg text-center transition-colors h-[48px]"
+                                    >
+                                        Szczegóły ankiety
+                                    </Button>
+                                    <Button
+                                        variant="secondary"
+                                        onClick={() => handleGenerateLink(survey)}
+                                        className="px-5 bg-[#1B1B1B] hover:bg-[#252525] rounded-lg text-muted-foreground hover:text-white transition-colors flex items-center gap-2 text-sm font-medium h-[48px]"
+                                    >
+                                        <Send className="w-5 h-5" />
+                                        Wyślij
+                                    </Button>
+                                    <Button
+                                        variant="secondary"
+                                        onClick={() => handleDeleteSurvey(survey.id)}
+                                        className="px-5 bg-[#1B1B1B] hover:bg-[#252525] rounded-lg text-muted-foreground hover:text-red-400 transition-colors flex items-center gap-2 text-sm font-medium h-[48px]"
+                                    >
+                                        <Trash2 className="w-5 h-5" />
+                                        Usuń
+                                    </Button>
                                 </div>
                             </Card>
                         );
