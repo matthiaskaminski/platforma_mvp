@@ -77,9 +77,9 @@ export function ClientLayout({
 
     const [isSidebarOpen, setIsSidebarOpen] = React.useState(true);
 
-    // Full screen layout for auth and onboarding
-    if (pathname === '/login' || pathname.startsWith('/onboarding')) {
-        return <div className="min-h-screen bg-background">{children}</div>;
+    // Full screen layout for auth, onboarding, and client pages (surveys, etc.)
+    if (pathname === '/login' || pathname.startsWith('/onboarding') || pathname.startsWith('/client')) {
+        return <>{children}</>;
     }
 
     return (
