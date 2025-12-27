@@ -257,10 +257,10 @@ export default function SurveysClient({ initialSurveys, projects, initialProject
                                         </div>
                                         <div>
                                             <h3 className="font-semibold text-[15px] text-white">{survey.title}</h3>
-                                            <p className="text-xs text-muted-foreground">{formatDate(survey.createdAt)}</p>
+                                            <p className="text-[14px] text-muted-foreground">{formatDate(survey.createdAt)}</p>
                                         </div>
                                     </div>
-                                    <Badge status={badgeStatus} dot className="bg-transparent px-0 font-medium text-xs gap-1.5">
+                                    <Badge status={badgeStatus} dot className="bg-transparent px-0 font-medium text-[14px] gap-1.5">
                                         {status.label}
                                     </Badge>
                                 </div>
@@ -270,15 +270,15 @@ export default function SurveysClient({ initialSurveys, projects, initialProject
                                     <div className="grid grid-cols-3 gap-3 text-center mb-3">
                                         <div>
                                             <div className="text-lg font-bold text-white">{survey._count.questions}</div>
-                                            <div className="text-xs text-muted-foreground">pytań</div>
+                                            <div className="text-[14px] text-muted-foreground">pytań</div>
                                         </div>
                                         <div>
                                             <div className="text-lg font-bold text-white">{survey._count.links}</div>
-                                            <div className="text-xs text-muted-foreground">linków</div>
+                                            <div className="text-[14px] text-muted-foreground">linków</div>
                                         </div>
                                         <div>
                                             <div className="text-lg font-bold text-[#91E8B2]">{completedCount}</div>
-                                            <div className="text-xs text-muted-foreground">odpowiedzi</div>
+                                            <div className="text-[14px] text-muted-foreground">odpowiedzi</div>
                                         </div>
                                     </div>
 
@@ -290,7 +290,7 @@ export default function SurveysClient({ initialSurveys, projects, initialProject
                                                 style={{ width: `${survey._count.links > 0 ? Math.min((completedCount / survey._count.links) * 100, 100) : 0}%` }}
                                             />
                                         </div>
-                                        <span className="text-xs text-muted-foreground min-w-[32px] text-right">
+                                        <span className="text-[14px] text-muted-foreground min-w-[32px] text-right">
                                             {survey._count.links > 0 ? Math.round((completedCount / survey._count.links) * 100) : 0}%
                                         </span>
                                     </div>
