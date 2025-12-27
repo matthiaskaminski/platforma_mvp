@@ -24,7 +24,7 @@ import { cn } from "@/lib/utils";
 import { CreateSurveyModal } from "@/components/modals/CreateSurveyModal";
 import { SurveyDetailModal } from "@/components/modals/SurveyDetailModal";
 import { GenerateLinkModal } from "@/components/modals/GenerateLinkModal";
-import { getSurveys, deleteSurvey } from "@/app/actions/surveys";
+import { getSurveys, deleteSurvey, getSurveyById } from "@/app/actions/surveys";
 import { useRouter } from "next/navigation";
 
 interface Survey {
@@ -101,8 +101,14 @@ export default function SurveysClient({ initialSurveys, projects, initialProject
         setMenuOpenId(null);
     };
 
-    const handleViewSurvey = (survey: Survey) => {
-        setSelectedSurvey(survey);
+    const handleViewSurvey = async (survey: Survey) => {
+        // Fetch full survey data with responses
+        const fullSurvey = await getSurveyById(survey.id);
+        if (fullSurvey) {
+            setSelectedSurvey(fullSurvey as any);
+        } else {
+            setSelectedSurvey(survey);
+        }
         setIsDetailModalOpen(true);
         setMenuOpenId(null);
     };
