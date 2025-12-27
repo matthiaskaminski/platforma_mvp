@@ -16,8 +16,7 @@ import {
     Copy,
     ExternalLink,
     FileText,
-    Send,
-    MessageSquare
+    Send
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -248,114 +247,77 @@ export default function SurveysClient({ initialSurveys, projects, initialProject
                         return (
                             <Card
                                 key={survey.id}
-                                className="overflow-hidden flex flex-col p-4 gap-5 group hover:border-white/10 transition-colors w-full min-h-[360px]"
+                                className="overflow-hidden flex flex-col p-4 gap-3 group hover:border-white/10 transition-colors w-full"
                             >
-                                {/* Header Row - like rooms */}
+                                {/* Header Row */}
                                 <div className="flex items-start justify-between">
-                                    <div className="flex items-center gap-4">
-                                        <div className="p-3 rounded-xl bg-[#91E8B2] text-[#1B1B1B]">
-                                            <ClipboardList className="w-6 h-6" />
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2.5 rounded-xl bg-[#91E8B2] text-[#1B1B1B]">
+                                            <ClipboardList className="w-5 h-5" />
                                         </div>
                                         <div>
-                                            <h3 className="font-semibold text-[16px] text-white">{survey.title}</h3>
-                                            <p className="text-sm text-muted-foreground">{formatDate(survey.createdAt)}</p>
+                                            <h3 className="font-semibold text-[15px] text-white">{survey.title}</h3>
+                                            <p className="text-xs text-muted-foreground">{formatDate(survey.createdAt)}</p>
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-2 text-sm font-medium">
-                                        <span className="text-muted-foreground/60">Status:</span>
-                                        <Badge status={badgeStatus} dot className="bg-transparent px-0 font-semibold gap-2">
-                                            {status.label}
-                                        </Badge>
+                                    <Badge status={badgeStatus} dot className="bg-transparent px-0 font-medium text-xs gap-1.5">
+                                        {status.label}
+                                    </Badge>
+                                </div>
+
+                                {/* Stats Row */}
+                                <div className="bg-[#1B1B1B] rounded-xl p-3">
+                                    <div className="grid grid-cols-3 gap-3 text-center mb-3">
+                                        <div>
+                                            <div className="text-lg font-bold text-white">{survey._count.questions}</div>
+                                            <div className="text-xs text-muted-foreground">pytań</div>
+                                        </div>
+                                        <div>
+                                            <div className="text-lg font-bold text-white">{survey._count.links}</div>
+                                            <div className="text-xs text-muted-foreground">linków</div>
+                                        </div>
+                                        <div>
+                                            <div className="text-lg font-bold text-[#91E8B2]">{completedCount}</div>
+                                            <div className="text-xs text-muted-foreground">odpowiedzi</div>
+                                        </div>
+                                    </div>
+
+                                    {/* Progress Bar */}
+                                    <div className="flex items-center gap-2">
+                                        <div className="h-1.5 bg-[#252525] rounded-full flex-1 overflow-hidden">
+                                            <div
+                                                className="h-full bg-[#91E8B2] rounded-full"
+                                                style={{ width: `${survey._count.links > 0 ? Math.min((completedCount / survey._count.links) * 100, 100) : 0}%` }}
+                                            />
+                                        </div>
+                                        <span className="text-xs text-muted-foreground min-w-[32px] text-right">
+                                            {survey._count.links > 0 ? Math.round((completedCount / survey._count.links) * 100) : 0}%
+                                        </span>
                                     </div>
                                 </div>
 
-                                {/* Middle Content: Description + Info Box */}
-                                <div className="flex gap-4 flex-1 min-h-0">
-                                    {/* Left: Description or placeholder */}
-                                    <div className="w-[45%] relative rounded-xl overflow-hidden bg-[#1B1B1B] flex items-center justify-center p-4">
-                                        {survey.description ? (
-                                            <p className="text-sm text-muted-foreground line-clamp-6">{survey.description}</p>
-                                        ) : (
-                                            <div className="flex flex-col items-center justify-center text-center">
-                                                <MessageSquare className="w-8 h-8 text-[#6E6E6E] mb-2" />
-                                                <span className="text-sm text-[#6E6E6E]">Brak opisu</span>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* Right: Info Box */}
-                                    <div className="flex-1 bg-[#1B1B1B] rounded-xl p-4 flex flex-col justify-between">
-                                        {/* Responses Badge */}
-                                        <div className="flex justify-between items-center mb-1">
-                                            <span className="text-sm text-muted-foreground">Odpowiedzi</span>
-                                            <span
-                                                className={cn("text-[14px] font-bold px-2 py-0.5 rounded-full min-w-[24px] text-center",
-                                                    completedCount === 0 ? 'bg-[#2A2A2A] text-zinc-500' : 'bg-[#91E8B2] text-black'
-                                                )}
-                                            >
-                                                {completedCount}
-                                            </span>
-                                        </div>
-
-                                        {/* Stats Grid */}
-                                        <div className="space-y-3 py-2">
-                                            <div className="flex justify-between items-end">
-                                                <span className="text-sm text-muted-foreground">Pytania</span>
-                                                <span className="text-base font-medium">{survey._count.questions}</span>
-                                            </div>
-                                            <div className="flex justify-between items-end">
-                                                <span className="text-sm text-muted-foreground">Wysłane linki</span>
-                                                <span className="text-base font-medium">{survey._count.links}</span>
-                                            </div>
-                                            <div className="flex justify-between items-end">
-                                                <span className="text-sm text-muted-foreground">Ukończone</span>
-                                                <span className="text-base font-medium text-[#91E8B2]">{completedCount}</span>
-                                            </div>
-                                        </div>
-
-                                        {/* Progress section */}
-                                        <div className="space-y-1.5 pt-3 border-t border-white/5 mt-auto">
-                                            <div className="flex justify-between items-end">
-                                                <span className="text-sm text-muted-foreground">Postęp</span>
-                                                <span className="text-base font-medium">
-                                                    {survey._count.links > 0 ? Math.round((completedCount / survey._count.links) * 100) : 0}%
-                                                </span>
-                                            </div>
-
-                                            {/* Progress Bar */}
-                                            <div className="h-2 bg-[#252525] rounded-full mt-3 overflow-hidden w-full">
-                                                <div
-                                                    className="h-full bg-[#91E8B2] rounded-full relative"
-                                                    style={{ width: `${survey._count.links > 0 ? Math.min((completedCount / survey._count.links) * 100, 100) : 0}%` }}
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Bottom Actions - like rooms */}
-                                <div className="flex gap-3 mt-auto">
+                                {/* Bottom Actions */}
+                                <div className="flex gap-2">
                                     <Button
                                         onClick={() => handleViewSurvey(survey)}
-                                        className="flex-1 bg-[#222222] hover:bg-[#2a2a2a] text-zinc-300 hover:text-white text-sm font-medium py-3 rounded-lg text-center transition-colors h-[48px]"
+                                        className="flex-1 bg-[#222222] hover:bg-[#2a2a2a] text-zinc-300 hover:text-white text-sm font-medium rounded-lg transition-colors h-[40px]"
                                     >
-                                        Szczegóły ankiety
+                                        Szczegóły
                                     </Button>
                                     <Button
                                         variant="secondary"
                                         onClick={() => handleGenerateLink(survey)}
-                                        className="px-5 bg-[#1B1B1B] hover:bg-[#252525] rounded-lg text-muted-foreground hover:text-white transition-colors flex items-center gap-2 text-sm font-medium h-[48px]"
+                                        className="px-4 bg-[#1B1B1B] hover:bg-[#252525] rounded-lg text-muted-foreground hover:text-white transition-colors flex items-center gap-1.5 text-sm font-medium h-[40px]"
                                     >
-                                        <Send className="w-5 h-5" />
+                                        <Send className="w-4 h-4" />
                                         Wyślij
                                     </Button>
                                     <Button
                                         variant="secondary"
                                         onClick={() => handleDeleteSurvey(survey.id)}
-                                        className="px-5 bg-[#1B1B1B] hover:bg-[#252525] rounded-lg text-muted-foreground hover:text-red-400 transition-colors flex items-center gap-2 text-sm font-medium h-[48px]"
+                                        className="px-3 bg-[#1B1B1B] hover:bg-[#252525] rounded-lg text-muted-foreground hover:text-red-400 transition-colors h-[40px]"
                                     >
-                                        <Trash2 className="w-5 h-5" />
-                                        Usuń
+                                        <Trash2 className="w-4 h-4" />
                                     </Button>
                                 </div>
                             </Card>
