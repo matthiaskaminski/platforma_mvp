@@ -192,6 +192,7 @@ model Project {
   contacts       Contact[]
   conversations  Conversation[]
   surveys        Survey[]
+  styleQuizzes   StyleQuiz[]
   moodboards     Moodboard[]
   sprints        Sprint[]        @relation("ProjectSprints")
   tasks          Task[]          @relation("ProjectTasks")
@@ -478,6 +479,8 @@ model SurveyResponse {
 enum NotificationType {
   SURVEY_COMPLETED @map("survey_completed")
   SURVEY_EXPIRED   @map("survey_expired")
+  STYLE_COMPLETED  @map("style_completed")
+  STYLE_EXPIRED    @map("style_expired")
   CLIENT_RESPONSE  @map("client_response")
   SYSTEM           @map("system")
 }
@@ -600,4 +603,114 @@ model ServiceItem {
   @@index([category])
   @@index([planningStatus])
   @@map("service_items")
+}
+
+// Style Quiz - Interior style preferences with images
+enum StyleQuizStatus {
+  DRAFT     @map("draft")
+  ACTIVE    @map("active")
+  COMPLETED @map("completed")
+  EXPIRED   @map("expired")
+}
+
+enum StyleLinkStatus {
+  ACTIVE    @map("active")
+  COMPLETED @map("completed")
+  EXPIRED   @map("expired")
+}
+
+model StyleQuiz {
+  id        String  @id @default(uuid()) @db.Uuid
+  projectId String  @map("project_id") @db.Uuid
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  title           String
+  description     String?
+  instruction     String? // Instruction text for client (e.g. "Select images that match your style")
+  logoUrl         String? @map("logo_url") // Designer's logo
+  status          StyleQuizStatus @default(DRAFT)
+
+  categories StyleCategory[]
+  links      StyleLink[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([projectId])
+  @@map("style_quizzes")
+}
+
+model StyleCategory {
+  id          String    @id @default(uuid()) @db.Uuid
+  styleQuizId String    @map("style_quiz_id") @db.Uuid
+  styleQuiz   StyleQuiz @relation(fields: [styleQuizId], references: [id], onDelete: Cascade)
+
+  name        String // e.g. "Skandynawski", "Industrialny", "Nowoczesny"
+  description String?
+  order       Int     @default(0)
+
+  images StyleImage[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([styleQuizId])
+  @@map("style_categories")
+}
+
+model StyleImage {
+  id         String        @id @default(uuid()) @db.Uuid
+  categoryId String        @map("category_id") @db.Uuid
+  category   StyleCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  imageUrl String @map("image_url")
+  caption  String?
+  order    Int    @default(0)
+
+  selections StyleSelection[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([categoryId])
+  @@map("style_images")
+}
+
+model StyleLink {
+  id          String    @id @default(uuid()) @db.Uuid
+  styleQuizId String    @map("style_quiz_id") @db.Uuid
+  styleQuiz   StyleQuiz @relation(fields: [styleQuizId], references: [id], onDelete: Cascade)
+
+  token       String  @unique
+  clientName  String? @map("client_name")
+  clientEmail String? @map("client_email")
+
+  status      StyleLinkStatus @default(ACTIVE)
+  expiresAt   DateTime        @map("expires_at")
+  completedAt DateTime?       @map("completed_at")
+
+  selections StyleSelection[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([styleQuizId])
+  @@index([token])
+  @@map("style_links")
+}
+
+model StyleSelection {
+  id     String    @id @default(uuid()) @db.Uuid
+  linkId String    @map("link_id") @db.Uuid
+  link   StyleLink @relation(fields: [linkId], references: [id], onDelete: Cascade)
+
+  imageId String     @map("image_id") @db.Uuid
+  image   StyleImage @relation(fields: [imageId], references: [id], onDelete: Cascade)
+
+  isSelected Boolean @default(true) @map("is_selected")
+  comment    String? // Client's comment for this specific image
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([linkId, imageId])
+  @@index([linkId])
+  @@index([imageId])
+  @@map("style_selections")
 }
