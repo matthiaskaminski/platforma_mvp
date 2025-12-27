@@ -114,7 +114,7 @@ export function SurveyDetailModal({ isOpen, onClose, survey, onGenerateLink }: S
                             <div className="flex items-center gap-3 mb-2">
                                 <h2 className="text-xl font-semibold text-white">{survey.title}</h2>
                                 <span className={cn(
-                                    "px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider border",
+                                    "px-2 py-0.5 rounded text-[14px] uppercase font-bold tracking-wider border",
                                     status.color,
                                     status.bg
                                 )}>
@@ -122,14 +122,14 @@ export function SurveyDetailModal({ isOpen, onClose, survey, onGenerateLink }: S
                                 </span>
                             </div>
                             {survey.description && (
-                                <p className="text-sm text-muted-foreground">{survey.description}</p>
+                                <p className="text-[14px] text-muted-foreground">{survey.description}</p>
                             )}
-                            <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+                            <div className="flex items-center gap-4 mt-2 text-[14px] text-muted-foreground">
                                 <div className="flex items-center gap-1">
-                                    <Calendar className="w-3.5 h-3.5" />
+                                    <Calendar className="w-4 h-4" />
                                     {formatDate(survey.createdAt)}
                                 </div>
-                                <div>{survey.questions.length} pytan</div>
+                                <div>{survey.questions.length} pytań</div>
                                 <div>{completedLinks.length} odpowiedzi</div>
                             </div>
                         </div>
@@ -143,7 +143,7 @@ export function SurveyDetailModal({ isOpen, onClose, survey, onGenerateLink }: S
                         <button
                             onClick={() => setActiveTab('questions')}
                             className={cn(
-                                "px-4 py-2 text-sm font-medium rounded-lg transition-colors",
+                                "px-4 py-2 text-[14px] font-medium rounded-lg transition-colors",
                                 activeTab === 'questions'
                                     ? "bg-white text-black"
                                     : "text-muted-foreground hover:text-white"
@@ -154,7 +154,7 @@ export function SurveyDetailModal({ isOpen, onClose, survey, onGenerateLink }: S
                         <button
                             onClick={() => setActiveTab('responses')}
                             className={cn(
-                                "px-4 py-2 text-sm font-medium rounded-lg transition-colors",
+                                "px-4 py-2 text-[14px] font-medium rounded-lg transition-colors",
                                 activeTab === 'responses'
                                     ? "bg-white text-black"
                                     : "text-muted-foreground hover:text-white"
@@ -175,28 +175,28 @@ export function SurveyDetailModal({ isOpen, onClose, survey, onGenerateLink }: S
                                     className="bg-[#1B1B1B] rounded-lg border border-white/5 p-4"
                                 >
                                     <div className="flex items-start gap-3">
-                                        <span className="text-sm text-muted-foreground w-6 shrink-0">
+                                        <span className="text-[14px] text-muted-foreground w-6 shrink-0">
                                             {index + 1}.
                                         </span>
                                         <div className="flex-1">
-                                            <p className="text-white font-medium">{q.question}</p>
+                                            <p className="text-white font-medium text-[14px]">{q.question}</p>
                                             <div className="flex items-center gap-2 mt-2">
                                                 {q.category && (
-                                                    <span className="text-xs text-muted-foreground px-2 py-0.5 bg-[#252525] rounded">
+                                                    <span className="text-[14px] text-muted-foreground px-2 py-0.5 bg-[#252525] rounded">
                                                         {q.category}
                                                     </span>
                                                 )}
-                                                <span className="text-xs text-muted-foreground px-2 py-0.5 bg-[#252525] rounded">
+                                                <span className="text-[14px] text-muted-foreground px-2 py-0.5 bg-[#252525] rounded">
                                                     {questionTypeLabels[q.type]}
                                                 </span>
                                                 {q.isRequired && (
-                                                    <span className="text-xs text-red-400">*Wymagane</span>
+                                                    <span className="text-[14px] text-red-400">*Wymagane</span>
                                                 )}
                                             </div>
                                             {q.options && q.options.length > 0 && (
                                                 <div className="mt-3 space-y-1">
                                                     {q.options.map((opt: string, idx: number) => (
-                                                        <div key={idx} className="flex items-center gap-2 text-sm text-muted-foreground">
+                                                        <div key={idx} className="flex items-center gap-2 text-[14px] text-muted-foreground">
                                                             <div className="w-3 h-3 rounded-full border border-white/20" />
                                                             {opt}
                                                         </div>
@@ -213,8 +213,8 @@ export function SurveyDetailModal({ isOpen, onClose, survey, onGenerateLink }: S
                             {survey.links.length === 0 ? (
                                 <div className="text-center py-12">
                                     <Link2 className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
-                                    <p className="text-muted-foreground">
-                                        Brak wyslanych linkow. Wygeneruj link i wyslij do klienta.
+                                    <p className="text-muted-foreground text-[14px]">
+                                        Brak wysłanych linków. Wygeneruj link i wyślij do klienta.
                                     </p>
                                 </div>
                             ) : (
@@ -241,31 +241,31 @@ export function SurveyDetailModal({ isOpen, onClose, survey, onGenerateLink }: S
                                                     <div>
                                                         <div className="flex items-center gap-2">
                                                             <User className="w-4 h-4 text-muted-foreground" />
-                                                            <span className="font-medium text-white">
+                                                            <span className="font-medium text-white text-[14px]">
                                                                 {link.clientName || 'Klient'}
                                                             </span>
-                                                            <span className={cn("text-xs", linkStatus.color)}>
+                                                            <span className={cn("text-[14px]", linkStatus.color)}>
                                                                 {linkStatus.label}
                                                             </span>
                                                         </div>
                                                         {link.clientEmail && (
-                                                            <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
-                                                                <Mail className="w-3 h-3" />
+                                                            <div className="flex items-center gap-1 text-[14px] text-muted-foreground mt-1">
+                                                                <Mail className="w-4 h-4" />
                                                                 {link.clientEmail}
                                                             </div>
                                                         )}
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-3">
-                                                    <div className="text-xs text-muted-foreground">
+                                                    <div className="text-[14px] text-muted-foreground">
                                                         {link.completedAt ? (
                                                             <span className="flex items-center gap-1">
-                                                                <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
+                                                                <CheckCircle2 className="w-4 h-4 text-green-500" />
                                                                 {formatDate(link.completedAt)}
                                                             </span>
                                                         ) : (
                                                             <span className="flex items-center gap-1">
-                                                                <Clock className="w-3.5 h-3.5" />
+                                                                <Clock className="w-4 h-4" />
                                                                 Wygasa: {formatDate(link.expiresAt)}
                                                             </span>
                                                         )}
@@ -291,12 +291,12 @@ export function SurveyDetailModal({ isOpen, onClose, survey, onGenerateLink }: S
                                             {/* Link Responses */}
                                             {isExpanded && link.responses && link.responses.length > 0 && (
                                                 <div className="border-t border-white/5 p-4 bg-[#151515]">
-                                                    <h4 className="text-sm font-medium text-white mb-3">Odpowiedzi</h4>
+                                                    <h4 className="text-[14px] font-medium text-white mb-3">Odpowiedzi</h4>
                                                     <div className="space-y-3">
                                                         {survey.questions.map((q: any, idx: number) => {
                                                             const answer = getResponseForQuestion(link.responses, q.id);
                                                             return (
-                                                                <div key={q.id} className="text-sm">
+                                                                <div key={q.id} className="text-[14px]">
                                                                     <p className="text-muted-foreground mb-1">
                                                                         {idx + 1}. {q.question}
                                                                     </p>
@@ -312,8 +312,8 @@ export function SurveyDetailModal({ isOpen, onClose, survey, onGenerateLink }: S
 
                                             {isExpanded && (!link.responses || link.responses.length === 0) && link.status !== 'COMPLETED' && (
                                                 <div className="border-t border-white/5 p-4 bg-[#151515] text-center">
-                                                    <p className="text-sm text-muted-foreground">
-                                                        Oczekiwanie na odpowiedz...
+                                                    <p className="text-[14px] text-muted-foreground">
+                                                        Oczekiwanie na odpowiedź...
                                                     </p>
                                                 </div>
                                             )}

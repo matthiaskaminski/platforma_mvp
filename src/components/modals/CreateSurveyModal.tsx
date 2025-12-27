@@ -198,10 +198,10 @@ export function CreateSurveyModal({ isOpen, onClose, projectId, onSuccess }: Cre
                         <h2 className="text-xl font-semibold text-white">
                             {step === 'info' ? 'Nowa ankieta' : 'Dodaj pytania'}
                         </h2>
-                        <p className="text-sm text-muted-foreground mt-1">
+                        <p className="text-[14px] text-muted-foreground mt-1">
                             {step === 'info'
-                                ? 'Podaj nazwe i opis ankiety'
-                                : 'Wybierz gotowe pytania lub dodaj wlasne'
+                                ? 'Podaj nazwę i opis ankiety'
+                                : 'Wybierz gotowe pytania lub dodaj własne'
                             }
                         </p>
                     </div>
@@ -215,26 +215,26 @@ export function CreateSurveyModal({ isOpen, onClose, projectId, onSuccess }: Cre
                     {step === 'info' ? (
                         <div className="space-y-6 max-w-lg">
                             <div>
-                                <label className="block text-sm font-medium text-white mb-2">
+                                <label className="block text-[14px] font-medium text-white mb-2">
                                     Nazwa ankiety *
                                 </label>
                                 <Input
                                     value={title}
                                     onChange={(e) => setTitle(e.target.value)}
-                                    placeholder="np. Ankieta funkcjonalna - Apartament Mokotow"
-                                    className="bg-[#1B1B1B] border-white/10"
+                                    placeholder="np. Ankieta funkcjonalna - Apartament Mokotów"
+                                    className="bg-[#1B1B1B] border-white/10 text-[14px]"
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-white mb-2">
+                                <label className="block text-[14px] font-medium text-white mb-2">
                                     Opis (opcjonalnie)
                                 </label>
                                 <textarea
                                     value={description}
                                     onChange={(e) => setDescription(e.target.value)}
-                                    placeholder="Krotki opis ankiety dla klienta..."
+                                    placeholder="Krótki opis ankiety dla klienta..."
                                     rows={3}
-                                    className="w-full px-4 py-3 bg-[#1B1B1B] border border-white/10 rounded-lg text-white placeholder:text-muted-foreground focus:outline-none focus:border-white/20 resize-none"
+                                    className="w-full px-4 py-3 bg-[#1B1B1B] border border-white/10 rounded-lg text-white text-[14px] placeholder:text-muted-foreground focus:outline-none focus:border-white/20 resize-none"
                                 />
                             </div>
                         </div>
@@ -242,7 +242,7 @@ export function CreateSurveyModal({ isOpen, onClose, projectId, onSuccess }: Cre
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                             {/* Preset Questions */}
                             <div>
-                                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-4">
+                                <h3 className="text-[14px] font-medium text-muted-foreground uppercase tracking-wider mb-4">
                                     Gotowe pytania
                                 </h3>
                                 <div className="space-y-2">
@@ -254,9 +254,9 @@ export function CreateSurveyModal({ isOpen, onClose, projectId, onSuccess }: Cre
                                             >
                                                 <div className="flex items-center gap-2">
                                                     {categoryIcons[category.category] || <Settings2 className="w-4 h-4" />}
-                                                    <span className="font-medium text-white">{category.category}</span>
-                                                    <span className="text-xs text-muted-foreground">
-                                                        ({category.questions.length} pytan)
+                                                    <span className="font-medium text-white text-[14px]">{category.category}</span>
+                                                    <span className="text-[14px] text-muted-foreground">
+                                                        ({category.questions.length} pytań)
                                                     </span>
                                                 </div>
                                                 {expandedCategories.has(key) ? (
@@ -278,7 +278,7 @@ export function CreateSurveyModal({ isOpen, onClose, projectId, onSuccess }: Cre
                                                                 onClick={() => !isAdded && addPresetQuestion(category.category, q)}
                                                                 disabled={isAdded}
                                                                 className={cn(
-                                                                    "w-full text-left p-2 rounded-md text-sm transition-colors",
+                                                                    "w-full text-left p-2 rounded-md text-[14px] transition-colors",
                                                                     isAdded
                                                                         ? "bg-[#91E8B2]/10 text-[#91E8B2] cursor-default"
                                                                         : "bg-[#252525] hover:bg-[#303030] text-white"
@@ -303,24 +303,24 @@ export function CreateSurveyModal({ isOpen, onClose, projectId, onSuccess }: Cre
                             {/* Selected Questions */}
                             <div>
                                 <div className="flex items-center justify-between mb-4">
-                                    <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+                                    <h3 className="text-[14px] font-medium text-muted-foreground uppercase tracking-wider">
                                         Wybrane pytania ({questions.length})
                                     </h3>
                                     <Button
                                         variant="ghost"
                                         size="sm"
                                         onClick={addCustomQuestion}
-                                        className="text-xs"
+                                        className="text-[14px]"
                                     >
-                                        <Plus className="w-3.5 h-3.5 mr-1" />
-                                        Wlasne pytanie
+                                        <Plus className="w-4 h-4 mr-1" />
+                                        Własne pytanie
                                     </Button>
                                 </div>
 
                                 {questions.length === 0 ? (
                                     <div className="bg-[#1B1B1B] rounded-lg border border-white/5 p-8 text-center">
-                                        <p className="text-muted-foreground text-sm">
-                                            Wybierz pytania z listy lub dodaj wlasne
+                                        <p className="text-muted-foreground text-[14px]">
+                                            Wybierz pytania z listy lub dodaj własne
                                         </p>
                                     </div>
                                 ) : (
@@ -333,25 +333,25 @@ export function CreateSurveyModal({ isOpen, onClose, projectId, onSuccess }: Cre
                                                 <div className="flex items-start gap-3">
                                                     <div className="flex items-center gap-2 shrink-0">
                                                         <GripVertical className="w-4 h-4 text-muted-foreground/50" />
-                                                        <span className="text-xs text-muted-foreground w-5">{index + 1}.</span>
+                                                        <span className="text-[14px] text-muted-foreground w-5">{index + 1}.</span>
                                                     </div>
                                                     <div className="flex-1 min-w-0">
                                                         {isQuestionFromPreset(q) ? (
-                                                            <p className="text-sm text-white">{q.question}</p>
+                                                            <p className="text-[14px] text-white">{q.question}</p>
                                                         ) : (
                                                             <Input
                                                                 value={q.question}
                                                                 onChange={(e) => updateQuestion(q.id, { question: e.target.value })}
-                                                                placeholder="Tresc pytania..."
-                                                                className="bg-[#252525] border-white/10 text-sm mb-2"
+                                                                placeholder="Treść pytania..."
+                                                                className="bg-[#252525] border-white/10 text-[14px] mb-2"
                                                             />
                                                         )}
 
                                                         <div className="flex items-center gap-2 mt-2">
-                                                            <span className="text-xs text-muted-foreground px-2 py-0.5 bg-[#252525] rounded">
+                                                            <span className="text-[14px] text-muted-foreground px-2 py-0.5 bg-[#252525] rounded">
                                                                 {q.category}
                                                             </span>
-                                                            <span className="text-xs text-muted-foreground px-2 py-0.5 bg-[#252525] rounded">
+                                                            <span className="text-[14px] text-muted-foreground px-2 py-0.5 bg-[#252525] rounded">
                                                                 {questionTypeLabels[q.type]}
                                                             </span>
                                                         </div>
@@ -359,23 +359,23 @@ export function CreateSurveyModal({ isOpen, onClose, projectId, onSuccess }: Cre
                                                         {/* Options editor for custom questions */}
                                                         {!isQuestionFromPreset(q) && (q.type === 'SINGLE_CHOICE' || q.type === 'MULTIPLE_CHOICE') && (
                                                             <div className="mt-3 space-y-2">
-                                                                <p className="text-xs text-muted-foreground">Opcje odpowiedzi:</p>
+                                                                <p className="text-[14px] text-muted-foreground">Opcje odpowiedzi:</p>
                                                                 {q.options.map((opt, optIdx) => (
                                                                     <div key={optIdx} className="flex items-center gap-2">
                                                                         <Input
                                                                             value={opt}
                                                                             onChange={(e) => updateOption(q.id, optIdx, e.target.value)}
                                                                             placeholder={`Opcja ${optIdx + 1}`}
-                                                                            className="bg-[#252525] border-white/10 text-xs h-8"
+                                                                            className="bg-[#252525] border-white/10 text-[14px] h-9"
                                                                         />
                                                                         {q.options.length > 1 && (
                                                                             <Button
                                                                                 variant="ghost"
                                                                                 size="icon"
                                                                                 onClick={() => removeOption(q.id, optIdx)}
-                                                                                className="h-8 w-8 shrink-0"
+                                                                                className="h-9 w-9 shrink-0"
                                                                             >
-                                                                                <X className="w-3 h-3" />
+                                                                                <X className="w-4 h-4" />
                                                                             </Button>
                                                                         )}
                                                                     </div>
@@ -384,10 +384,10 @@ export function CreateSurveyModal({ isOpen, onClose, projectId, onSuccess }: Cre
                                                                     variant="ghost"
                                                                     size="sm"
                                                                     onClick={() => addOption(q.id)}
-                                                                    className="text-xs h-7"
+                                                                    className="text-[14px] h-8"
                                                                 >
-                                                                    <Plus className="w-3 h-3 mr-1" />
-                                                                    Dodaj opcje
+                                                                    <Plus className="w-4 h-4 mr-1" />
+                                                                    Dodaj opcję
                                                                 </Button>
                                                             </div>
                                                         )}
