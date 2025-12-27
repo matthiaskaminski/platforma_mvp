@@ -228,7 +228,7 @@ export default function SurveysClient({ initialSurveys, projects, initialProject
                 </Card>
             ) : (
                 <div className={cn(
-                    "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 w-full flex-1 min-h-0 overflow-y-auto pr-1",
+                    "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 w-full overflow-y-auto pr-1 auto-rows-min",
                     surveys.length === 0 && "flex items-center justify-center"
                 )}>
                     {surveys.map(survey => {
