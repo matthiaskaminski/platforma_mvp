@@ -1,4 +1,3 @@
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -48,54 +47,54 @@ enum RoomType {
 
 // Product planning status (lifecycle)
 enum ProductPlanningStatus {
-  LIKED         @map("liked")
-  MAIN          @map("main")
-  VARIANT       @map("variant")
-  APPROVED      @map("approved")
-  REJECTED      @map("rejected")
+  LIKED    @map("liked")
+  MAIN     @map("main")
+  VARIANT  @map("variant")
+  APPROVED @map("approved")
+  REJECTED @map("rejected")
 }
 
 // Product fulfillment status (after approval)
 enum ProductStatus {
-  TO_ORDER      @map("to_order")
-  ORDERED       @map("ordered")
-  PAID          @map("paid")
-  DELIVERED     @map("delivered")
-  RETURNED      @map("returned")
+  TO_ORDER  @map("to_order")
+  ORDERED   @map("ordered")
+  PAID      @map("paid")
+  DELIVERED @map("delivered")
+  RETURNED  @map("returned")
 }
 
 // Service category type
 enum ServiceCategory {
-  MATERIAL      @map("material")
-  LABOR         @map("labor")
+  MATERIAL @map("material")
+  LABOR    @map("labor")
 }
 
 // Service planning status (lifecycle)
 enum ServicePlanningStatus {
-  DRAFT         @map("draft")       // Draft - not in budget
-  PLANNED       @map("planned")     // Planned - in estimated budget
-  APPROVED      @map("approved")    // Approved - in real budget
-  REJECTED      @map("rejected")    // Rejected
+  DRAFT    @map("draft") // Draft - not in budget
+  PLANNED  @map("planned") // Planned - in estimated budget
+  APPROVED @map("approved") // Approved - in real budget
+  REJECTED @map("rejected") // Rejected
 }
 
 // Material fulfillment status (after approval)
 enum MaterialStatus {
-  TO_ORDER        @map("to_order")        // To order
-  ORDERED         @map("ordered")         // Ordered
-  TO_PAY          @map("to_pay")          // To pay
-  PAID            @map("paid")            // Paid
-  ADVANCE_PAID    @map("advance_paid")    // Advance paid
-  RECEIVED        @map("received")        // Received
-  COMPLETED       @map("completed")       // Completed
+  TO_ORDER     @map("to_order") // To order
+  ORDERED      @map("ordered") // Ordered
+  TO_PAY       @map("to_pay") // To pay
+  PAID         @map("paid") // Paid
+  ADVANCE_PAID @map("advance_paid") // Advance paid
+  RECEIVED     @map("received") // Received
+  COMPLETED    @map("completed") // Completed
 }
 
 // Labor fulfillment status (after approval)
 enum LaborStatus {
-  TO_ORDER        @map("to_order")        // To order
-  ORDERED         @map("ordered")         // Ordered
-  PAID            @map("paid")            // Paid
-  IN_PROGRESS     @map("in_progress")     // In progress
-  COMPLETED       @map("completed")       // Completed
+  TO_ORDER    @map("to_order") // To order
+  ORDERED     @map("ordered") // Ordered
+  PAID        @map("paid") // Paid
+  IN_PROGRESS @map("in_progress") // In progress
+  COMPLETED   @map("completed") // Completed
 }
 
 enum RoomStatus {
@@ -113,167 +112,167 @@ model Profile {
   role        UserRole @default(DESIGNER)
 
   // New onboarding fields
-  studioName  String?  @map("studio_name")
-  nip         String?
+  studioName String? @map("studio_name")
+  nip        String?
 
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  projects    Project[]
-  wishlists   Wishlist[]
-  gmailToken  GmailToken?
+  projects   Project[]
+  wishlists  Wishlist[]
+  gmailToken GmailToken?
 
   @@index([email])
   @@map("profiles")
 }
 
 model GmailToken {
-  id            String   @id @default(uuid()) @db.Uuid
-  profileId     String   @unique @map("profile_id") @db.Uuid
-  profile       Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  id        String  @id @default(uuid()) @db.Uuid
+  profileId String  @unique @map("profile_id") @db.Uuid
+  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
 
-  accessToken   String   @map("access_token")
-  refreshToken  String   @map("refresh_token")
-  expiresAt     DateTime @map("expires_at")
-  gmailEmail    String   @map("gmail_email")
+  accessToken  String   @map("access_token")
+  refreshToken String   @map("refresh_token")
+  expiresAt    DateTime @map("expires_at")
+  gmailEmail   String   @map("gmail_email")
 
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("gmail_tokens")
 }
 
 model Client {
-  id          String   @id @default(uuid()) @db.Uuid
+  id          String  @id @default(uuid()) @db.Uuid
   email       String
-  fullName    String?  @map("full_name")
-  phoneNumber String?  @map("phone_number")
+  fullName    String? @map("full_name")
+  phoneNumber String? @map("phone_number")
   nip         String?
 
-  projectId   String   @map("project_id") @db.Uuid
-  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId String  @map("project_id") @db.Uuid
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@index([projectId])
   @@map("clients")
 }
 
 model Project {
-  id          String   @id @default(uuid()) @db.Uuid
-  designerId  String   @map("designer_id") @db.Uuid
-  designer    Profile  @relation(fields: [designerId], references: [id], onDelete: Cascade)
+  id         String  @id @default(uuid()) @db.Uuid
+  designerId String  @map("designer_id") @db.Uuid
+  designer   Profile @relation(fields: [designerId], references: [id], onDelete: Cascade)
 
   name        String
   description String?
   status      ProjectStatus @default(DRAFT)
 
   // New visual fields
-  icon        String?
-  color       String?
-  coverImage  String?  @map("cover_image")
+  icon       String?
+  color      String?
+  coverImage String? @map("cover_image")
 
   // Address / Details
-  address     String?
-  city        String?
-  postalCode  String?  @map("postal_code")
+  address    String?
+  city       String?
+  postalCode String? @map("postal_code")
 
   totalArea   Float?   @map("total_area")
   floorsCount Int?     @map("floors_count")
   roomsCount  Int?     @map("rooms_count")
   budgetGoal  Decimal? @map("budget_goal") @db.Decimal(12, 2)
 
-  startDate   DateTime? @map("start_date")
-  deadline    DateTime?
+  startDate DateTime? @map("start_date")
+  deadline  DateTime?
 
   // Relations
-  rooms       Room[]
-  clients     Client[]
-  contacts    Contact[]
-  conversations Conversation[]
-  surveys     Survey[]
-  moodboards  Moodboard[]
-  sprints     Sprint[]    @relation("ProjectSprints")
-  tasks       Task[]      @relation("ProjectTasks")
-  documents   Document[]  @relation("ProjectDocuments")
+  rooms          Room[]
+  clients        Client[]
+  contacts       Contact[]
+  conversations  Conversation[]
+  surveys        Survey[]
+  moodboards     Moodboard[]
+  sprints        Sprint[]        @relation("ProjectSprints")
+  tasks          Task[]          @relation("ProjectTasks")
+  documents      Document[]      @relation("ProjectDocuments")
   calendarEvents CalendarEvent[]
-  serviceItems ServiceItem[]
+  serviceItems   ServiceItem[]
 
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@index([designerId])
   @@map("projects")
 }
 
 model Room {
-  id          String   @id @default(uuid()) @db.Uuid
-  projectId   String   @map("project_id") @db.Uuid
-  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  id        String  @id @default(uuid()) @db.Uuid
+  projectId String  @map("project_id") @db.Uuid
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
-  name        String
-  type        RoomType @default(OTHER)
-  status      RoomStatus @default(NOT_STARTED)
-  area        Float?
-  floorNumber Int?     @map("floor_number")
-  budgetAllocated Decimal? @map("budget_allocated") @db.Decimal(12, 2)
-  coverImage  String?  @map("cover_image")
+  name            String
+  type            RoomType   @default(OTHER)
+  status          RoomStatus @default(NOT_STARTED)
+  area            Float?
+  floorNumber     Int?       @map("floor_number")
+  budgetAllocated Decimal?   @map("budget_allocated") @db.Decimal(12, 2)
+  coverImage      String?    @map("cover_image")
 
   // Relations
-  productItems ProductItem[]
+  productItems  ProductItem[]
   galleryImages GalleryImage[]
-  tasks       Task[]      @relation("RoomTasks")
-  sprints     Sprint[]    @relation("RoomSprints")
-  notes       Note[]
-  serviceItems ServiceItem[]
+  tasks         Task[]         @relation("RoomTasks")
+  sprints       Sprint[]       @relation("RoomSprints")
+  notes         Note[]
+  serviceItems  ServiceItem[]
 
   @@index([projectId])
   @@map("rooms")
 }
 
 model Wishlist {
-  id          String   @id @default(uuid()) @db.Uuid
-  designerId  String   @map("designer_id") @db.Uuid
-  designer    Profile  @relation(fields: [designerId], references: [id], onDelete: Cascade)
-  name        String
+  id         String  @id @default(uuid()) @db.Uuid
+  designerId String  @map("designer_id") @db.Uuid
+  designer   Profile @relation(fields: [designerId], references: [id], onDelete: Cascade)
+  name       String
 
   // Relations
   productItems ProductItem[]
 
-  createdAt   DateTime @default(now()) @map("created_at")
+  createdAt DateTime @default(now()) @map("created_at")
 
   @@index([designerId])
   @@map("wishlists")
 }
 
 model ProductItem {
-  id          String   @id @default(uuid()) @db.Uuid
+  id String @id @default(uuid()) @db.Uuid
 
-  wishlistId  String?  @map("wishlist_id") @db.Uuid
-  wishlist    Wishlist? @relation(fields: [wishlistId], references: [id], onDelete: SetNull)
+  wishlistId String?   @map("wishlist_id") @db.Uuid
+  wishlist   Wishlist? @relation(fields: [wishlistId], references: [id], onDelete: SetNull)
 
-  roomId      String?  @map("room_id") @db.Uuid
-  room        Room?    @relation(fields: [roomId], references: [id], onDelete: SetNull)
+  roomId String? @map("room_id") @db.Uuid
+  room   Room?   @relation(fields: [roomId], references: [id], onDelete: SetNull)
 
-  name        String
-  category    String?
-  supplier    String?
-  url         String?
-  imageUrl    String?  @map("image_url")
+  name     String
+  category String?
+  supplier String?
+  url      String?
+  imageUrl String? @map("image_url")
 
-  price       Decimal  @default(0) @db.Decimal(12, 2)
-  quantity    Int      @default(1)
-  paidAmount  Decimal  @default(0) @map("paid_amount") @db.Decimal(12, 2)
+  price      Decimal @default(0) @db.Decimal(12, 2)
+  quantity   Int     @default(1)
+  paidAmount Decimal @default(0) @map("paid_amount") @db.Decimal(12, 2)
 
   planningStatus ProductPlanningStatus @default(LIKED) @map("planning_status")
-  status      ProductStatus @default(TO_ORDER)
-  isInCart    Boolean  @default(false) @map("is_in_cart")
+  status         ProductStatus         @default(TO_ORDER)
+  isInCart       Boolean               @default(false) @map("is_in_cart")
 
-  notes       String?
+  notes String?
 
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@index([wishlistId])
   @@index([roomId])
@@ -282,25 +281,25 @@ model ProductItem {
 }
 
 model Sprint {
-  id          String   @id @default(uuid()) @db.Uuid
-  projectId   String   @map("project_id") @db.Uuid
-  project     Project  @relation("ProjectSprints", fields: [projectId], references: [id], onDelete: Cascade)
+  id        String  @id @default(uuid()) @db.Uuid
+  projectId String  @map("project_id") @db.Uuid
+  project   Project @relation("ProjectSprints", fields: [projectId], references: [id], onDelete: Cascade)
 
-  roomId      String?  @map("room_id") @db.Uuid
-  room        Room?    @relation("RoomSprints", fields: [roomId], references: [id], onDelete: SetNull)
+  roomId String? @map("room_id") @db.Uuid
+  room   Room?   @relation("RoomSprints", fields: [roomId], references: [id], onDelete: SetNull)
 
-  name        String
-  goal        String?
-  status      SprintStatus @default(PLANNED)
+  name   String
+  goal   String?
+  status SprintStatus @default(PLANNED)
 
-  startDate   DateTime? @map("start_date")
-  endDate     DateTime? @map("end_date")
+  startDate DateTime? @map("start_date")
+  endDate   DateTime? @map("end_date")
 
   // Relations
-  tasks       Task[]
+  tasks Task[]
 
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@index([projectId])
   @@index([roomId])
@@ -308,26 +307,26 @@ model Sprint {
 }
 
 model Task {
-  id          String   @id @default(uuid()) @db.Uuid
-  projectId   String   @map("project_id") @db.Uuid
-  project     Project  @relation("ProjectTasks", fields: [projectId], references: [id], onDelete: Cascade)
+  id        String  @id @default(uuid()) @db.Uuid
+  projectId String  @map("project_id") @db.Uuid
+  project   Project @relation("ProjectTasks", fields: [projectId], references: [id], onDelete: Cascade)
 
-  sprintId    String?  @map("sprint_id") @db.Uuid
-  sprint      Sprint?  @relation(fields: [sprintId], references: [id], onDelete: SetNull)
+  sprintId String? @map("sprint_id") @db.Uuid
+  sprint   Sprint? @relation(fields: [sprintId], references: [id], onDelete: SetNull)
 
-  roomId      String?  @map("room_id") @db.Uuid
-  room        Room?    @relation("RoomTasks", fields: [roomId], references: [id], onDelete: SetNull)
+  roomId String? @map("room_id") @db.Uuid
+  room   Room?   @relation("RoomTasks", fields: [roomId], references: [id], onDelete: SetNull)
 
   title       String
   description String?
   status      TaskStatus @default(TODO)
 
   // AssignedTo typically refers to a Profile or user ID, which should be UUID too if users are in Profile
-  assignedTo  String?  @map("assigned_to") @db.Uuid
-  dueDate     DateTime? @map("due_date")
+  assignedTo String?   @map("assigned_to") @db.Uuid
+  dueDate    DateTime? @map("due_date")
 
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@index([projectId])
   @@index([sprintId])
@@ -337,25 +336,27 @@ model Task {
 
 // Additional models for context (simplified)
 model Contact {
-  id        String   @id @default(uuid()) @db.Uuid
-  projectId String   @map("project_id") @db.Uuid
-  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  id        String  @id @default(uuid()) @db.Uuid
+  projectId String  @map("project_id") @db.Uuid
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
   name      String
   role      String?
   email     String?
   phone     String?
+
   @@index([projectId])
   @@map("contacts")
 }
 
 model Conversation {
-  id        String   @id @default(uuid()) @db.Uuid
-  projectId String   @map("project_id") @db.Uuid
-  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  id        String    @id @default(uuid()) @db.Uuid
+  projectId String    @map("project_id") @db.Uuid
+  project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
   title     String?
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
   messages  Message[]
+
   @@index([projectId])
   @@map("conversations")
 }
@@ -372,35 +373,153 @@ model Message {
   @@map("messages")
 }
 
+// Survey status
+enum SurveyStatus {
+  DRAFT     @map("draft")
+  ACTIVE    @map("active")
+  COMPLETED @map("completed")
+  EXPIRED   @map("expired")
+}
+
+// Survey question type
+enum SurveyQuestionType {
+  SINGLE_CHOICE   @map("single_choice")
+  MULTIPLE_CHOICE @map("multiple_choice")
+  TEXT            @map("text")
+  SCALE           @map("scale")
+}
+
+// Survey link status
+enum SurveyLinkStatus {
+  ACTIVE    @map("active")
+  COMPLETED @map("completed")
+  EXPIRED   @map("expired")
+}
+
 model Survey {
-  id        String   @id @default(uuid()) @db.Uuid
-  projectId String   @map("project_id") @db.Uuid
-  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  title     String
-  status    String   @default("DRAFT")
+  id        String  @id @default(uuid()) @db.Uuid
+  projectId String  @map("project_id") @db.Uuid
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  title       String
+  description String?
+  status      SurveyStatus @default(DRAFT)
+
+  questions SurveyQuestion[]
+  links     SurveyLink[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
   @@index([projectId])
   @@map("surveys")
 }
 
+model SurveyQuestion {
+  id       String @id @default(uuid()) @db.Uuid
+  surveyId String @map("survey_id") @db.Uuid
+  survey   Survey @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+
+  category   String? // e.g. "Lighting", "Bathroom", "Kitchen", "Living room"
+  question   String
+  type       SurveyQuestionType @default(SINGLE_CHOICE)
+  options    Json? // Array of options for choice questions
+  isRequired Boolean            @default(true) @map("is_required")
+  order      Int                @default(0)
+
+  responses SurveyResponse[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([surveyId])
+  @@map("survey_questions")
+}
+
+model SurveyLink {
+  id       String @id @default(uuid()) @db.Uuid
+  surveyId String @map("survey_id") @db.Uuid
+  survey   Survey @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+
+  token       String  @unique
+  clientName  String? @map("client_name")
+  clientEmail String? @map("client_email")
+
+  status      SurveyLinkStatus @default(ACTIVE)
+  expiresAt   DateTime         @map("expires_at")
+  completedAt DateTime?        @map("completed_at")
+
+  responses SurveyResponse[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([surveyId])
+  @@index([token])
+  @@map("survey_links")
+}
+
+model SurveyResponse {
+  id     String     @id @default(uuid()) @db.Uuid
+  linkId String     @map("link_id") @db.Uuid
+  link   SurveyLink @relation(fields: [linkId], references: [id], onDelete: Cascade)
+
+  questionId String         @map("question_id") @db.Uuid
+  question   SurveyQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  answer Json // Can be string, array, or number depending on question type
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([linkId])
+  @@index([questionId])
+  @@map("survey_responses")
+}
+
+// Notification system
+enum NotificationType {
+  SURVEY_COMPLETED @map("survey_completed")
+  SURVEY_EXPIRED   @map("survey_expired")
+  CLIENT_RESPONSE  @map("client_response")
+  SYSTEM           @map("system")
+}
+
+model Notification {
+  id        String @id @default(uuid()) @db.Uuid
+  profileId String @map("profile_id") @db.Uuid
+
+  type    NotificationType
+  title   String
+  message String
+  data    Json? // Additional data (e.g. surveyId, linkId)
+  isRead  Boolean          @default(false) @map("is_read")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([profileId])
+  @@index([isRead])
+  @@map("notifications")
+}
+
 model Moodboard {
-  id        String   @id @default(uuid()) @db.Uuid
-  projectId String   @map("project_id") @db.Uuid
-  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  id        String  @id @default(uuid()) @db.Uuid
+  projectId String  @map("project_id") @db.Uuid
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
   name      String
   images    Json?
+
   @@index([projectId])
   @@map("moodboards")
 }
 
 model Document {
-  id        String   @id @default(uuid()) @db.Uuid
-  projectId String   @map("project_id") @db.Uuid
-  project   Project  @relation("ProjectDocuments", fields: [projectId], references: [id], onDelete: Cascade)
-  name      String
-  url       String
-  type      String?
-  size      Int?
+  id         String   @id @default(uuid()) @db.Uuid
+  projectId  String   @map("project_id") @db.Uuid
+  project    Project  @relation("ProjectDocuments", fields: [projectId], references: [id], onDelete: Cascade)
+  name       String
+  url        String
+  type       String?
+  size       Int?
   uploadedAt DateTime @default(now()) @map("uploaded_at")
+
   @@index([projectId])
   @@map("documents")
 }
@@ -412,6 +531,7 @@ model Note {
   content   String
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
+
   @@index([roomId])
   @@map("notes")
 }
@@ -424,6 +544,7 @@ model CalendarEvent {
   date        DateTime
   description String?
   type        String   @default("MEETING") // MEETING, DEADLINE, PAYMENT, INSTALLATION
+
   @@index([projectId])
   @@map("calendar_events")
 }
@@ -435,43 +556,44 @@ model GalleryImage {
   url       String
   caption   String?
   createdAt DateTime @default(now()) @map("created_at")
+
   @@index([roomId])
   @@map("gallery_images")
 }
 
 // Services - Materials and Labor
 model ServiceItem {
-  id            String   @id @default(uuid()) @db.Uuid
-  projectId     String   @map("project_id") @db.Uuid
-  project       Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  id        String  @id @default(uuid()) @db.Uuid
+  projectId String  @map("project_id") @db.Uuid
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
-  roomId        String?  @map("room_id") @db.Uuid
-  room          Room?    @relation(fields: [roomId], references: [id], onDelete: SetNull)
+  roomId String? @map("room_id") @db.Uuid
+  room   Room?   @relation(fields: [roomId], references: [id], onDelete: SetNull)
 
   // Common fields
-  category      ServiceCategory @default(MATERIAL)
+  category       ServiceCategory       @default(MATERIAL)
   planningStatus ServicePlanningStatus @default(DRAFT) @map("planning_status")
 
   // Material specific fields
-  name          String?          // Material name
-  unit          String?          // Unit (e.g. m2, pcs, kg)
-  quantity      Float?           // Quantity
-  price         Decimal @default(0) @db.Decimal(12, 2)  // Total price
-  imageUrl      String?  @map("image_url")
-  url           String?          // Product link
-  materialType  String?  @map("material_type")  // Material type
+  name           String? // Material name
+  unit           String? // Unit (e.g. m2, pcs, kg)
+  quantity       Float? // Quantity
+  price          Decimal         @default(0) @db.Decimal(12, 2) // Total price
+  imageUrl       String?         @map("image_url")
+  url            String? // Product link
+  materialType   String?         @map("material_type") // Material type
   materialStatus MaterialStatus? @default(TO_ORDER) @map("material_status")
 
   // Labor specific fields
-  subcontractor String?          // Subcontractor
-  scope         String?          // Work scope
-  duration      String?          // Duration
+  subcontractor String? // Subcontractor
+  scope         String? // Work scope
+  duration      String? // Duration
   laborStatus   LaborStatus? @default(TO_ORDER) @map("labor_status")
 
-  notes         String?
+  notes String?
 
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@index([projectId])
   @@index([roomId])

@@ -39,7 +39,8 @@ export async function updateSession(request: NextRequest) {
     } = await supabase.auth.getUser()
 
     // Protect routes - if no user and trying to access protected route -> login
-    if (!user && !request.nextUrl.pathname.startsWith('/login') && !request.nextUrl.pathname.startsWith('/auth') && !request.nextUrl.pathname.startsWith('/schema')) {
+    // Public routes: /login, /auth, /schema, /client (for client surveys)
+    if (!user && !request.nextUrl.pathname.startsWith('/login') && !request.nextUrl.pathname.startsWith('/auth') && !request.nextUrl.pathname.startsWith('/schema') && !request.nextUrl.pathname.startsWith('/client')) {
         // Allow static assets, images, etc.
         if (request.nextUrl.pathname.match(/\.(png|jpg|jpeg|svg|ico|css|js)$/)) {
             return response
